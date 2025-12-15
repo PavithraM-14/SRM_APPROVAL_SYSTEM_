@@ -117,14 +117,6 @@ export default function DashboardPage() {
     ? baseStatsCards 
     : [
         ...baseStatsCards.slice(0, 2), // Total and Pending
-        {
-          name: 'My Involvement',
-          stat: stats?.inProgressRequests || 0,
-          icon: ClockIcon,
-          color: 'text-blue-600',
-          bgColor: 'bg-blue-100',
-          description: 'View requests you\'ve been involved in approving',
-        },
         ...baseStatsCards.slice(2) // Approved and Rejected
       ];
 
