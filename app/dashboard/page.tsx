@@ -103,7 +103,7 @@ export default function DashboardPage() {
       icon: ClipboardDocumentListIcon,
       color: 'text-blue-600',
       bgColor: 'bg-blue-100',
-      description: currentUser?.role === 'requester' ? 'View all my requests' : 'View all system requests',
+      description: currentUser?.role === 'requester' ? 'View all my requests' : 'View all requests at your level (including approved ones)',
     },
     {
       name: 'Pending',

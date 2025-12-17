@@ -171,14 +171,70 @@ function hasRequestReachedUserLevel(
     return true;
   }
 
-  // Check if request has passed through this user's level
+  // ENHANCED: Check if request has EVER passed through this user's level
+  // This ensures users can see ALL requests that have historically been at their level
   const statusesRequiringThisRole = getAllStatusesForRole(userRole);
+  
+  // Check history for any status that required this role
   const hasPassedThrough = history.some(h => 
     statusesRequiringThisRole.includes(h.newStatus) || 
     statusesRequiringThisRole.includes(h.previousStatus)
   );
+  
+  // ADDITIONAL: Check if request has progressed beyond this user's level
+  // This catches cases where the request has moved past their level
+  const hasProgressedBeyond = checkIfRequestProgressedBeyondUserLevel(request, userRole, history);
+  
+  return hasPassedThrough || hasProgressedBeyond;
+}
 
-  return hasPassedThrough;
+/**
+ * Check if a request has progressed beyond the user's approval level
+ * This ensures users can see requests they've previously approved
+ */
+function checkIfRequestProgressedBeyondUserLevel(
+  request: any,
+  userRole: UserRole,
+  history: any[]
+): boolean {
+  
+  // Define the approval workflow order
+  const workflowOrder = [
+    UserRole.INSTITUTION_MANAGER,
+    UserRole.SOP_VERIFIER,
+    UserRole.ACCOUNTANT,
+    UserRole.VP,
+    UserRole.HEAD_OF_INSTITUTION,
+    UserRole.DEAN,
+    UserRole.MMA, // Department roles are parallel to Dean
+    UserRole.HR,
+    UserRole.AUDIT,
+    UserRole.IT,
+    UserRole.CHIEF_DIRECTOR,
+    UserRole.CHAIRMAN
+  ];
+  
+  const userLevelIndex = workflowOrder.indexOf(userRole);
+  if (userLevelIndex === -1) return false;
+  
+  // Check if request has reached any level beyond the user's level
+  const currentStatus = request.status;
+  const statusesForLaterRoles = workflowOrder
+    .slice(userLevelIndex + 1)
+    .flatMap(role => getAllStatusesForRole(role));
+  
+  // If current status is for a later role, user should see this request
+  if (statusesForLaterRoles.includes(currentStatus)) {
+    return true;
+  }
+  
+  // Check history for any status that indicates progression beyond user's level
+  const hasReachedLaterLevel = history.some(h => 
+    statusesForLaterRoles.includes(h.newStatus) || 
+    statusesForLaterRoles.includes(h.previousStatus)
+  );
+  
+  return hasReachedLaterLevel;
 }
 
 function getAllStatusesForRole(userRole: UserRole): RequestStatus[] {

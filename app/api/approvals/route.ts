@@ -100,12 +100,11 @@ export async function GET(request: NextRequest) {
       visibleRequests = allRequests.filter(req => req.status === RequestStatus.REJECTED);
       console.log('[DEBUG] Filtered to rejected requests:', visibleRequests.length);
     } else if (statusFilter === 'all') {
-      // Show all requests visible to this role
+      // Show all requests visible to this role (no category filter)
       visibleRequests = filterRequestsByVisibility(
         allRequests, 
         user.role as UserRole, 
-        dbUser._id.toString(),
-        'all'
+        dbUser._id.toString()
       );
       console.log('[DEBUG] Showing all visible requests:', visibleRequests.length);
     } else {
