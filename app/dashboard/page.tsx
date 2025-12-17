@@ -61,7 +61,7 @@ export default function DashboardPage() {
         if (isRequester) {
           router.push('/dashboard/requests?status=pending');
         } else {
-          router.push('/dashboard/approvals'); // Default is pending
+          router.push('/dashboard/approvals?status=pending');
         }
         break;
         

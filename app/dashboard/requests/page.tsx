@@ -14,6 +14,10 @@ interface Request {
   status: string;
   createdAt: string;
   history?: any[]; // Add history to check for clarifications
+  _visibility?: {
+    category: 'pending' | 'approved' | 'in_progress' | 'completed';
+    userAction?: 'approve' | 'clarify' | null;
+  };
 }
 
 export default function RequestsPage() {
@@ -35,7 +39,7 @@ export default function RequestsPage() {
 
   useEffect(() => {
     // Set active filter based on URL parameter
-    if (statusFilter) {
+    if (statusFilter && ['pending', 'approved', 'rejected'].includes(statusFilter)) {
       setActiveFilter(statusFilter);
     } else {
       setActiveFilter('all');
@@ -226,10 +230,11 @@ export default function RequestsPage() {
             key={filter.key}
             onClick={() => {
               setActiveFilter(filter.key);
+              // Use router.replace to avoid adding to history stack
               if (filter.key === 'all') {
-                router.push('/dashboard/requests');
+                router.replace('/dashboard/requests');
               } else {
-                router.push(`/dashboard/requests?status=${filter.key}`);
+                router.replace(`/dashboard/requests?status=${filter.key}`);
               }
             }}
             className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-sm sm:text-base font-medium transition-all active:scale-95 ${

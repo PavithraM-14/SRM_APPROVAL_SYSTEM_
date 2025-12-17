@@ -44,10 +44,10 @@ async function seed() {
       const plainPassword = 'password123'; // Default password for all users
       
       const user = await User.create({
-        email: `${role}@srm.edu`,
+        email: `${role}@srmrmp.edu.in`, // Updated to use correct domain
         name: getRoleDisplayName(role),
         empId: `EMP${role.toUpperCase()}`, // Add employee ID
-        contactNo: `+91-${contactCounter}`, // Add contact number
+        contactNo: `+91 ${contactCounter.toString().slice(-10)}`, // Format contact number correctly
         password: plainPassword, // Pass plain password - model will hash it
         role,
         college: colleges[0],
@@ -132,10 +132,22 @@ async function seed() {
     }
 
     console.log('🎉 Database seeded successfully!');
-    console.log('👥 Default users created with emails:');
+    console.log('\n👥 Default users created:');
+    console.log('📧 All users have password: password123');
+    console.log('🌐 Email domain: @srmrmp.edu.in\n');
+    
     users.forEach(user => {
-      console.log(`   ${user.email} (${user.role}) - Password: password123`);
+      console.log(`   📧 ${user.email}`);
+      console.log(`   👤 ${user.name} (${user.role.replace('_', ' ').toUpperCase()})`);
+      console.log(`   🆔 Employee ID: ${user.empId}`);
+      console.log(`   📱 Contact: ${user.contactNo}`);
+      console.log('   ─────────────────────────────────────');
     });
+    
+    console.log('\n🔑 Login Instructions:');
+    console.log('   1. Go to /login');
+    console.log('   2. Use any email above with password: password123');
+    console.log('   3. Each user has different role permissions\n');
 
   } catch (error) {
     console.error('❌ Seed failed:', error);

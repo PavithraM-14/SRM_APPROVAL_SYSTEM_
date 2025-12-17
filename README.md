@@ -1,6 +1,26 @@
 # SRM-RMP Institutional Approval System
 
-A comprehensive digital approval workflow system built with Next.js, TypeScript, MongoDB, and Tailwind CSS. This system streamlines institutional request approvals through a role-based workflow with real-time tracking and audit capabilities.
+A comprehensive digital approval workflow system built with Next.js, TypeScript, MongoDB, and Tailwind CSS. This system streamlines institutional request approvals through a sophisticated role-based workflow with real-time tracking, enhanced UI/UX, and comprehensive audit capabilities.
+
+## 🆕 Latest Updates (v2.0.0)
+
+### Enhanced User Experience
+- ✅ **Indian Number System** - Real-time comma formatting for cost estimates (₹30,00,000)
+- ✅ **Password Visibility Toggle** - Eye icon for show/hide password functionality
+- ✅ **Improved Navigation** - Fixed dashboard stats card routing for all user roles
+- ✅ **Mobile Responsiveness** - Enhanced mobile experience across all pages
+
+### Workflow Improvements
+- ✅ **Department Clarification System** - Targeted clarifications with proper role-based visibility
+- ✅ **Simplified SOP/Accountant Workflow** - Removed unnecessary clarification steps
+- ✅ **Parallel Verification** - SOP and Budget verification happen simultaneously
+- ✅ **Enhanced Role-Based Visibility** - Sophisticated request visibility system
+
+### Technical Enhancements
+- ✅ **Reusable Components** - CostEstimateInput, PasswordInput, FormattedAmount
+- ✅ **Email Domain Validation** - Restricted to @srmrmp.edu.in emails
+- ✅ **Comprehensive Debugging** - Enhanced error handling and logging
+- ✅ **Updated Seed Script** - Compatible with new validation requirements
 
 ## ✨ Features Implemented
 
@@ -17,12 +37,16 @@ A comprehensive digital approval workflow system built with Next.js, TypeScript,
 - ✅ **Responsive Design** with modern UI components
 
 ### Advanced Features
-- ✅ **Approval Engine** - Modular rules-based workflow system
-- ✅ **Timeline Tracking** - Visual progress indicators
-- ✅ **Search & Filtering** - Advanced request filtering
-- ✅ **Role-Based Dashboards** - Customized views per role
-- ✅ **Notification System** - In-app notifications (ready for webhooks)
-- ✅ **Data Seeding** - Complete sample data for testing
+- ✅ **Enhanced Approval Engine** - Parallel verification with smart routing
+- ✅ **Indian Number System** - Real-time formatting with lakhs/crores
+- ✅ **Department Clarification System** - Targeted clarifications with visibility control
+- ✅ **Sophisticated Role-Based Visibility** - Users see only relevant requests
+- ✅ **Timeline Tracking** - Visual progress indicators with enhanced status display
+- ✅ **Advanced Search & Filtering** - Role-based request filtering
+- ✅ **Enhanced Dashboards** - Improved navigation and stats cards
+- ✅ **Password Security** - Visibility toggle with eye icons
+- ✅ **Mobile-First Design** - Responsive across all devices
+- ✅ **Comprehensive Data Seeding** - Complete sample data with proper validation
 
 ### Technical Features
 - ✅ **Server-Side API Routes** - No separate backend needed
@@ -102,63 +126,80 @@ npm run dev
 
 Visit `http://localhost:3000` to see the application.
 
-### Default Login Credentials (Dev Mode)
+### Default Login Credentials
 
-The system includes a dev-only authentication system. Visit `/login` and select any role:
+After running `npm run seed`, use these credentials to test different roles:
 
-| Role | Email | Access Level |
-|------|-------|-------------|
-| Requester | requester@srm.edu | Create requests |
-| Institution Manager | institution_manager@srm.edu | Review requests, SOP checks |
-| Accountant | accountant@srm.edu | Budget verification |
-| VP | vp@srm.edu | Vice President approval |
-| Head of Institution | head_of_institution@srm.edu | HOI approval |
-| Dean | dean@srm.edu | Dean review and verification |
-| MMA/HR/Audit/IT | mma@srm.edu | Department checks |
-| Chief Director | chief_director@srm.edu | Senior approval |
-| Chairman | chairman@srm.edu | Final approval |
+| Role | Email | Password | Access Level |
+|------|-------|----------|-------------|
+| Requester | requester@srmrmp.edu.in | password123 | Create and track requests |
+| Institution Manager | institution_manager@srmrmp.edu.in | password123 | Review requests, parallel verification |
+| SOP Verifier | sop_verifier@srmrmp.edu.in | password123 | SOP compliance verification |
+| Accountant | accountant@srmrmp.edu.in | password123 | Budget verification |
+| VP | vp@srmrmp.edu.in | password123 | Vice President approval |
+| Head of Institution | head_of_institution@srmrmp.edu.in | password123 | HOI approval |
+| Dean | dean@srmrmp.edu.in | password123 | Dean review and department clarifications |
+| MMA | mma@srmrmp.edu.in | password123 | MMA department verification |
+| HR | hr@srmrmp.edu.in | password123 | HR department verification |
+| Audit | audit@srmrmp.edu.in | password123 | Audit department verification |
+| IT | it@srmrmp.edu.in | password123 | IT department verification |
+| Chief Director | chief_director@srmrmp.edu.in | password123 | Senior management approval |
+| Chairman | chairman@srmrmp.edu.in | password123 | Final board approval |
 
-## 📊 Approval Workflow
+**Note**: All users have Employee IDs (EMP + ROLE) and contact numbers for complete profiles.
 
-### Standard Flow (Budget Available)
+## 📊 Enhanced Approval Workflow
+
+### New Parallel Verification System
 ```
-Request Created → Manager Review → Budget Check ✅ → VP → HOI → Dean → Dept. Checks → Dean Verification → Chief Director → Chairman → Approved
+Request Created → Manager Review → Parallel Verification (SOP + Budget) → Manager Routing Decision
+                                                                        ↓
+Budget Available: → VP → HOI → Dean → Department Checks → Chief Director → Chairman → Approved
+Budget Not Available: → Dean Review → Department Checks → Chief Director → Chairman → Approved/Rejected
 ```
 
-### Special Flow (Budget Not Available)
-```
-Request Created → Manager Review → Budget Check ❌ → Dean Review → Chairman → Approved/Rejected
-```
+### Key Workflow Features
+- **Parallel Processing**: SOP and Budget verification happen simultaneously
+- **Smart Routing**: Manager decides routing based on budget availability after verifications
+- **Department Targeting**: Dean can send clarifications to specific departments (MMA/HR/Audit/IT)
+- **Role-Based Visibility**: Users only see requests relevant to their role and approval level
 
 ### Workflow States
-- **Draft** - Initial creation
-- **Submitted** - Ready for manager review
-- **Manager Review** - SOP compliance check
-- **Budget Check** - Financial verification
-- **VP Approval** - Vice President review
+- **Manager Review** - Initial review and routing to parallel verification
+- **Parallel Verification** - Simultaneous SOP and Budget verification
+- **SOP Completed** - SOP verification finished, waiting for budget
+- **Budget Completed** - Budget verification finished, waiting for SOP
+- **VP Approval** - Vice President review (budget available path)
 - **HOI Approval** - Head of Institution approval
-- **Dean Review** - Dean assessment
-- **Department Checks** - MMA/HR/Audit/IT verification
-- **Dean Verification** - Final dean approval
+- **Dean Review** - Dean assessment and department clarification management
+- **Department Checks** - Targeted department verification (MMA/HR/Audit/IT)
 - **Chief Director Approval** - Senior management approval
-- **Chairman Approval** - Board approval
+- **Chairman Approval** - Final board approval
 - **Approved/Rejected** - Final status
 
 ## 🔌 API Endpoints
 
 ### Authentication
 ```bash
-POST /api/auth/dev-login    # Dev login
+POST /api/auth/login       # User login with email/password
+POST /api/auth/signup      # User registration (restricted to @srmrmp.edu.in)
 GET  /api/auth/me          # Get current user
 POST /api/auth/logout      # Logout
 ```
 
 ### Requests
 ```bash
-GET  /api/requests         # List requests (with filters)
-POST /api/requests         # Create request
+GET  /api/requests         # List requests (with role-based visibility)
+POST /api/requests         # Create request (requesters only)
 GET  /api/requests/[id]    # Get single request
-POST /api/requests/[id]/actions  # Approve/reject/clarify
+POST /api/requests/[id]/approve  # Approve/reject/clarify with enhanced workflow
+```
+
+### Enhanced APIs
+```bash
+GET  /api/approvals        # Role-based pending approvals
+GET  /api/in-progress      # User's involvement in ongoing requests
+GET  /api/dashboard/stats  # Enhanced dashboard statistics
 ```
 
 ### Dashboard & Data
@@ -264,11 +305,14 @@ The system uses 6 main collections:
 - **AuditLogs** - Complete audit trail
 - **ApprovalHistory** - Embedded request timeline
 
-### Custom Hooks & Utilities
-- `useAuth()` - Authentication state management
-- `approvalEngine` - Workflow state machine
-- `useSWR` - Optimistic data fetching
-- Role guards and permission checks
+### Enhanced Components & Utilities
+- `CostEstimateInput` - Indian number system formatting with real-time commas
+- `PasswordInput` - Password field with visibility toggle
+- `FormattedAmount` - Display component for Indian currency formatting
+- `approvalEngine` - Enhanced workflow state machine with parallel verification
+- `request-visibility` - Sophisticated role-based request filtering
+- `indian-number-format` - Utility functions for Indian number system
+- Role guards and permission checks with department targeting
 
 ### Code Quality
 - TypeScript for type safety
@@ -277,6 +321,18 @@ The system uses 6 main collections:
 - Modular component architecture
 
 ## 📝 Changelog
+
+### v2.0.0 - Enhanced UI/UX & Workflow Improvements
+- ✅ **Indian Number Formatting** - Real-time comma formatting for cost estimates
+- ✅ **Password Visibility Toggle** - Enhanced login/signup experience
+- ✅ **Parallel Verification System** - Simultaneous SOP and Budget verification
+- ✅ **Department Clarification Targeting** - Specific department routing
+- ✅ **Enhanced Role-Based Visibility** - Sophisticated request filtering
+- ✅ **Simplified Workflows** - Removed unnecessary clarification steps
+- ✅ **Mobile Responsiveness** - Improved mobile experience
+- ✅ **Dashboard Navigation Fixes** - Proper stats card routing
+- ✅ **Email Domain Validation** - Restricted to @srmrmp.edu.in
+- ✅ **Comprehensive Debugging** - Enhanced error handling
 
 ### v1.0.0 - Initial Release
 - ✅ Complete approval workflow system

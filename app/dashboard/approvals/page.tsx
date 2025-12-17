@@ -45,6 +45,8 @@ export default function ApprovalsPage() {
   useEffect(() => {
     if (statusFilter) {
       setActiveTab(statusFilter);
+    } else {
+      setActiveTab('pending'); // Default to pending if no status filter
     }
   }, [statusFilter]);
 
@@ -106,7 +108,11 @@ export default function ApprovalsPage() {
   const handleTabChange = (tab: string) => {
     setActiveTab(tab);
     // Update URL without page reload
-    router.push(`/dashboard/approvals${tab !== 'pending' ? `?status=${tab}` : ''}`);
+    if (tab === 'pending') {
+      router.push('/dashboard/approvals');
+    } else {
+      router.push(`/dashboard/approvals?status=${tab}`);
+    }
   };
 
   const getStatusBadgeClass = (status: string) => {
