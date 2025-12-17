@@ -15,10 +15,24 @@ export default function LoginPage() {
   const searchParams = useSearchParams();
   const message = searchParams.get('message');
 
+  const validateEmail = () => {
+    if (email && !email.endsWith('@srmrmp.edu.in')) {
+      setError('Only @srmrmp.edu.in emails are allowed');
+    } else {
+      setError('');
+    }
+  };
+
   const handleAuthLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError('');
+
+    if (!email.endsWith('@srmrmp.edu.in')) {
+      setError('Only @srmrmp.edu.in emails are allowed');
+      setLoading(false);
+      return;
+    }
     
     try {
       const response = await fetch('/api/auth/login', {
@@ -99,7 +113,8 @@ export default function LoginPage() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="name@example.com"
+                onBlur={validateEmail}
+                placeholder="name@srmrmp.edu.in"
                 className="mt-1 block w-full border border-gray-400 rounded-lg px-3 py-2 bg-white shadow-sm
                            placeholder-gray-500 text-gray-900
                            focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"

@@ -7,11 +7,26 @@ export async function POST(request: NextRequest) {
   try {
     await connectDB();
     
-    const { name, empId, email, password, role, college, department } = await request.json();
+    //  Added contactNo to destructuring
+    const { name, empId, email, password, role, college, department, contactNo } = await request.json();
     
-    // Validate required fields
-    if (!name || !empId || !email || !password) {
-      return NextResponse.json({ error: 'Name, employee ID, email, and password are required' }, { status: 400 });
+    // Added contactNo to validation
+    if (!name || !empId || !email || !password || !contactNo) {
+      return NextResponse.json({ error: 'Name, employee ID, email, password, and contact number are required' }, { status: 400 });
+    }
+    
+    //  Validate contact number (must be exactly 10 digits)
+    const contactNoDigits = contactNo.replace(/\D/g, ''); // Remove non-digits
+    if (contactNoDigits.length !== 10) {
+      return NextResponse.json({ error: 'Contact number must be exactly 10 digits' }, { status: 400 });
+    }
+    
+    // Format contact number with +91 prefix
+    const formattedContactNo = `+91 ${contactNoDigits}`;
+    
+    // Validate email domain
+    if (!email.endsWith('@srmrmp.edu.in')) {
+      return NextResponse.json({ error: 'Only @srmrmp.edu.in emails are allowed' }, { status: 400 });
     }
     
     // Validate role
@@ -31,7 +46,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'User with this employee ID already exists' }, { status: 400 });
     }
 
-    // Create user (password will be automatically hashed by the User model pre-save hook)
+    // Create user with formatted contactNo included
     const user = await User.create({
       name,
       empId,
@@ -40,7 +55,10 @@ export async function POST(request: NextRequest) {
       role,
       college: college || null,
       department: department || null,
-    });    // Return success response (without password)
+      contactNo: formattedContactNo, // Contact number added to db with +91 prefix
+    });
+    
+    // Return success response (without password)
     const { password: _, ...userWithoutPassword } = user.toObject();
     
     return NextResponse.json({ 

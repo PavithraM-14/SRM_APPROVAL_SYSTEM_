@@ -10,6 +10,7 @@ const userSchema = new mongoose.Schema({
   role: { type: String, enum: Object.values(UserRole), required: true },
   college: { type: String },
   department: { type: String },
+  contactNo: { type: String, required: true }, //contact no field added
   isActive: { type: Boolean, default: true },
 }, {
   timestamps: true,

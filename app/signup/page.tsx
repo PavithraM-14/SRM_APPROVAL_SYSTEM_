@@ -45,6 +45,26 @@ export default function SignupPage() {
     'bg-white shadow-sm placeholder-gray-500 text-gray-900 ' +
     'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition';
 
+  const validateEmail = () => {
+    if (email && !email.endsWith('@srmrmp.edu.in')) {
+      setError('Only @srmrmp.edu.in emails are allowed');
+    } else {
+      setError('');
+    }
+  };
+
+  // ✅ Contact number validation
+  const validateContactNo = () => {
+    if (contactNo) {
+      const digits = contactNo.replace(/\D/g, '');
+      if (digits.length !== 10) {
+        setError('Contact number must be exactly 10 digits');
+      } else {
+        setError('');
+      }
+    }
+  };
+
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -52,6 +72,20 @@ export default function SignupPage() {
 
     if (password !== confirmPassword) {
       setError('Passwords do not match');
+      setLoading(false);
+      return;
+    }
+
+    if (!email.endsWith('@srmrmp.edu.in')) {
+      setError('Only @srmrmp.edu.in emails are allowed');
+      setLoading(false);
+      return;
+    }
+
+    // ✅ Validate contact number before submission
+    const contactDigits = contactNo.replace(/\D/g, '');
+    if (contactDigits.length !== 10) {
+      setError('Contact number must be exactly 10 digits');
       setLoading(false);
       return;
     }
@@ -172,12 +206,13 @@ export default function SignupPage() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                onBlur={validateEmail}
                 placeholder="name@srmrmp.edu.in"
                 className={inputClass}
               />
             </div>
 
-            {/* ✅ CONTACT NUMBER */}
+            {/* ✅ CONTACT NUMBER with validation */}
             <div>
               <label className="block text-sm font-medium text-gray-700">Contact Number *</label>
               <input
@@ -185,7 +220,8 @@ export default function SignupPage() {
                 required
                 value={contactNo}
                 onChange={(e) => setContactNo(e.target.value)}
-                placeholder="Enter contact number"
+                onBlur={validateContactNo}
+                placeholder="Enter 10-digit contact number"
                 className={inputClass}
               />
             </div>

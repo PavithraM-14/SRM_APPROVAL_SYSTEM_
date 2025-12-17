@@ -37,6 +37,8 @@ async function seed() {
 
     // Create users for each role
     const users = [];
+    let contactCounter = 9876543210;
+    
     for (const role of Object.values(UserRole)) {
       // Use plain password - the User model will hash it automatically
       const plainPassword = 'password123'; // Default password for all users
@@ -45,12 +47,14 @@ async function seed() {
         email: `${role}@srm.edu`,
         name: getRoleDisplayName(role),
         empId: `EMP${role.toUpperCase()}`, // Add employee ID
+        contactNo: `+91-${contactCounter}`, // Add contact number
         password: plainPassword, // Pass plain password - model will hash it
         role,
         college: colleges[0],
         department: departments[0],
       });
       users.push(user);
+      contactCounter++; // Increment for next user
     }
 
     console.log(`✅ Created ${users.length} users`);

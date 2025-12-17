@@ -26,6 +26,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Email and password are required' }, { status: 400 });
     }
     
+    // Validate email domain
+    if (!email.endsWith('@srmrmp.edu.in')) {
+      return NextResponse.json({ error: 'Only @srmrmp.edu.in emails are allowed' }, { status: 400 });
+    }
+    
     // Find user
     const user = await User.findOne({ email });
     if (!user) {
