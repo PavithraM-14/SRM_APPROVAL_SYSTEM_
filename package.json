@@ -23,6 +23,7 @@
     "mongodb": "^7.0.0",
     "mongoose": "^8.0.3",
     "next": "^14.0.4",
+    "node-fetch": "^3.3.2",
     "nodemailer": "^7.0.11",
     "puppeteer": "^24.33.0",
     "react": "^18.2.0",
@@ -30,7 +31,7 @@
     "react-hook-form": "^7.48.2",
     "recharts": "^3.2.0",
     "swr": "^2.2.4",
-    "zod": "^3.22.4"
+    "zod": "^4.2.1"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^6.1.5",

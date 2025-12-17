@@ -154,7 +154,7 @@ export default function ApprovalsPage() {
   const getPageDescription = () => {
     switch (activeTab) {
       case 'all':
-        return 'All requests in the system';
+        return 'All requests forwarded to you (pending approval + already approved by you)';
       case 'approved':
         return 'Requests that have been fully approved';
       case 'rejected':
