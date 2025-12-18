@@ -146,15 +146,33 @@ export async function POST(
           // After accountant approval, always go back to manager for routing decision
           nextStatus = RequestStatus.MANAGER_REVIEW;
         } else {
-          // Handle other approval flows
-          nextStatus =
-            approvalEngine.getNextStatus(
-              requestRecord.status,
-              ActionType.APPROVE,
-              user.role as UserRole,
-              { budgetAvailable }
-            ) || requestRecord.status;
-        }
+  // ✅ COST-BASED FINAL APPROVAL LOGIC
+  if (
+    user.role === UserRole.CHIEF_DIRECTOR &&
+    requestRecord.status === RequestStatus.CHIEF_DIRECTOR_APPROVAL
+  ) {
+    const cost = requestRecord.costEstimate || 0;
+
+    if (cost > 50000) {
+      // 🔴 High cost → Chairman required
+      nextStatus = RequestStatus.CHAIRMAN_APPROVAL;
+    } else {
+      // 🟢 Low / No cost → FINAL APPROVAL
+      nextStatus = RequestStatus.APPROVED;
+    }
+  } else {
+    nextStatus =
+      approvalEngine.getNextStatus(
+        requestRecord.status,
+        ActionType.APPROVE,
+        user.role as UserRole,
+        { budgetAvailable,
+          costEstimate: requestRecord.costEstimate
+         }
+      ) || requestRecord.status;
+  }
+}
+
         actionType = ActionType.APPROVE;
         break;
 
