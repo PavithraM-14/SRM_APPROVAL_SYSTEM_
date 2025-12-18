@@ -1,38 +1,78 @@
-import { NextResponse } from "next/server";
-import connectDB from "../../../../lib/mongodb";
-import User from "../../../../models/User";
-import bcrypt from "bcryptjs";
+import { NextRequest, NextResponse } from 'next/server';
+import connectDB from '@/lib/mongodb';
+import User from '@/models/User';
 
-// Simple in-memory OTP store (in production, use Redis or database)
-const otpStore = new Map<string, { otp: string; expires: number }>();
-
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   try {
     await connectDB();
-    const { email, password } = await req.json();
 
-    if (!email || !password) {
-      return NextResponse.json({ error: 'Email and password are required' }, { status: 400 });
+    const { email, otp, newPassword } = await req.json();
+
+    // Validate input
+    if (!email || !otp || !newPassword) {
+      return NextResponse.json(
+        { error: 'Email, OTP, and new password are required' },
+        { status: 400 }
+      );
     }
 
-    const hashed = await bcrypt.hash(password, 10);
+    // Validate password strength
+    if (newPassword.length < 6) {
+      return NextResponse.json(
+        { error: 'Password must be at least 6 characters long' },
+        { status: 400 }
+      );
+    }
 
-    const user = await User.findOneAndUpdate(
-      { email },
-      { password: hashed },
-      { new: true }
-    );
-
+    // Find user
+    const user = await User.findOne({ email: email.toLowerCase() });
     if (!user) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+      return NextResponse.json(
+        { error: 'User not found' },
+        { status: 404 }
+      );
     }
 
-    // Clear OTP after successful password reset
-    otpStore.delete(email);
+    // Check if OTP exists
+    if (!user.otp || !user.otpExpiry) {
+      return NextResponse.json(
+        { error: 'No OTP found. Please request a new one.' },
+        { status: 400 }
+      );
+    }
 
-    return NextResponse.json({ success: true });
+    // Check if OTP is expired
+    if (new Date() > user.otpExpiry) {
+      return NextResponse.json(
+        { error: 'OTP has expired. Please request a new one.' },
+        { status: 400 }
+      );
+    }
+
+    // Verify OTP
+    if (user.otp !== otp) {
+      return NextResponse.json(
+        { error: 'Invalid OTP' },
+        { status: 401 }
+      );
+    }
+
+    // Update password and clear OTP
+    // Don't hash here - let the User model's pre-save hook handle it
+    user.password = newPassword;
+    user.otp = undefined;
+    user.otpExpiry = undefined;
+    await user.save();
+
+    return NextResponse.json({
+      message: 'Password reset successfully',
+    });
+
   } catch (error) {
-    console.error('Password reset error:', error);
-    return NextResponse.json({ error: 'Failed to reset password' }, { status: 500 });
+    console.error('Reset password error:', error);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
   }
 }

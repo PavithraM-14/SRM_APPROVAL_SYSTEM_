@@ -10,8 +10,12 @@ const userSchema = new mongoose.Schema({
   role: { type: String, enum: Object.values(UserRole), required: true },
   college: { type: String },
   department: { type: String },
-  contactNo: { type: String, required: true }, //contact no field added
+  contactNo: { type: String, required: true },
   isActive: { type: Boolean, default: true },
+  // OTP fields for email verification
+  otp: { type: String, required: false },
+  otpExpiry: { type: Date, required: false },
+  isVerified: { type: Boolean, default: false },
 }, {
   timestamps: true,
 });
