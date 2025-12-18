@@ -1,30 +1,60 @@
-import { NextResponse } from "next/server";
-import nodemailer from "nodemailer";
+import { NextRequest, NextResponse } from 'next/server';
+import connectDB from '@/lib/mongodb';
+import User from '@/models/User';
+import { generateOTP, sendOTPEmail } from '@/lib/email';
 
-const otpStore = new Map<string, string>(); // Temporary in-memory OTP storage
+export async function POST(req: NextRequest) {
+  try {
+    await connectDB();
 
-export async function POST(req: Request) {
-  const { email } = await req.json();
+    const { email } = await req.json();
 
-  if (!email) return NextResponse.json({ error: "Email required" }, { status: 400 });
+    // Validate input
+    if (!email) {
+      return NextResponse.json(
+        { error: 'Email is required' },
+        { status: 400 }
+      );
+    }
 
-  const otp = Math.floor(100000 + Math.random() * 900000).toString();
-  otpStore.set(email, otp);
+    // Find user
+    const user = await User.findOne({ email: email.toLowerCase() });
+    if (!user) {
+      return NextResponse.json(
+        { error: 'No account found with this email' },
+        { status: 404 }
+      );
+    }
 
-  const transporter = nodemailer.createTransport({
-    service: "gmail",
-    auth: {
-      user: process.env.EMAIL_USER!,
-      pass: process.env.EMAIL_PASS!,
-    },
-  });
+    // Generate OTP
+    const otp = generateOTP();
+    const otpExpiry = new Date(Date.now() + 60 * 1000); // 1 minute expiry
 
-  await transporter.sendMail({
-    from: process.env.EMAIL_USER!,
-    to: email,
-    subject: "SRM-RMP Password Reset OTP",
-    text: `Your OTP is ${otp}. It is valid for 10 minutes.`,
-  });
+    // Save OTP to user
+    user.otp = otp;
+    user.otpExpiry = otpExpiry;
+    await user.save();
 
-  return NextResponse.json({ success: true });
+    // Send OTP email
+    const emailSent = await sendOTPEmail(user.email, otp, user.name);
+
+    if (!emailSent) {
+      return NextResponse.json(
+        { error: 'Failed to send OTP email. Please try again.' },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json({
+      message: 'OTP sent successfully to your email',
+      email: user.email,
+    });
+
+  } catch (error) {
+    console.error('Forgot password error:', error);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
 }

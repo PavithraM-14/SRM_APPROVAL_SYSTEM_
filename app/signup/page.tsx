@@ -6,6 +6,7 @@ import { UserRole } from '../../lib/types';
 import PasswordInput from '../../components/PasswordInput';
 import Image from 'next/image';
 import SRMRMP_Logo from '../assets/SRMRMP_LOGO.png';
+import OTPVerification from '../../components/OTPVerification';
 
 const roleOptions = [
   { value: UserRole.REQUESTER, label: 'Requester/HOD' },
@@ -23,13 +24,11 @@ const roleOptions = [
   { value: UserRole.CHAIRMAN, label: 'Chairman' },
 ];
 
-// ✅ ONLY requester needs department
 const rolesWithDepartment = [UserRole.REQUESTER];
-
-// ✅ Chairman doesn't need college field
 const rolesWithoutCollege = [UserRole.CHAIRMAN];
 
 export default function SignupPage() {
+  const [step, setStep] = useState<'form' | 'otp'>('form');
   const [name, setName] = useState('');
   const [empId, setEmpId] = useState('');
   const [email, setEmail] = useState('');
@@ -41,6 +40,10 @@ export default function SignupPage() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [otpData, setOtpData] = useState<{
+    otp: string;
+    otpTimestamp: string;
+  } | null>(null);
   const router = useRouter();
 
   const inputClass =
@@ -48,15 +51,6 @@ export default function SignupPage() {
     'bg-white shadow-sm placeholder-gray-500 text-gray-900 ' +
     'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition';
 
-  /*const validateEmail = () => {
-    if (email && !email.endsWith('@srmrmp.edu.in')) {
-      setError('Only @srmrmp.edu.in emails are allowed');
-    } else {
-      setError('');
-    }
-  };*/
-
-  // ✅ Contact number validation
   const validateContactNo = () => {
     if (contactNo) {
       const digits = contactNo.replace(/\D/g, '');
@@ -79,13 +73,6 @@ export default function SignupPage() {
       return;
     }
 
-    /*if (!email.endsWith('@srmrmp.edu.in')) {
-      setError('Only @srmrmp.edu.in emails are allowed');
-      setLoading(false);
-      return;
-    }*/
-
-    // ✅ Validate contact number before submission
     const contactDigits = contactNo.replace(/\D/g, '');
     if (contactDigits.length !== 10) {
       setError('Contact number must be exactly 10 digits');
@@ -111,40 +98,122 @@ export default function SignupPage() {
     }
 
     try {
-      const response = await fetch('/api/auth/signup', {
+      // Send OTP to email
+      const response = await fetch('/api/auth/send-otp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          name,
-          empId,
           email,
-          contactNo,
-          password,
-          role: selectedRole,
-          college: isCollegeRequired ? college : null,
-          department: isDepartmentRequired ? department : null,
+          type: 'signup',
         }),
       });
 
       const data = await response.json();
 
       if (response.ok) {
-        router.push('/login?message=Signup successful. Please login.');
+        // Store OTP data and move to OTP verification step
+        setOtpData({
+          otp: data.otp,
+          otpTimestamp: new Date().toISOString(),
+        });
+        setStep('otp');
       } else {
-        setError(data.error || 'Signup failed');
+        setError(data.error || 'Failed to send OTP');
       }
     } catch {
-      setError('An error occurred during signup');
+      setError('An error occurred. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
+  const handleOTPVerified = async (otp: string) => {
+    try {
+      // Format contact number
+      const contactDigits = contactNo.replace(/\D/g, '');
+      const formattedContactNo = `+91 ${contactDigits}`;
+
+      const isDepartmentRequired = rolesWithDepartment.includes(selectedRole);
+      const isCollegeRequired = !rolesWithoutCollege.includes(selectedRole);
+
+      // Verify OTP and create account
+      const response = await fetch('/api/auth/verify-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email,
+          otp,
+          type: 'signup',
+          userData: {
+            name,
+            empId,
+            email,
+            contactNo: formattedContactNo,
+            password,
+            role: selectedRole,
+            college: isCollegeRequired ? college : null,
+            department: isDepartmentRequired ? department : null,
+            otp: otpData?.otp,
+            otpTimestamp: otpData?.otpTimestamp,
+          },
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        router.push('/login?message=Account created successfully! Please login.');
+      } else {
+        throw new Error(data.error || 'Verification failed');
+      }
+    } catch (error: any) {
+      throw error;
+    }
+  };
+
+  const handleResendOTP = async () => {
+    try {
+      const response = await fetch('/api/auth/resend-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email,
+          type: 'signup',
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setOtpData({
+          otp: data.otp,
+          otpTimestamp: new Date().toISOString(),
+        });
+        return true;
+      } else {
+        throw new Error(data.error);
+      }
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  if (step === 'otp') {
+    return (
+      <OTPVerification
+        email={email}
+        type="signup"
+        onVerify={handleOTPVerified}
+        onResend={handleResendOTP}
+        onBack={() => setStep('form')}
+      />
+    );
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100 px-4 animate-fadeIn">
       <div className="max-w-md w-full space-y-8">
 
-        {/* LOGO + SYSTEM TITLE */}
         <div className="flex flex-col items-center text-center">
           <Image
             src={SRMRMP_Logo}
@@ -159,7 +228,6 @@ export default function SignupPage() {
           </h1>
         </div>
 
-        {/* PAGE TITLE */}
         <div className="text-center">
           <h2 className="text-2xl font-bold text-gray-900">
             Create an account
@@ -169,7 +237,6 @@ export default function SignupPage() {
           </p>
         </div>
 
-        {/* FORM CARD */}
         <div className="bg-white p-8 rounded-2xl shadow-xl border border-gray-100">
 
           {error && (
@@ -210,13 +277,11 @@ export default function SignupPage() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                /*onBlur={validateEmail}*/
                 placeholder="name@srmrmp.edu.in"
                 className={inputClass}
               />
             </div>
 
-            {/* ✅ CONTACT NUMBER with validation */}
             <div>
               <label className="block text-sm font-medium text-gray-700">Contact Number *</label>
               <input
@@ -247,9 +312,7 @@ export default function SignupPage() {
                 onChange={(e) => {
                   const role = e.target.value as UserRole;
                   setSelectedRole(role);
-                  // Clear department if role doesn't need it
                   if (!rolesWithDepartment.includes(role)) setDepartment('');
-                  // Clear college if role doesn't need it
                   if (rolesWithoutCollege.includes(role)) setCollege('');
                 }}
                 className={inputClass}
@@ -262,7 +325,6 @@ export default function SignupPage() {
               </select>
             </div>
 
-            {/* ✅ COLLEGE FIELD - Hidden for Chairman */}
             {!rolesWithoutCollege.includes(selectedRole) && (
               <div>
                 <label className="block text-sm font-medium text-gray-700">College *</label>
@@ -277,7 +339,6 @@ export default function SignupPage() {
               </div>
             )}
 
-            {/* ✅ DEPARTMENT ONLY FOR REQUESTER */}
             {rolesWithDepartment.includes(selectedRole) && (
               <div>
                 <label className="block text-sm font-medium text-gray-700">Department *</label>
@@ -295,9 +356,9 @@ export default function SignupPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-blue-700 hover:bg-blue-800 text-white py-3 rounded-lg font-medium shadow-md transition"
+              className="w-full bg-blue-700 hover:bg-blue-800 text-white py-3 rounded-lg font-medium shadow-md transition disabled:opacity-50"
             >
-              {loading ? 'Creating account...' : 'Sign Up'}
+              {loading ? 'Sending OTP...' : 'Continue'}
             </button>
           </form>
 
@@ -306,7 +367,7 @@ export default function SignupPage() {
               Already have an account?{' '}
               <button
                 onClick={() => router.push('/login')}
-                className="text-blue-600 font-medium"
+                className="text-blue-600 font-medium hover:text-blue-700"
               >
                 Sign in
               </button>

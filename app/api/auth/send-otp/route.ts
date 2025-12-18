@@ -1,0 +1,96 @@
+import { NextRequest, NextResponse } from 'next/server';
+import connectDB from '@/lib/mongodb';
+import User from '@/models/User';
+import { generateOTP, sendOTPEmail } from '@/lib/email';
+
+export async function POST(req: NextRequest) {
+  try {
+    await connectDB();
+
+    const { email, type } = await req.json(); // type: 'signup' or 'forgot-password'
+
+    // Validate input
+    if (!email || !type) {
+      return NextResponse.json(
+        { error: 'Email and type are required' },
+        { status: 400 }
+      );
+    }
+
+    if (type === 'signup') {
+      // For signup: Check if user already exists
+      const existingUser = await User.findOne({ email: email.toLowerCase() });
+      if (existingUser) {
+        return NextResponse.json(
+          { error: 'Email already registered' },
+          { status: 400 }
+        );
+      }
+
+      // Generate OTP for signup (we'll store it temporarily in session/state)
+      const otp = generateOTP();
+      
+      // Send OTP email
+      const emailSent = await sendOTPEmail(email, otp);
+
+      if (!emailSent) {
+        return NextResponse.json(
+          { error: 'Failed to send OTP email. Please try again.' },
+          { status: 500 }
+        );
+      }
+
+      return NextResponse.json({
+        message: 'OTP sent successfully',
+        email: email,
+        otp: otp, // Return OTP for frontend to store temporarily
+      });
+
+    } else if (type === 'forgot-password') {
+      // For forgot password: Check if user exists
+      const user = await User.findOne({ email: email.toLowerCase() });
+      if (!user) {
+        return NextResponse.json(
+          { error: 'No account found with this email' },
+          { status: 404 }
+        );
+      }
+
+      // Generate OTP
+      const otp = generateOTP();
+      const otpExpiry = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+
+      // Save OTP to user
+      user.otp = otp;
+      user.otpExpiry = otpExpiry;
+      await user.save();
+
+      // Send OTP email
+      const emailSent = await sendOTPEmail(user.email, otp, user.name);
+
+      if (!emailSent) {
+        return NextResponse.json(
+          { error: 'Failed to send OTP email. Please try again.' },
+          { status: 500 }
+        );
+      }
+
+      return NextResponse.json({
+        message: 'OTP sent successfully',
+        email: user.email,
+      });
+    }
+
+    return NextResponse.json(
+      { error: 'Invalid type' },
+      { status: 400 }
+    );
+
+  } catch (error) {
+    console.error('Send OTP error:', error);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}
