@@ -52,10 +52,10 @@ export const CreateRequestSchema = z.object({
   purpose: z.string().min(10, 'Purpose must be at least 10 characters'),
   college: z.string().min(1, 'College is required'),
   department: z.string().min(1, 'Department is required'),
-  costEstimate: z.number().min(1, 'Cost estimate must be greater than 0'),
-  expenseCategory: z.string().min(1, 'Expense category is required'),
+  costEstimate: z.number().optional(),
+  expenseCategory: z.string().optional().or(z.literal('')),
   sopReference: z.string().optional(),
-  attachments: z.array(z.string()).default([]),
+  attachments: z.array(z.string()).min(1, 'At least one document is required'),
 });
 
 export interface User {

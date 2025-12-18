@@ -3,7 +3,7 @@ import connectDB from '../../../../lib/mongodb';
 import Request from '../../../../models/Request';
 import User from '../../../../models/User';
 import { getCurrentUser } from '../../../../lib/auth';
-import { RequestStatus, UserRole } from '../../../../lib/types';
+import { RequestStatus, ActionType, UserRole } from '../../../../lib/types';
 import { filterRequestsByVisibility } from '../../../../lib/request-visibility';
 import mongoose from 'mongoose';
 
@@ -36,34 +36,84 @@ export async function GET() {
       .populate('history.actor', 'name email empId')
       .lean(); // Convert to plain objects
     
-    // Apply role-based visibility filtering
-    const visibleRequests = filterRequestsByVisibility(
-      allRequests, 
-      user.role as UserRole, 
-      dbUser._id.toString()
-    );
-
-    // Calculate stats based on user's involvement categories
-    const totalRequests = visibleRequests.length;
+    // For total requests: 
+    // - Requesters see only their own requests
+    // - Non-requesters see ALL requests that have ever been at their level (including approved ones)
+    let totalRequests: number;
+    let visibleRequests: any[];
     
-    const pendingRequests = visibleRequests.filter(req => 
-      req._visibility.category === 'pending'
-    ).length;
+    if (user.role === UserRole.REQUESTER) {
+      // Requesters see only their own requests
+      visibleRequests = allRequests.filter(req => 
+        req.requester._id?.toString() === dbUser._id.toString() || 
+        req.requester.toString() === dbUser._id.toString()
+      );
+      totalRequests = visibleRequests.length;
+    } else {
+      // Non-requesters: apply visibility filtering to get ALL requests at their level
+      visibleRequests = filterRequestsByVisibility(
+        allRequests, 
+        user.role as UserRole, 
+        dbUser._id.toString()
+      );
+      
+      // Total requests = all requests they can see (including approved/completed ones)
+      totalRequests = visibleRequests.length;
+    }
     
-    // Approved requests = only requests that have been fully approved by Chairman
-    const approvedRequests = visibleRequests.filter(req => 
-      req.status === RequestStatus.APPROVED
-    ).length;
+    // Calculate other stats based on role
+    let pendingRequests: number;
+    let approvedRequests: number;
+    let rejectedRequests: number;
+    let inProgressRequests: number;
     
-    const rejectedRequests = visibleRequests.filter(req => 
-      req.status === RequestStatus.REJECTED
-    ).length;
-
-    // Calculate in-progress requests for non-requesters
-    const inProgressRequests = user.role === UserRole.REQUESTER ? 0 : visibleRequests.filter(req => 
-      req._visibility.category === 'in_progress' && 
-      (req._visibility.userAction === 'approve' || req._visibility.userAction === 'clarify')
-    ).length;
+    if (user.role === UserRole.REQUESTER) {
+      // For requesters, use their own requests
+      pendingRequests = visibleRequests.filter(req => 
+        !['approved', 'rejected'].includes(req.status)
+      ).length;
+      
+      approvedRequests = visibleRequests.filter(req => 
+        req.status === RequestStatus.APPROVED
+      ).length;
+      
+      rejectedRequests = visibleRequests.filter(req => 
+        req.status === RequestStatus.REJECTED
+      ).length;
+      
+      inProgressRequests = 0; // Requesters don't have "in progress" concept
+    } else {
+      // For non-requesters, use visibility-filtered requests for all counts
+      // This ensures they only see requests that have been at their level
+      pendingRequests = visibleRequests.filter(req => 
+        req._visibility.category === 'pending'
+      ).length;
+      
+      // Approved: show requests they have approved (regardless of current status)
+      approvedRequests = visibleRequests.filter(req => 
+        req._visibility.category === 'approved'
+      ).length;
+      
+      // Rejected: show requests they approved but were later rejected by someone else
+      rejectedRequests = visibleRequests.filter(req => {
+        // Request must be rejected
+        if (req.status !== RequestStatus.REJECTED) return false;
+        
+        // Check if this user has approved this request in the history
+        const userHasApproved = req.history?.some((h: any) => 
+          (h.actor?._id?.toString() === dbUser._id.toString() || h.actor?.toString() === dbUser._id.toString()) &&
+          (h.action === ActionType.APPROVE || h.action === ActionType.FORWARD)
+        );
+        
+        return userHasApproved;
+      }).length;
+      
+      // In-progress: show requests they've been involved with
+      inProgressRequests = visibleRequests.filter(req => 
+        req._visibility.category === 'in_progress' && 
+        (req._visibility.userAction === 'approve' || req._visibility.userAction === 'clarify')
+      ).length;
+    }
 
     return NextResponse.json({
       totalRequests,

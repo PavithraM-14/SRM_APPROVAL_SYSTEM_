@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 interface Request {
   _id: string;
@@ -22,15 +22,33 @@ interface Request {
 
 export default function ApprovalsPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const statusFilter = searchParams.get('status'); // Get status from URL query
+  
   const [requests, setRequests] = useState<Request[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentUser, setCurrentUser] = useState<any>(null);
+  const [activeTab, setActiveTab] = useState<string>(statusFilter || 'pending');
 
   useEffect(() => {
     fetchCurrentUser();
-    fetchApprovals();
   }, []);
+
+  useEffect(() => {
+    if (currentUser) {
+      fetchApprovals(activeTab);
+    }
+  }, [currentUser, activeTab]);
+
+  // Update active tab when URL changes
+  useEffect(() => {
+    if (statusFilter) {
+      setActiveTab(statusFilter);
+    } else {
+      setActiveTab('pending'); // Default to pending if no status filter
+    }
+  }, [statusFilter]);
 
   const fetchCurrentUser = async () => {
     console.log('[DEBUG] fetchCurrentUser called in approvals page');
@@ -45,44 +63,55 @@ export default function ApprovalsPage() {
         
         // Redirect requesters to their requests page
         if (userData.role === 'requester') {
-          console.log('[DEBUG] User is requester, but allowing access for testing');
-          // Temporarily comment out redirect for testing
-          // router.push('/dashboard/requests');
-          // return;
+          router.push('/dashboard/requests');
+          return;
         }
-        
-        console.log('[DEBUG] User is not requester, proceeding with approvals page');
       }
     } catch (err) {
       console.error('Error fetching current user:', err);
     }
   };
 
-  const fetchApprovals = async () => {
-    console.log('[DEBUG] fetchApprovals called');
+  const fetchApprovals = async (status: string = 'pending') => {
+    console.log('[DEBUG] fetchApprovals called with status:', status);
     try {
       setLoading(true);
       setError(null);
       
-      console.log('[DEBUG] Making request to /api/approvals');
-      const response = await fetch('/api/approvals', {
+      // Build URL with status filter
+      const url = `/api/approvals?status=${status}`;
+      
+      console.log('[DEBUG] Making request to:', url);
+      const response = await fetch(url, {
         credentials: 'include'
       });
       
       console.log('[DEBUG] Response status:', response.status);
       
       if (!response.ok) {
-        throw new Error('Failed to fetch pending approvals');
+        throw new Error('Failed to fetch approvals');
       }
 
       const data = await response.json();
       console.log('[DEBUG] Response data:', data);
+      console.log('[DEBUG] Number of requests received:', data.requests?.length || 0);
+      console.log('[DEBUG] Filter used:', data.filter);
       setRequests(data.requests || []);
     } catch (err) {
       console.error('Error fetching approvals:', err);
       setError(err instanceof Error ? err.message : 'Failed to load approvals');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleTabChange = (tab: string) => {
+    setActiveTab(tab);
+    // Update URL without page reload
+    if (tab === 'pending') {
+      router.push('/dashboard/approvals');
+    } else {
+      router.push(`/dashboard/approvals?status=${tab}`);
     }
   };
 
@@ -109,6 +138,32 @@ export default function ApprovalsPage() {
     return status.replace(/_/g, ' ').toUpperCase();
   };
 
+  const getPageTitle = () => {
+    switch (activeTab) {
+      case 'all':
+        return 'All Requests';
+      case 'approved':
+        return 'Approved Requests';
+      case 'rejected':
+        return 'Rejected Requests';
+      default:
+        return 'Pending Approvals';
+    }
+  };
+
+  const getPageDescription = () => {
+    switch (activeTab) {
+      case 'all':
+        return 'All requests you have been involved with (pending + approved by you + in progress)';
+      case 'approved':
+        return 'Requests that you have approved (regardless of current status)';
+      case 'rejected':
+        return 'Requests you approved but were later rejected by someone else';
+      default:
+        return 'Requests waiting for your approval';
+    }
+  };
+
   if (loading || !currentUser) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -117,29 +172,9 @@ export default function ApprovalsPage() {
     );
   }
 
-  // Show access denied for requesters (temporarily disabled for testing)
+  // Redirect requesters
   if (currentUser.role === 'requester') {
-    console.log('[DEBUG] Requester accessing approvals page - allowing for testing');
-    // Temporarily allow requesters to see approvals page for testing
-    /*
-    return (
-      <div className="max-w-4xl mx-auto p-4 sm:p-6">
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 text-center">
-          <svg className="mx-auto h-12 w-12 text-blue-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-          </svg>
-          <h3 className="text-lg font-medium text-blue-800 mb-2">Redirecting to Your Requests</h3>
-          <p className="text-blue-700 mb-4">As a requester, you should view your submitted requests instead of approvals.</p>
-          <button
-            onClick={() => router.push('/dashboard/requests')}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-          >
-            Go to My Requests
-          </button>
-        </div>
-      </div>
-    );
-    */
+    return null; // Will redirect in useEffect
   }
 
   return (
@@ -148,10 +183,10 @@ export default function ApprovalsPage() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 sm:mb-8 gap-4">
         <div className="min-w-0 flex-1">
           <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900">
-            Pending Approvals
+            {getPageTitle()}
           </h1>
           <p className="text-sm sm:text-base text-gray-600 mt-1">
-            Requests waiting for your approval
+            {getPageDescription()}
           </p>
           {currentUser && (
             <p className="text-xs sm:text-sm text-gray-500 mt-1">
@@ -162,13 +197,59 @@ export default function ApprovalsPage() {
 
         <div className="flex gap-2 sm:gap-3 flex-shrink-0">
           <button
-            onClick={fetchApprovals}
+            onClick={() => fetchApprovals(activeTab)}
             className="px-3 sm:px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 text-gray-700 shadow-sm transition text-sm sm:text-base active:scale-95"
           >
             <span className="hidden sm:inline">Refresh</span>
             <span className="sm:hidden">↻</span>
           </button>
         </div>
+      </div>
+
+      {/* Tab Navigation */}
+      <div className="mb-6 border-b border-gray-200">
+        <nav className="flex gap-4 overflow-x-auto">
+          <button
+            onClick={() => handleTabChange('all')}
+            className={`pb-3 px-1 border-b-2 font-medium text-sm whitespace-nowrap transition ${
+              activeTab === 'all'
+                ? 'border-blue-600 text-blue-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            }`}
+          >
+            All Requests
+          </button>
+          <button
+            onClick={() => handleTabChange('pending')}
+            className={`pb-3 px-1 border-b-2 font-medium text-sm whitespace-nowrap transition ${
+              activeTab === 'pending'
+                ? 'border-blue-600 text-blue-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            }`}
+          >
+            Pending
+          </button>
+          <button
+            onClick={() => handleTabChange('approved')}
+            className={`pb-3 px-1 border-b-2 font-medium text-sm whitespace-nowrap transition ${
+              activeTab === 'approved'
+                ? 'border-blue-600 text-blue-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            }`}
+          >
+            Approved
+          </button>
+          <button
+            onClick={() => handleTabChange('rejected')}
+            className={`pb-3 px-1 border-b-2 font-medium text-sm whitespace-nowrap transition ${
+              activeTab === 'rejected'
+                ? 'border-blue-600 text-blue-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            }`}
+          >
+            Rejected
+          </button>
+        </nav>
       </div>
 
       {/* Error Message */}
@@ -192,10 +273,13 @@ export default function ApprovalsPage() {
             />
           </svg>
           <h3 className="mt-4 text-base sm:text-lg font-semibold text-gray-900">
-            No pending approvals
+            No {activeTab === 'all' ? '' : activeTab} requests found
           </h3>
           <p className="text-sm sm:text-base text-gray-500 mt-1">
-            You don't have any requests waiting for your approval at the moment.
+            {activeTab === 'pending' 
+              ? "You don't have any requests waiting for your approval at the moment."
+              : `No ${activeTab} requests to display.`
+            }
           </p>
         </div>
       ) : (
@@ -204,7 +288,7 @@ export default function ApprovalsPage() {
           {/* Results Summary */}
           <div className="mb-4 pb-4 border-b border-gray-200">
             <p className="text-xs sm:text-sm text-gray-600">
-              {requests.length} request{requests.length !== 1 ? 's' : ''} waiting for your approval
+              {requests.length} request{requests.length !== 1 ? 's' : ''} found
             </p>
           </div>
 
@@ -229,11 +313,6 @@ export default function ApprovalsPage() {
                     </div>
 
                     <div className="flex flex-wrap gap-2 items-center justify-between sm:justify-end flex-shrink-0">
-                      {/* Pending approval badge */}
-                      <span className="px-2 py-1 rounded-full bg-yellow-100 text-yellow-700 text-xs font-medium whitespace-nowrap">
-                        ⏳ Awaiting Your Approval
-                      </span>
-                      
                       <span className="px-2 sm:px-3 py-1 rounded-full bg-green-100 text-green-700 text-xs font-semibold whitespace-nowrap">
                         ₹{request.costEstimate.toLocaleString()}
                       </span>

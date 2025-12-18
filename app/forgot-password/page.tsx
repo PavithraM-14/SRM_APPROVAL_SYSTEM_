@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Image from 'next/image';
+import SRMRMP_Logo from '../assets/SRMRMP_LOGO.png';
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
@@ -33,6 +35,22 @@ export default function ForgotPasswordPage() {
     <div className="min-h-screen flex items-center justify-center bg-blue-50 px-4">
       <div className="bg-white p-8 rounded-2xl shadow-xl max-w-md w-full">
 
+        {/* LOGO + SYSTEM TITLE */}
+                <div className="flex flex-col items-center text-center">
+                  <Image
+                    src={SRMRMP_Logo}
+                    alt="SRM Logo"
+                    width={90}
+                    height={90}
+                    className="mb-4"
+                    priority
+                  />
+                  <h1 className="text-3xl font-extrabold text-gray-900 drop-shadow-sm">
+                    SRM-RMP Approval System
+
+                  </h1>
+                </div>
+
         <h2 className="text-3xl font-bold text-center text-gray-900">
           Forgot Password
         </h2>
@@ -52,7 +70,7 @@ export default function ForgotPasswordPage() {
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="name@example.com"
+              placeholder="name@srmrmp.edu.in"
               className="mt-1 w-full border border-gray-300 rounded-lg px-3 py-2"
             />
           </div>

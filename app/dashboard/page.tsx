@@ -40,36 +40,58 @@ export default function DashboardPage() {
 
   const handleStatsCardClick = (cardName: string) => {
     // Route based on user role
-    const basePath = currentUser?.role === 'requester' ? '/dashboard/requests' : '/dashboard/approvals';
+    const isRequester = currentUser?.role === 'requester';
+    
+    console.log('[DEBUG] Stats card clicked:', {
+      cardName,
+      userRole: currentUser?.role,
+      isRequester
+    });
     
     switch (cardName) {
       case 'Total Requests':
-        router.push(basePath);
+        if (isRequester) {
+          router.push('/dashboard/requests');
+        } else {
+          router.push('/dashboard/approvals?status=all');
+        }
         break;
+        
       case 'Pending':
-        if (currentUser?.role === 'requester') {
+        if (isRequester) {
           router.push('/dashboard/requests?status=pending');
         } else {
-          router.push('/dashboard/approvals'); // Approvers see all their pending approvals
+          router.push('/dashboard/approvals?status=pending');
         }
         break;
-      case 'Approved':
         
+      case 'Approved':
+        if (isRequester) {
           router.push('/dashboard/requests?status=approved');
+        } else {
+          router.push('/dashboard/approvals?status=approved');
+        }
         break;
+        
       case 'Rejected':
-        if (currentUser?.role === 'requester') {
+        if (isRequester) {
           router.push('/dashboard/requests?status=rejected');
         } else {
-          router.push('/dashboard/approvals'); // Approvers don't filter by rejected
+          router.push('/dashboard/approvals?status=rejected');
         }
         break;
+        
       case 'In Progress':
       case 'My Involvement':
         router.push('/dashboard/in-progress');
         break;
+        
       default:
-        router.push(basePath);
+        if (isRequester) {
+          router.push('/dashboard/requests');
+        } else {
+          router.push('/dashboard/approvals');
+        }
     }
   };
 
@@ -81,7 +103,7 @@ export default function DashboardPage() {
       icon: ClipboardDocumentListIcon,
       color: 'text-blue-600',
       bgColor: 'bg-blue-100',
-      description: currentUser?.role === 'requester' ? 'View all my requests' : 'View all system requests',
+      description: currentUser?.role === 'requester' ? 'View all my requests' : 'View all requests forwarded to you (pending + approved by you)',
     },
     {
       name: 'Pending',
@@ -97,7 +119,7 @@ export default function DashboardPage() {
       icon: CheckCircleIcon,
       color: 'text-green-600',
       bgColor: 'bg-green-100',
-      description: currentUser?.role === 'requester' ? 'View my fully approved requests' : 'View fully approved requests (Chairman approved)',
+      description: currentUser?.role === 'requester' ? 'View my fully approved requests (Chairman approved)' : 'View requests you have approved',
     },
     {
       name: 'Rejected',
@@ -105,7 +127,7 @@ export default function DashboardPage() {
       icon: ExclamationTriangleIcon,
       color: 'text-red-600',
       bgColor: 'bg-red-100',
-      description: currentUser?.role === 'requester' ? 'View my rejected requests' : 'View rejected requests',
+      description: currentUser?.role === 'requester' ? 'View my rejected requests' : 'View requests you approved but were later rejected',
     },
   ];
 

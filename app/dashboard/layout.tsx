@@ -15,6 +15,8 @@ import {
 } from '@heroicons/react/24/outline';
 import { UserRole } from '../../lib/types';
 import { AuthUser } from '../../lib/auth';
+import Image from "next/image";
+import SRMRMP_Logo from "../assets/SRMRMP_LOGO.png"; 
 
 interface NavItem {
   name: string;
@@ -83,7 +85,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <div className="hidden lg:flex lg:w-64 lg:flex-col lg:fixed lg:inset-y-0">
         <div className="flex flex-col flex-grow bg-blue-600 pt-5 pb-4">
           <div className="px-4 text-white text-lg font-semibold">
-            SRM-RMP Approval
+            SRM-RMP 
           </div>
           <nav className="mt-6 px-2 space-y-1">
             {filteredNavigation.map(item => (
@@ -101,12 +103,24 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       </div>
 
       {/* Main */}
-      <div className="lg:pl-64 flex flex-col flex-1">
-        {/* HEADER */}
-        <div className="flex h-14 sm:h-16 bg-white border-b border-gray-200 items-center justify-between px-4">
+<div className="lg:pl-64 flex flex-col flex-1">
+  {/* HEADER */}
+  <div className="flex h-14 sm:h-16 bg-white border-b border-gray-200 items-center justify-between px-4">
 
-          {/* LEFT (empty / menu space) */}
-          <div />
+    {/* LEFT : Logo + Title */}
+    <div className="flex items-center gap-3">
+      <Image
+        src={SRMRMP_Logo}
+        alt="SRM Logo"
+        width={50}
+        height={50}
+        priority
+      />
+
+      <span className="text-lg font-semibold text-gray-800 hidden sm:block">
+        SRM-RMP Approval System
+      </span>
+    </div>
 
           {/* RIGHT */}
           <div className="flex items-center gap-3">

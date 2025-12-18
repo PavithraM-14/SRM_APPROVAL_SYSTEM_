@@ -44,10 +44,10 @@ async function seed() {
       const plainPassword = 'password123'; // Default password for all users
       
       const user = await User.create({
-        email: `${role}@srm.edu`,
+        email: `${role}@srmrmp.edu.in`, // Updated to use correct domain
         name: getRoleDisplayName(role),
         empId: `EMP${role.toUpperCase()}`, // Add employee ID
-        contactNo: `+91-${contactCounter}`, // Add contact number
+        contactNo: `+91 ${contactCounter.toString().slice(-10)}`, // Format contact number correctly
         password: plainPassword, // Pass plain password - model will hash it
         role,
         college: colleges[0],
@@ -100,42 +100,592 @@ async function seed() {
 
     console.log(`✅ Created ${sopRecords.length} SOP records`);
 
-    // Create sample requests
+    // Create sample requests with realistic workflow scenarios
     const requester = users.find(u => u.role === UserRole.REQUESTER);
     const manager = users.find(u => u.role === UserRole.INSTITUTION_MANAGER);
+    const sopVerifier = users.find(u => u.role === UserRole.SOP_VERIFIER);
+    const accountant = users.find(u => u.role === UserRole.ACCOUNTANT);
+    const vp = users.find(u => u.role === UserRole.VP);
+    const hoi = users.find(u => u.role === UserRole.HEAD_OF_INSTITUTION);
+    const dean = users.find(u => u.role === UserRole.DEAN);
+    const chiefDirector = users.find(u => u.role === UserRole.CHIEF_DIRECTOR);
+    const chairman = users.find(u => u.role === UserRole.CHAIRMAN);
     
-    if (requester && manager) {
+    if (requester && manager && sopVerifier && accountant && vp && dean && chairman) {
       const requests = [];
       
-      for (let i = 0; i < 10; i++) {
-        const request = await Request.create({
-          title: `Sample Request ${i + 1}`,
-          purpose: `This is a sample request for ${expenseCategories[i % expenseCategories.length]} purposes. It demonstrates the approval workflow system.`,
-          college: colleges[i % colleges.length],
-          department: departments[i % departments.length],
-          costEstimate: Math.floor(Math.random() * 100000) + 5000,
-          expenseCategory: expenseCategories[i % expenseCategories.length],
-          sopReference: sopRecords[i % sopRecords.length].code,
-          attachments: [],
-          requester: requester._id,
-          status: getRandomStatus(),
-          history: [{
+      // Scenario 1: Fully approved request (Chairman approved)
+      const approvedRequest = await Request.create({
+        title: 'New Laboratory Equipment Purchase',
+        purpose: 'Purchase of advanced laboratory equipment for Computer Science department to enhance research capabilities and student learning experience.',
+        college: colleges[0],
+        department: departments[0],
+        costEstimate: 250000,
+        expenseCategory: 'Equipment',
+        sopReference: sopRecords[0].code,
+        attachments: [],
+        requester: requester._id,
+        status: RequestStatus.APPROVED,
+        history: [
+          {
             action: ActionType.CREATE,
             actor: requester._id,
-            timestamp: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000), // Random date within last 30 days
-          }],
-        });
-        requests.push(request);
-      }
+            timestamp: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000),
+            newStatus: RequestStatus.MANAGER_REVIEW,
+            notes: 'Request created and forwarded to manager'
+          },
+          {
+            action: ActionType.FORWARD,
+            actor: manager._id,
+            timestamp: new Date(Date.now() - 19 * 24 * 60 * 60 * 1000),
+            newStatus: RequestStatus.PARALLEL_VERIFICATION,
+            notes: 'Forwarded for parallel verification'
+          },
+          {
+            action: ActionType.APPROVE,
+            actor: sopVerifier._id,
+            timestamp: new Date(Date.now() - 18 * 24 * 60 * 60 * 1000),
+            newStatus: RequestStatus.SOP_COMPLETED,
+            notes: 'SOP verification completed'
+          },
+          {
+            action: ActionType.APPROVE,
+            actor: accountant._id,
+            timestamp: new Date(Date.now() - 17 * 24 * 60 * 60 * 1000),
+            newStatus: RequestStatus.MANAGER_REVIEW,
+            notes: 'Budget verification completed, returning to manager'
+          },
+          {
+            action: ActionType.FORWARD,
+            actor: manager._id,
+            timestamp: new Date(Date.now() - 16 * 24 * 60 * 60 * 1000),
+            newStatus: RequestStatus.VP_APPROVAL,
+            notes: 'Budget available, forwarded to VP'
+          },
+          {
+            action: ActionType.APPROVE,
+            actor: vp._id,
+            timestamp: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000),
+            newStatus: RequestStatus.HOI_APPROVAL,
+            notes: 'VP approved, forwarded to HOI'
+          },
+          {
+            action: ActionType.APPROVE,
+            actor: hoi._id,
+            timestamp: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000),
+            newStatus: RequestStatus.DEAN_REVIEW,
+            notes: 'HOI approved, forwarded to Dean'
+          },
+          {
+            action: ActionType.APPROVE,
+            actor: dean._id,
+            timestamp: new Date(Date.now() - 13 * 24 * 60 * 60 * 1000),
+            newStatus: RequestStatus.CHIEF_DIRECTOR_APPROVAL,
+            notes: 'Dean approved, forwarded to Chief Director'
+          },
+          {
+            action: ActionType.APPROVE,
+            actor: chiefDirector._id,
+            timestamp: new Date(Date.now() - 12 * 24 * 60 * 60 * 1000),
+            newStatus: RequestStatus.CHAIRMAN_APPROVAL,
+            notes: 'Chief Director approved, forwarded to Chairman'
+          },
+          {
+            action: ActionType.APPROVE,
+            actor: chairman._id,
+            timestamp: new Date(Date.now() - 11 * 24 * 60 * 60 * 1000),
+            newStatus: RequestStatus.APPROVED,
+            notes: 'Final approval granted by Chairman'
+          }
+        ]
+      });
+      requests.push(approvedRequest);
 
-      console.log(`✅ Created ${requests.length} sample requests`);
+      // Scenario 2: Request rejected by VP (after manager and verifiers approved)
+      const rejectedByVP = await Request.create({
+        title: 'Software License Renewal',
+        purpose: 'Annual renewal of software licenses for development tools used in Computer Science curriculum.',
+        college: colleges[0],
+        department: departments[0],
+        costEstimate: 150000,
+        expenseCategory: 'Software',
+        sopReference: sopRecords[1].code,
+        attachments: [],
+        requester: requester._id,
+        status: RequestStatus.REJECTED,
+        history: [
+          {
+            action: ActionType.CREATE,
+            actor: requester._id,
+            timestamp: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000),
+            newStatus: RequestStatus.MANAGER_REVIEW,
+            notes: 'Request created and forwarded to manager'
+          },
+          {
+            action: ActionType.FORWARD,
+            actor: manager._id,
+            timestamp: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000),
+            newStatus: RequestStatus.PARALLEL_VERIFICATION,
+            notes: 'Forwarded for parallel verification'
+          },
+          {
+            action: ActionType.APPROVE,
+            actor: sopVerifier._id,
+            timestamp: new Date(Date.now() - 13 * 24 * 60 * 60 * 1000),
+            newStatus: RequestStatus.SOP_COMPLETED,
+            notes: 'SOP verification completed'
+          },
+          {
+            action: ActionType.APPROVE,
+            actor: accountant._id,
+            timestamp: new Date(Date.now() - 12 * 24 * 60 * 60 * 1000),
+            newStatus: RequestStatus.MANAGER_REVIEW,
+            notes: 'Budget verification completed'
+          },
+          {
+            action: ActionType.FORWARD,
+            actor: manager._id,
+            timestamp: new Date(Date.now() - 11 * 24 * 60 * 60 * 1000),
+            newStatus: RequestStatus.VP_APPROVAL,
+            notes: 'Forwarded to VP for approval'
+          },
+          {
+            action: ActionType.REJECT,
+            actor: vp._id,
+            timestamp: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000),
+            newStatus: RequestStatus.REJECTED,
+            notes: 'Request rejected due to budget constraints and alternative solutions available'
+          }
+        ]
+      });
+      requests.push(rejectedByVP);
+
+      // Scenario 3: Request rejected by Dean (after multiple approvals)
+      const rejectedByDean = await Request.create({
+        title: 'Conference Travel Request',
+        purpose: 'Travel expenses for attending international conference on Machine Learning and AI.',
+        college: colleges[0],
+        department: departments[0],
+        costEstimate: 180000,
+        expenseCategory: 'Travel',
+        sopReference: sopRecords[2].code,
+        attachments: [],
+        requester: requester._id,
+        status: RequestStatus.REJECTED,
+        history: [
+          {
+            action: ActionType.CREATE,
+            actor: requester._id,
+            timestamp: new Date(Date.now() - 18 * 24 * 60 * 60 * 1000),
+            newStatus: RequestStatus.MANAGER_REVIEW,
+            notes: 'Request created and forwarded to manager'
+          },
+          {
+            action: ActionType.FORWARD,
+            actor: manager._id,
+            timestamp: new Date(Date.now() - 17 * 24 * 60 * 60 * 1000),
+            newStatus: RequestStatus.PARALLEL_VERIFICATION,
+            notes: 'Forwarded for parallel verification'
+          },
+          {
+            action: ActionType.APPROVE,
+            actor: sopVerifier._id,
+            timestamp: new Date(Date.now() - 16 * 24 * 60 * 60 * 1000),
+            newStatus: RequestStatus.SOP_COMPLETED,
+            notes: 'SOP verification completed'
+          },
+          {
+            action: ActionType.APPROVE,
+            actor: accountant._id,
+            timestamp: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000),
+            newStatus: RequestStatus.MANAGER_REVIEW,
+            notes: 'Budget verification completed'
+          },
+          {
+            action: ActionType.FORWARD,
+            actor: manager._id,
+            timestamp: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000),
+            newStatus: RequestStatus.DEAN_REVIEW,
+            notes: 'Budget not available, forwarded directly to Dean'
+          },
+          {
+            action: ActionType.REJECT,
+            actor: dean._id,
+            timestamp: new Date(Date.now() - 13 * 24 * 60 * 60 * 1000),
+            newStatus: RequestStatus.REJECTED,
+            notes: 'Travel request rejected due to current travel restrictions and budget limitations'
+          }
+        ]
+      });
+      requests.push(rejectedByDean);
+
+      // Scenario 4: Currently pending at manager level
+      const pendingAtManager = await Request.create({
+        title: 'Infrastructure Upgrade Project',
+        purpose: 'Upgrade of network infrastructure in Engineering building to support increased bandwidth requirements.',
+        college: colleges[0],
+        department: departments[1],
+        costEstimate: 500000,
+        expenseCategory: 'Infrastructure',
+        sopReference: sopRecords[3].code,
+        attachments: [],
+        requester: requester._id,
+        status: RequestStatus.MANAGER_REVIEW,
+        history: [
+          {
+            action: ActionType.CREATE,
+            actor: requester._id,
+            timestamp: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
+            newStatus: RequestStatus.MANAGER_REVIEW,
+            notes: 'Request created and forwarded to manager for review'
+          }
+        ]
+      });
+      requests.push(pendingAtManager);
+
+      // Scenario 5: Currently in parallel verification
+      const inParallelVerification = await Request.create({
+        title: 'Training Program for Faculty',
+        purpose: 'Professional development training program for faculty members on latest teaching methodologies.',
+        college: colleges[1],
+        department: departments[2],
+        costEstimate: 120000,
+        expenseCategory: 'Training',
+        sopReference: sopRecords[4].code,
+        attachments: [],
+        requester: requester._id,
+        status: RequestStatus.PARALLEL_VERIFICATION,
+        history: [
+          {
+            action: ActionType.CREATE,
+            actor: requester._id,
+            timestamp: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000),
+            newStatus: RequestStatus.MANAGER_REVIEW,
+            notes: 'Request created and forwarded to manager'
+          },
+          {
+            action: ActionType.FORWARD,
+            actor: manager._id,
+            timestamp: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+            newStatus: RequestStatus.PARALLEL_VERIFICATION,
+            notes: 'Manager approved, forwarded for parallel verification'
+          }
+        ]
+      });
+      requests.push(inParallelVerification);
+
+      // Scenario 6: Manager approved, now at VP level
+      const atVPLevel = await Request.create({
+        title: 'Research Equipment Purchase',
+        purpose: 'Purchase of specialized research equipment for advanced materials testing laboratory.',
+        college: colleges[1],
+        department: departments[1],
+        costEstimate: 350000,
+        expenseCategory: 'Equipment',
+        sopReference: sopRecords[0].code,
+        attachments: [],
+        requester: requester._id,
+        status: RequestStatus.VP_APPROVAL,
+        history: [
+          {
+            action: ActionType.CREATE,
+            actor: requester._id,
+            timestamp: new Date(Date.now() - 12 * 24 * 60 * 60 * 1000),
+            newStatus: RequestStatus.MANAGER_REVIEW,
+            notes: 'Request created and forwarded to manager'
+          },
+          {
+            action: ActionType.FORWARD,
+            actor: manager._id,
+            timestamp: new Date(Date.now() - 11 * 24 * 60 * 60 * 1000),
+            newStatus: RequestStatus.PARALLEL_VERIFICATION,
+            notes: 'Forwarded for parallel verification'
+          },
+          {
+            action: ActionType.APPROVE,
+            actor: sopVerifier._id,
+            timestamp: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000),
+            newStatus: RequestStatus.SOP_COMPLETED,
+            notes: 'SOP verification completed'
+          },
+          {
+            action: ActionType.APPROVE,
+            actor: accountant._id,
+            timestamp: new Date(Date.now() - 9 * 24 * 60 * 60 * 1000),
+            newStatus: RequestStatus.MANAGER_REVIEW,
+            notes: 'Budget verification completed'
+          },
+          {
+            action: ActionType.FORWARD,
+            actor: manager._id,
+            timestamp: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000),
+            newStatus: RequestStatus.VP_APPROVAL,
+            notes: 'Budget available, forwarded to VP for approval'
+          }
+        ]
+      });
+      requests.push(atVPLevel);
+
+      // Scenario 7: At Dean level
+      const atDeanLevel = await Request.create({
+        title: 'Library Book Collection Expansion',
+        purpose: 'Purchase of new books and digital resources for the central library to support curriculum updates.',
+        college: colleges[2],
+        department: departments[3],
+        costEstimate: 80000,
+        expenseCategory: 'Equipment',
+        sopReference: sopRecords[1].code,
+        attachments: [],
+        requester: requester._id,
+        status: RequestStatus.DEAN_REVIEW,
+        history: [
+          {
+            action: ActionType.CREATE,
+            actor: requester._id,
+            timestamp: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000),
+            newStatus: RequestStatus.MANAGER_REVIEW,
+            notes: 'Request created and forwarded to manager'
+          },
+          {
+            action: ActionType.FORWARD,
+            actor: manager._id,
+            timestamp: new Date(Date.now() - 9 * 24 * 60 * 60 * 1000),
+            newStatus: RequestStatus.PARALLEL_VERIFICATION,
+            notes: 'Forwarded for parallel verification'
+          },
+          {
+            action: ActionType.APPROVE,
+            actor: sopVerifier._id,
+            timestamp: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000),
+            newStatus: RequestStatus.SOP_COMPLETED,
+            notes: 'SOP verification completed'
+          },
+          {
+            action: ActionType.APPROVE,
+            actor: accountant._id,
+            timestamp: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+            newStatus: RequestStatus.MANAGER_REVIEW,
+            notes: 'Budget verification completed'
+          },
+          {
+            action: ActionType.FORWARD,
+            actor: manager._id,
+            timestamp: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000),
+            newStatus: RequestStatus.DEAN_REVIEW,
+            notes: 'Budget not available, forwarded directly to Dean'
+          }
+        ]
+      });
+      requests.push(atDeanLevel);
+
+      // Scenario 8: Another fully approved request
+      const anotherApproved = await Request.create({
+        title: 'Student Lab Setup',
+        purpose: 'Setup of new student laboratory with modern equipment for hands-on learning experience.',
+        college: colleges[1],
+        department: departments[0],
+        costEstimate: 200000,
+        expenseCategory: 'Equipment',
+        sopReference: sopRecords[2].code,
+        attachments: [],
+        requester: requester._id,
+        status: RequestStatus.APPROVED,
+        history: [
+          {
+            action: ActionType.CREATE,
+            actor: requester._id,
+            timestamp: new Date(Date.now() - 25 * 24 * 60 * 60 * 1000),
+            newStatus: RequestStatus.MANAGER_REVIEW,
+            notes: 'Request created and forwarded to manager'
+          },
+          {
+            action: ActionType.FORWARD,
+            actor: manager._id,
+            timestamp: new Date(Date.now() - 24 * 24 * 60 * 60 * 1000),
+            newStatus: RequestStatus.PARALLEL_VERIFICATION,
+            notes: 'Forwarded for parallel verification'
+          },
+          {
+            action: ActionType.APPROVE,
+            actor: sopVerifier._id,
+            timestamp: new Date(Date.now() - 23 * 24 * 60 * 60 * 1000),
+            newStatus: RequestStatus.SOP_COMPLETED,
+            notes: 'SOP verification completed'
+          },
+          {
+            action: ActionType.APPROVE,
+            actor: accountant._id,
+            timestamp: new Date(Date.now() - 22 * 24 * 60 * 60 * 1000),
+            newStatus: RequestStatus.MANAGER_REVIEW,
+            notes: 'Budget verification completed'
+          },
+          {
+            action: ActionType.FORWARD,
+            actor: manager._id,
+            timestamp: new Date(Date.now() - 21 * 24 * 60 * 60 * 1000),
+            newStatus: RequestStatus.DEAN_REVIEW,
+            notes: 'Budget not available, forwarded to Dean'
+          },
+          {
+            action: ActionType.APPROVE,
+            actor: dean._id,
+            timestamp: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000),
+            newStatus: RequestStatus.CHIEF_DIRECTOR_APPROVAL,
+            notes: 'Dean approved, forwarded to Chief Director'
+          },
+          {
+            action: ActionType.APPROVE,
+            actor: chiefDirector._id,
+            timestamp: new Date(Date.now() - 19 * 24 * 60 * 60 * 1000),
+            newStatus: RequestStatus.CHAIRMAN_APPROVAL,
+            notes: 'Chief Director approved, forwarded to Chairman'
+          },
+          {
+            action: ActionType.APPROVE,
+            actor: chairman._id,
+            timestamp: new Date(Date.now() - 18 * 24 * 60 * 60 * 1000),
+            newStatus: RequestStatus.APPROVED,
+            notes: 'Final approval granted by Chairman'
+          }
+        ]
+      });
+      requests.push(anotherApproved);
+
+      // Scenario 9: Request rejected at manager level
+      const rejectedByManager = await Request.create({
+        title: 'Unnecessary Equipment Purchase',
+        purpose: 'Purchase of equipment that duplicates existing functionality in the department.',
+        college: colleges[0],
+        department: departments[2],
+        costEstimate: 75000,
+        expenseCategory: 'Equipment',
+        sopReference: sopRecords[3].code,
+        attachments: [],
+        requester: requester._id,
+        status: RequestStatus.REJECTED,
+        history: [
+          {
+            action: ActionType.CREATE,
+            actor: requester._id,
+            timestamp: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000),
+            newStatus: RequestStatus.MANAGER_REVIEW,
+            notes: 'Request created and forwarded to manager'
+          },
+          {
+            action: ActionType.REJECT,
+            actor: manager._id,
+            timestamp: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
+            newStatus: RequestStatus.REJECTED,
+            notes: 'Request rejected as similar equipment already exists and is underutilized'
+          }
+        ]
+      });
+      requests.push(rejectedByManager);
+
+      // Scenario 10: Currently at Chairman level
+      const atChairmanLevel = await Request.create({
+        title: 'Major Infrastructure Overhaul',
+        purpose: 'Complete overhaul of campus infrastructure including electrical, plumbing, and network systems.',
+        college: colleges[2],
+        department: departments[2],
+        costEstimate: 2000000,
+        expenseCategory: 'Infrastructure',
+        sopReference: sopRecords[4].code,
+        attachments: [],
+        requester: requester._id,
+        status: RequestStatus.CHAIRMAN_APPROVAL,
+        history: [
+          {
+            action: ActionType.CREATE,
+            actor: requester._id,
+            timestamp: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+            newStatus: RequestStatus.MANAGER_REVIEW,
+            notes: 'Request created and forwarded to manager'
+          },
+          {
+            action: ActionType.FORWARD,
+            actor: manager._id,
+            timestamp: new Date(Date.now() - 29 * 24 * 60 * 60 * 1000),
+            newStatus: RequestStatus.PARALLEL_VERIFICATION,
+            notes: 'Forwarded for parallel verification'
+          },
+          {
+            action: ActionType.APPROVE,
+            actor: sopVerifier._id,
+            timestamp: new Date(Date.now() - 28 * 24 * 60 * 60 * 1000),
+            newStatus: RequestStatus.SOP_COMPLETED,
+            notes: 'SOP verification completed'
+          },
+          {
+            action: ActionType.APPROVE,
+            actor: accountant._id,
+            timestamp: new Date(Date.now() - 27 * 24 * 60 * 60 * 1000),
+            newStatus: RequestStatus.MANAGER_REVIEW,
+            notes: 'Budget verification completed'
+          },
+          {
+            action: ActionType.FORWARD,
+            actor: manager._id,
+            timestamp: new Date(Date.now() - 26 * 24 * 60 * 60 * 1000),
+            newStatus: RequestStatus.VP_APPROVAL,
+            notes: 'High value request, forwarded to VP'
+          },
+          {
+            action: ActionType.APPROVE,
+            actor: vp._id,
+            timestamp: new Date(Date.now() - 25 * 24 * 60 * 60 * 1000),
+            newStatus: RequestStatus.HOI_APPROVAL,
+            notes: 'VP approved, forwarded to HOI'
+          },
+          {
+            action: ActionType.APPROVE,
+            actor: hoi._id,
+            timestamp: new Date(Date.now() - 24 * 24 * 60 * 60 * 1000),
+            newStatus: RequestStatus.DEAN_REVIEW,
+            notes: 'HOI approved, forwarded to Dean'
+          },
+          {
+            action: ActionType.APPROVE,
+            actor: dean._id,
+            timestamp: new Date(Date.now() - 23 * 24 * 60 * 60 * 1000),
+            newStatus: RequestStatus.CHIEF_DIRECTOR_APPROVAL,
+            notes: 'Dean approved, forwarded to Chief Director'
+          },
+          {
+            action: ActionType.APPROVE,
+            actor: chiefDirector._id,
+            timestamp: new Date(Date.now() - 22 * 24 * 60 * 60 * 1000),
+            newStatus: RequestStatus.CHAIRMAN_APPROVAL,
+            notes: 'Chief Director approved, awaiting final Chairman approval'
+          }
+        ]
+      });
+      requests.push(atChairmanLevel);
+
+      console.log(`✅ Created ${requests.length} sample requests with realistic workflow scenarios`);
+      console.log('📊 Request scenarios created:');
+      console.log('   • 3 Fully approved requests (Chairman approved)');
+      console.log('   • 3 Rejected requests (at different stages)');
+      console.log('   • 4 In-progress requests (at various approval stages)');
     }
 
     console.log('🎉 Database seeded successfully!');
-    console.log('👥 Default users created with emails:');
+    console.log('\n👥 Default users created:');
+    console.log('📧 All users have password: password123');
+    console.log('🌐 Email domain: @srmrmp.edu.in\n');
+    
     users.forEach(user => {
-      console.log(`   ${user.email} (${user.role}) - Password: password123`);
+      console.log(`   📧 ${user.email}`);
+      console.log(`   👤 ${user.name} (${user.role.replace('_', ' ').toUpperCase()})`);
+      console.log(`   🆔 Employee ID: ${user.empId}`);
+      console.log(`   📱 Contact: ${user.contactNo}`);
+      console.log('   ─────────────────────────────────────');
     });
+    
+    console.log('\n🔑 Login Instructions:');
+    console.log('   1. Go to /login');
+    console.log('   2. Use any email above with password: password123');
+    console.log('   3. Each user has different role permissions\n');
 
   } catch (error) {
     console.error('❌ Seed failed:', error);
@@ -163,24 +713,7 @@ function getRoleDisplayName(role: UserRole): string {
   return roleNames[role] || role;
 }
 
-function getRandomStatus(): RequestStatus {
-  const statuses = [
-    RequestStatus.MANAGER_REVIEW,
-    RequestStatus.SOP_VERIFICATION,
-    RequestStatus.BUDGET_CHECK,
-    RequestStatus.INSTITUTION_VERIFIED,
-    RequestStatus.VP_APPROVAL,
-    RequestStatus.HOI_APPROVAL,
-    RequestStatus.DEAN_REVIEW,
-    RequestStatus.DEPARTMENT_CHECKS,
-    RequestStatus.DEAN_VERIFICATION,
-    RequestStatus.CHIEF_DIRECTOR_APPROVAL,
-    RequestStatus.CHAIRMAN_APPROVAL,
-    RequestStatus.APPROVED,
-    RequestStatus.REJECTED,
-  ];
-  return statuses[Math.floor(Math.random() * statuses.length)];
-}
+
 
 // Run the seed function
 if (require.main === module) {

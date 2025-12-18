@@ -26,6 +26,9 @@ const roleOptions = [
 // ✅ ONLY requester needs department
 const rolesWithDepartment = [UserRole.REQUESTER];
 
+// ✅ Chairman doesn't need college field
+const rolesWithoutCollege = [UserRole.CHAIRMAN];
+
 export default function SignupPage() {
   const [name, setName] = useState('');
   const [empId, setEmpId] = useState('');
@@ -91,14 +94,15 @@ export default function SignupPage() {
     }
 
     const isDepartmentRequired = rolesWithDepartment.includes(selectedRole);
+    const isCollegeRequired = !rolesWithoutCollege.includes(selectedRole);
 
     if (
       !name ||
       !email ||
       !password ||
       !empId ||
-      !college ||
       !contactNo ||
+      (isCollegeRequired && !college) ||
       (isDepartmentRequired && !department)
     ) {
       setError('Please fill in all required fields');
@@ -117,7 +121,7 @@ export default function SignupPage() {
           contactNo,
           password,
           role: selectedRole,
-          college,
+          college: isCollegeRequired ? college : null,
           department: isDepartmentRequired ? department : null,
         }),
       });
@@ -243,7 +247,10 @@ export default function SignupPage() {
                 onChange={(e) => {
                   const role = e.target.value as UserRole;
                   setSelectedRole(role);
+                  // Clear department if role doesn't need it
                   if (!rolesWithDepartment.includes(role)) setDepartment('');
+                  // Clear college if role doesn't need it
+                  if (rolesWithoutCollege.includes(role)) setCollege('');
                 }}
                 className={inputClass}
               >
@@ -255,17 +262,20 @@ export default function SignupPage() {
               </select>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700">College *</label>
-              <input
-                type="text"
-                required
-                value={college}
-                onChange={(e) => setCollege(e.target.value)}
-                placeholder="Enter College Name"
-                className={inputClass}
-              />
-            </div>
+            {/* ✅ COLLEGE FIELD - Hidden for Chairman */}
+            {!rolesWithoutCollege.includes(selectedRole) && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700">College *</label>
+                <input
+                  type="text"
+                  required
+                  value={college}
+                  onChange={(e) => setCollege(e.target.value)}
+                  placeholder="Enter College Name"
+                  className={inputClass}
+                />
+              </div>
+            )}
 
             {/* ✅ DEPARTMENT ONLY FOR REQUESTER */}
             {rolesWithDepartment.includes(selectedRole) && (
