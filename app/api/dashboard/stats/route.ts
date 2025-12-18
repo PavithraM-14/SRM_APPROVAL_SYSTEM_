@@ -94,10 +94,16 @@ export async function GET() {
         req._visibility.category === 'approved'
       ).length;
       
-      // Rejected: show requests they approved but were later rejected by someone else
+      // Rejected: show requests they have rejected OR requests they approved but were later rejected by someone else
       rejectedRequests = visibleRequests.filter(req => {
         // Request must be rejected
         if (req.status !== RequestStatus.REJECTED) return false;
+        
+        // Check if this user has rejected this request
+        const userHasRejected = req.history?.some((h: any) => 
+          (h.actor?._id?.toString() === dbUser._id.toString() || h.actor?.toString() === dbUser._id.toString()) &&
+          h.action === ActionType.REJECT
+        );
         
         // Check if this user has approved this request in the history
         const userHasApproved = req.history?.some((h: any) => 
@@ -105,7 +111,8 @@ export async function GET() {
           (h.action === ActionType.APPROVE || h.action === ActionType.FORWARD)
         );
         
-        return userHasApproved;
+        // Show if user rejected it OR if user approved it but someone else rejected it later
+        return userHasRejected || userHasApproved;
       }).length;
       
       // In-progress: show requests they've been involved with

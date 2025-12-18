@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import ClarificationIndicator from '../../../components/ClarificationIndicator';
 
 interface Request {
   _id: string;
@@ -13,7 +14,9 @@ interface Request {
   expenseCategory: string;
   status: string;
   createdAt: string;
-  history?: any[]; // Add history to check for clarifications
+  history?: any[];
+  pendingClarification?: boolean;
+  clarificationLevel?: string;
   _visibility?: {
     category: 'pending' | 'approved' | 'in_progress' | 'completed';
     userAction?: 'approve' | 'clarify' | null;
@@ -373,9 +376,14 @@ export default function RequestsPage() {
                         return null;
                       })()}
                       
-                      <span className={`px-2 sm:px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap ${getStatusBadgeClass(request.status)}`}>
-                        {request.status.replace('_', ' ').toUpperCase()}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className={`px-2 sm:px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap ${getStatusBadgeClass(request.status)}`}>
+                          {request.status.replace('_', ' ').toUpperCase()}
+                        </span>
+                        {request.pendingClarification && request.clarificationLevel === currentUser?.role && (
+                          <ClarificationIndicator size="sm" showText={false} />
+                        )}
+                      </div>
                     </div>
                   </div>
 

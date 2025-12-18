@@ -4,6 +4,7 @@ import { ClipboardDocumentListIcon, ClockIcon, CheckCircleIcon, ExclamationTrian
 import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import useSWR from 'swr';
+import ClarificationIndicator from '../../components/ClarificationIndicator';
 
 const fetcher = (url: string) =>
   fetch(url, { credentials: 'include' }).then((res) => res.json());
@@ -252,9 +253,14 @@ export default function DashboardPage() {
                 </div>
 
                 <div className="flex items-center justify-between sm:justify-end space-x-2 sm:space-x-3 flex-shrink-0">
-                  <span className={`px-2 sm:px-4 py-1 sm:py-1.5 rounded-full text-xs sm:text-sm font-semibold ${getStatusClass(request.status || 'unknown')} whitespace-nowrap`}>
-                    {request.status ? request.status.replace('_', ' ').toUpperCase() : 'UNKNOWN'}
-                  </span>
+                  <div className="flex items-center space-x-2">
+                    <span className={`px-2 sm:px-4 py-1 sm:py-1.5 rounded-full text-xs sm:text-sm font-semibold ${getStatusClass(request.status || 'unknown')} whitespace-nowrap`}>
+                      {request.status ? request.status.replace('_', ' ').toUpperCase() : 'UNKNOWN'}
+                    </span>
+                    {request.pendingClarification && request.clarificationLevel === currentUser?.role && (
+                      <ClarificationIndicator size="sm" showText={false} />
+                    )}
+                  </div>
                   <svg 
                     className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400 flex-shrink-0" 
                     fill="none" 

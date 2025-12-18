@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import ClarificationIndicator from '../../../components/ClarificationIndicator';
 
 interface Request {
   _id: string;
@@ -18,6 +19,8 @@ interface Request {
     email: string;
   };
   history?: any[];
+  pendingClarification?: boolean;
+  clarificationLevel?: string;
 }
 
 export default function ApprovalsPage() {
@@ -316,9 +319,14 @@ export default function ApprovalsPage() {
                       <span className="px-2 sm:px-3 py-1 rounded-full bg-green-100 text-green-700 text-xs font-semibold whitespace-nowrap">
                         ₹{request.costEstimate.toLocaleString()}
                       </span>
-                      <span className={`px-2 sm:px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap ${getStatusBadgeClass(request.status)}`}>
-                        {getStatusDisplayName(request.status)}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className={`px-2 sm:px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap ${getStatusBadgeClass(request.status)}`}>
+                          {getStatusDisplayName(request.status)}
+                        </span>
+                        {request.pendingClarification && request.clarificationLevel === currentUser?.role && (
+                          <ClarificationIndicator size="sm" showText={false} />
+                        )}
+                      </div>
                     </div>
                   </div>
 

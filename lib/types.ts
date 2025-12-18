@@ -45,6 +45,8 @@ export enum ActionType {
   REJECT = 'reject',
   CLARIFY = 'clarify',
   FORWARD = 'forward',
+  REJECT_WITH_CLARIFICATION = 'reject_with_clarification', // Reject and send back for clarification
+  CLARIFY_AND_REAPPROVE = 'clarify_and_reapprove', // Provide clarification and re-approve
 }
 
 export const CreateRequestSchema = z.object({
@@ -96,6 +98,10 @@ export interface ApprovalHistory {
   previousStatus?: RequestStatus;
   newStatus?: RequestStatus;
   target?: 'sop' | 'budget'; // For clarification: which step to clarify
+  clarificationRequest?: string; // Question/note when rejecting for clarification
+  clarificationResponse?: string; // Response from lower level user
+  clarificationAttachments?: string[]; // Attachments for clarification response
+  requiresClarification?: boolean; // Flag to indicate this is a clarification request
   timestamp: Date;
 }
 

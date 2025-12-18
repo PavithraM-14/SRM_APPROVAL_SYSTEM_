@@ -89,7 +89,7 @@ export async function GET(request: NextRequest) {
     const allRequests = await Request.find(baseQuery)
       .populate('requester', 'name email empId')
       .populate('history.actor', 'name email empId')
-      .sort({ createdAt: -1 })
+      .sort({ updatedAt: -1, createdAt: -1 })
       .lean(); // Convert to plain objects for better performance
 
     console.log('[DEBUG] Total requests fetched:', allRequests.length);
@@ -108,16 +108,8 @@ export async function GET(request: NextRequest) {
       console.log('[DEBUG] Applying status filter:', statusFilter);
       
       if (statusFilter === 'pending') {
-        // For requesters: show all non-approved, non-rejected requests
-        if (user.role === UserRole.REQUESTER) {
-          visibleRequests = visibleRequests.filter(req => 
-            req.status !== RequestStatus.APPROVED && 
-            req.status !== RequestStatus.REJECTED
-          );
-        } else {
-          // For approvers: show requests pending their action
-          visibleRequests = visibleRequests.filter(req => req._visibility?.category === 'pending');
-        }
+        // For both requesters and approvers: use visibility category
+        visibleRequests = visibleRequests.filter(req => req._visibility?.category === 'pending');
       } else if (statusFilter === 'approved') {
         if (user.role === UserRole.REQUESTER) {
           // For requesters: show only requests that have been fully approved by Chairman
@@ -127,24 +119,18 @@ export async function GET(request: NextRequest) {
           visibleRequests = visibleRequests.filter(req => req._visibility?.category === 'approved');
         }
       } else if (statusFilter === 'rejected') {
-        if (user.role === UserRole.REQUESTER) {
-          // For requesters: show requests that were rejected at any stage
-          visibleRequests = visibleRequests.filter(req => req.status === RequestStatus.REJECTED);
-        } else {
-          // For non-requesters: show requests they approved but were later rejected by someone else
-          visibleRequests = visibleRequests.filter(req => {
-            // Request must be rejected AND user must have approved it at some point
-            if (req.status !== RequestStatus.REJECTED) return false;
-            
-            // Check if this user has approved this request in the history
-            const userHasApproved = req.history?.some((h: any) => 
-              (h.actor?._id?.toString() === dbUser!._id.toString() || h.actor?.toString() === dbUser!._id.toString()) &&
-              (h.action === ActionType.APPROVE || h.action === ActionType.FORWARD)
-            );
-            
-            return userHasApproved;
-          });
-        }
+        // Show requests that are rejected OR were rejected with clarification
+        visibleRequests = visibleRequests.filter(req => {
+          // Include requests with status REJECTED
+          if (req.status === RequestStatus.REJECTED) return true;
+          
+          // Also include requests that were rejected with clarification (even if status changed)
+          const wasRejectedWithClarification = req.history?.some((h: any) => 
+            h.action === ActionType.REJECT_WITH_CLARIFICATION
+          );
+          
+          return wasRejectedWithClarification;
+        });
       } else if (statusFilter === 'all') {
         // Show all visible requests (no additional filtering)
         // visibleRequests already contains all visible requests
@@ -162,6 +148,8 @@ export async function GET(request: NextRequest) {
     const total = visibleRequests.length;
 
     console.log('[DEBUG] Returning', filteredRequests.length, 'requests after pagination');
+    console.log('[DEBUG] Total visible requests before pagination:', visibleRequests.length);
+    console.log('[DEBUG] Request titles:', filteredRequests.map(r => r.title));
 
     return NextResponse.json({
       requests: filteredRequests,

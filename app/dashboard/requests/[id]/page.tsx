@@ -3,10 +3,14 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import ApprovalModal from '../../../../components/ApprovalModal';
+import ClarificationModal from '../../../../components/ClarificationModal';
+import ClarificationIndicator from '../../../../components/ClarificationIndicator';
+import DeanClarificationModal from '../../../../components/DeanClarificationModal';
 import ApprovalHistory from '../../../../components/ApprovalHistory';
 import ApprovalWorkflow from '../../../../components/ApprovalWorkflow';
 import { RequestStatus, ActionType, UserRole } from '../../../../lib/types';
 import { approvalEngine } from '../../../../lib/approval-engine';
+import { clarificationEngine } from '../../../../lib/clarification-engine';
 
 interface User {
   _id: string;
@@ -27,6 +31,12 @@ interface ApprovalHistoryItem {
   previousStatus?: RequestStatus;
   newStatus?: RequestStatus;
   timestamp: Date;
+  clarificationRequest?: string;
+  clarificationResponse?: string;
+  clarificationAttachments?: string[];
+  requiresClarification?: boolean;
+  isDeanMediated?: boolean;
+  originalRejector?: string;
 }
 
 interface Request {
@@ -44,6 +54,8 @@ interface Request {
   createdAt: string;
   updatedAt: string;
   history: ApprovalHistoryItem[];
+  pendingClarification?: boolean;
+  clarificationLevel?: string;
 }
 
 export default function RequestDetailPage({ params }: { params: { id: string } }) {
@@ -52,8 +64,11 @@ export default function RequestDetailPage({ params }: { params: { id: string } }
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isApprovalModalOpen, setIsApprovalModalOpen] = useState(false);
+  const [isClarificationModalOpen, setIsClarificationModalOpen] = useState(false);
+  const [isDeanClarificationModalOpen, setIsDeanClarificationModalOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [showApprovalHistory, setShowApprovalHistory] = useState(false);
+  const [processingApproval, setProcessingApproval] = useState(false);
 
   useEffect(() => {
     fetchRequest();
@@ -96,6 +111,19 @@ export default function RequestDetailPage({ params }: { params: { id: string } }
       const data = await response.json();
       setRequest(data);
 
+      // Auto-open appropriate clarification modal if request needs clarification from current user
+      // IMPORTANT: Only REQUESTERS and DEAN (in Dean-mediated cases) can provide clarification responses
+      if (currentUser && data.pendingClarification && data.clarificationLevel === currentUser.role) {
+        if (currentUser.role === 'dean' && clarificationEngine.isDeanMediatedClarification(data)) {
+          setIsDeanClarificationModalOpen(true);
+        } else if (currentUser.role === 'requester') {
+          // Only auto-open for requesters, not for the original rejectors
+          setIsClarificationModalOpen(true);
+        }
+        // For other roles (VP, Manager, etc.), don't auto-open any modal
+        // They should see the request in their rejected list until requester responds
+      }
+
     } catch (err) {
       console.error('Error fetching request:', err);
       setError(err instanceof Error ? err.message : 'Failed to load request');
@@ -104,21 +132,202 @@ export default function RequestDetailPage({ params }: { params: { id: string } }
     }
   };
 
-  const handleApprove = async (approvalData: any) => {
+  const handleApprove = async (notes: string, attachments: string[]) => {
     try {
+      setProcessingApproval(true);
       const response = await fetch(`/api/requests/${params.id}/approve`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(approvalData),
+        body: JSON.stringify({
+          action: 'approve',
+          notes,
+          attachments
+        }),
       });
       
-      if (!response.ok) throw new Error('Failed to process approval');
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to process approval');
+      }
 
       await fetchRequest();
       setIsApprovalModalOpen(false);
 
     } catch (err) {
+      console.error('Approval error:', err);
       throw err;
+    } finally {
+      setProcessingApproval(false);
+    }
+  };
+
+  const handleReject = async (notes: string) => {
+    try {
+      setProcessingApproval(true);
+      const response = await fetch(`/api/requests/${params.id}/approve`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'reject',
+          notes
+        }),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to process rejection');
+      }
+
+      await fetchRequest();
+      setIsApprovalModalOpen(false);
+
+    } catch (err) {
+      console.error('Rejection error:', err);
+      throw err;
+    } finally {
+      setProcessingApproval(false);
+    }
+  };
+
+  const handleRejectWithClarification = async (clarificationRequest: string, attachments: string[]) => {
+    try {
+      setProcessingApproval(true);
+      const response = await fetch(`/api/requests/${params.id}/approve`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'reject_with_clarification',
+          notes: clarificationRequest,
+          attachments
+        }),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to request clarification');
+      }
+
+      await fetchRequest();
+      setIsApprovalModalOpen(false);
+
+    } catch (err) {
+      console.error('Clarification request error:', err);
+      throw err;
+    } finally {
+      setProcessingApproval(false);
+    }
+  };
+
+  const handleClarifyAndApprove = async (response: string, attachments: string[]) => {
+    try {
+      setProcessingApproval(true);
+      const apiResponse = await fetch(`/api/requests/${params.id}/approve`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'clarify_and_reapprove',
+          notes: response,
+          attachments
+        }),
+      });
+      
+      if (!apiResponse.ok) {
+        const errorData = await apiResponse.json();
+        throw new Error(errorData.error || 'Failed to provide clarification');
+      }
+
+      await fetchRequest();
+      setIsClarificationModalOpen(false);
+
+    } catch (err) {
+      console.error('Clarification response error:', err);
+      throw err;
+    } finally {
+      setProcessingApproval(false);
+    }
+  };
+
+  const handleClarificationReject = async (reason: string) => {
+    try {
+      setProcessingApproval(true);
+      const response = await fetch(`/api/requests/${params.id}/approve`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'reject',
+          notes: reason
+        }),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to reject request');
+      }
+
+      await fetchRequest();
+      setIsClarificationModalOpen(false);
+
+    } catch (err) {
+      console.error('Clarification rejection error:', err);
+      throw err;
+    } finally {
+      setProcessingApproval(false);
+    }
+  };
+
+  const handleDeanSendToRequester = async (message: string) => {
+    try {
+      setProcessingApproval(true);
+      const response = await fetch(`/api/requests/${params.id}/approve`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'dean_send_to_requester',
+          notes: message
+        }),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to send to requester');
+      }
+
+      await fetchRequest();
+      setIsDeanClarificationModalOpen(false);
+
+    } catch (err) {
+      console.error('Dean send to requester error:', err);
+      throw err;
+    } finally {
+      setProcessingApproval(false);
+    }
+  };
+
+  const handleDeanReapprove = async (notes: string) => {
+    try {
+      setProcessingApproval(true);
+      const response = await fetch(`/api/requests/${params.id}/approve`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'clarify_and_reapprove',
+          notes
+        }),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to re-approve request');
+      }
+
+      await fetchRequest();
+      setIsDeanClarificationModalOpen(false);
+
+    } catch (err) {
+      console.error('Dean re-approval error:', err);
+      throw err;
+    } finally {
+      setProcessingApproval(false);
     }
   };
 
@@ -249,9 +458,14 @@ export default function RequestDetailPage({ params }: { params: { id: string } }
                 <div className="flex flex-col xs:flex-row xs:justify-between xs:items-start gap-1 xs:gap-2">
                   <dt className="text-xs sm:text-sm font-medium text-gray-700 min-w-0 xs:min-w-[100px]">Status</dt>
                   <dd className="text-xs sm:text-sm flex-1">
-                    <span className="inline-flex px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                      {request.status.replace('_', ' ').toUpperCase()}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="inline-flex px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                        {request.status.replace('_', ' ').toUpperCase()}
+                      </span>
+                      {request.pendingClarification && request.clarificationLevel === currentUser?.role && (
+                        <ClarificationIndicator size="sm" showText={false} />
+                      )}
+                    </div>
                   </dd>
                 </div>
 
@@ -288,8 +502,63 @@ export default function RequestDetailPage({ params }: { params: { id: string } }
 
           {/* Process Request Button */}
           {(() => {
-            // Check if current user is authorized to process this request status
+            // Check if request needs clarification from this user
+            // IMPORTANT: Only REQUESTERS and DEAN (in Dean-mediated cases) can provide clarification responses
+            const needsClarification = request.pendingClarification && request.clarificationLevel === currentUser?.role;
+            
+            // If requester needs to provide clarification, show the button
+            if (currentUser?.role === 'requester' && needsClarification) {
+              return (
+                <div className="mt-4 sm:mt-6 flex justify-center sm:justify-start">
+                  <button
+                    onClick={() => setIsClarificationModalOpen(true)}
+                    className="w-full sm:w-auto min-w-[200px] px-4 sm:px-6 py-3 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors text-sm sm:text-base font-medium active:scale-95 shadow-sm flex items-center justify-center gap-2"
+                  >
+                    <ClarificationIndicator size="sm" showText={false} className="text-white" />
+                    Respond to Clarification
+                  </button>
+                </div>
+              );
+            }
+            
+            // For non-requesters, check if they're authorized to process this request status
             if (currentUser?.role === 'requester') return null;
+            
+            if (needsClarification) {
+              // Special handling for Dean clarification (Dean-mediated from above Dean level)
+              if (currentUser?.role === 'dean' && clarificationEngine.isDeanMediatedClarification(request)) {
+                return (
+                  <div className="mt-4 sm:mt-6 flex justify-center sm:justify-start">
+                    <button
+                      onClick={() => setIsDeanClarificationModalOpen(true)}
+                      className="w-full sm:w-auto min-w-[200px] px-4 sm:px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm sm:text-base font-medium active:scale-95 shadow-sm flex items-center justify-center gap-2"
+                    >
+                      <ClarificationIndicator size="sm" showText={false} className="text-white" />
+                      Handle Rejection
+                    </button>
+                  </div>
+                );
+              }
+              
+              // Only show clarification response button for requesters
+              // Other roles (VP, Manager, etc.) who requested clarification should NOT see this button
+              if (currentUser?.role === 'requester') {
+                return (
+                  <div className="mt-4 sm:mt-6 flex justify-center sm:justify-start">
+                    <button
+                      onClick={() => setIsClarificationModalOpen(true)}
+                      className="w-full sm:w-auto min-w-[200px] px-4 sm:px-6 py-3 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors text-sm sm:text-base font-medium active:scale-95 shadow-sm flex items-center justify-center gap-2"
+                    >
+                      <ClarificationIndicator size="sm" showText={false} className="text-white" />
+                      Respond to Clarification
+                    </button>
+                  </div>
+                );
+              }
+              
+              // For other roles (VP, Manager, etc.), don't show any clarification response button
+              // They requested the clarification, so they should wait for the requester to respond
+            }
             
             const requiredApprovers = approvalEngine.getRequiredApprover(request.status as RequestStatus);
             const isAuthorized = requiredApprovers.includes(currentUser?.role as UserRole);
@@ -361,14 +630,93 @@ export default function RequestDetailPage({ params }: { params: { id: string } }
 
       {/* Approval Modal */}
       <ApprovalModal
-        requestId={params.id}
         isOpen={isApprovalModalOpen}
         onClose={() => setIsApprovalModalOpen(false)}
+        request={{
+          _id: request._id,
+          title: request.title,
+          purpose: request.purpose,
+          costEstimate: request.costEstimate,
+          requester: { name: request.requester.name }
+        }}
+        userRole={currentUser?.role || ''}
         onApprove={handleApprove}
-        currentStatus={request.status}
-        userRole={currentUser?.role}
-        requestData={request}
+        onReject={handleReject}
+        onRejectWithClarification={handleRejectWithClarification}
+        loading={processingApproval}
       />
+
+      {/* Clarification Modal */}
+      {(() => {
+        // Get the latest clarification request
+        const latestClarificationRequest = clarificationEngine.getLatestClarificationRequest(request);
+        
+        if (!latestClarificationRequest) return null;
+
+        return (
+          <ClarificationModal
+            isOpen={isClarificationModalOpen}
+            onClose={() => setIsClarificationModalOpen(false)}
+            clarificationRequest={{
+              actor: {
+                name: latestClarificationRequest.actor?.name || 'Unknown',
+                role: latestClarificationRequest.actor?.role || 'Unknown'
+              },
+              clarificationRequest: latestClarificationRequest.clarificationRequest || '',
+              timestamp: latestClarificationRequest.timestamp || new Date().toISOString(),
+              attachments: latestClarificationRequest.attachments || []
+            }}
+            onClarifyAndApprove={handleClarifyAndApprove}
+            onReject={handleClarificationReject}
+            loading={processingApproval}
+            userRole={currentUser?.role || ''}
+            isRequester={currentUser?.role === 'requester'}
+          />
+        );
+      })()}
+
+      {/* Dean Clarification Modal */}
+      {(() => {
+        // Only show for Dean handling above-Dean rejections
+        if (currentUser?.role !== 'dean' || !clarificationEngine.isDeanMediatedClarification(request)) {
+          return null;
+        }
+
+        const originalRejector = clarificationEngine.getOriginalRejector(request);
+        const latestRejection = request.history
+          ?.filter((h: any) => h.action === 'REJECT_WITH_CLARIFICATION')
+          ?.sort((a: any, b: any) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())[0];
+
+        // Check if requester has provided clarification
+        const requesterClarification = request.history
+          ?.filter((h: any) => h.action === 'CLARIFY_AND_REAPPROVE' && h.actor?.role === 'requester')
+          ?.sort((a: any, b: any) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())[0];
+
+        if (!originalRejector || !latestRejection) return null;
+
+        return (
+          <DeanClarificationModal
+            isOpen={isDeanClarificationModalOpen}
+            onClose={() => setIsDeanClarificationModalOpen(false)}
+            rejectionInfo={{
+              rejector: {
+                name: originalRejector.name || 'Unknown',
+                role: originalRejector.role || 'Unknown'
+              },
+              rejectionReason: latestRejection.clarificationRequest || 'No reason provided',
+              timestamp: latestRejection.timestamp ? new Date(latestRejection.timestamp).toISOString() : new Date().toISOString()
+            }}
+            requesterClarification={requesterClarification ? {
+              response: requesterClarification.clarificationResponse || '',
+              attachments: requesterClarification.clarificationAttachments || [],
+              timestamp: requesterClarification.timestamp ? new Date(requesterClarification.timestamp).toISOString() : new Date().toISOString()
+            } : undefined}
+            onSendToRequester={handleDeanSendToRequester}
+            onReapprove={handleDeanReapprove}
+            loading={processingApproval}
+          />
+        );
+      })()}
 
     </div>
   );

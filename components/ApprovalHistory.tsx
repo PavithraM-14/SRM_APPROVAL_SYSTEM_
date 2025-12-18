@@ -206,6 +206,26 @@ const ApprovalHistory: React.FC<ApprovalHistoryProps> = ({ history, currentStatu
                         <p className="mt-1">{historyItem.forwardedMessage}</p>
                       </div>
                     )}
+
+                    {/* Clarification Request */}
+                    {(historyItem as any).clarificationRequest && (
+                      <div className="mt-2 text-sm text-gray-600">
+                        <p className="font-medium text-gray-700">Clarification Request:</p>
+                        <div className="mt-1 p-2 bg-yellow-50 border border-yellow-200 rounded">
+                          <p className="text-yellow-800">{(historyItem as any).clarificationRequest}</p>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Clarification Response */}
+                    {(historyItem as any).clarificationResponse && (
+                      <div className="mt-2 text-sm text-gray-600">
+                        <p className="font-medium text-gray-700">Clarification Response:</p>
+                        <div className="mt-1 p-2 bg-blue-50 border border-blue-200 rounded">
+                          <p className="text-blue-800">{(historyItem as any).clarificationResponse}</p>
+                        </div>
+                      </div>
+                    )}
                     
                     {/* Budget Information */}
                     {historyItem.budgetAvailable !== undefined && (
@@ -237,6 +257,34 @@ const ApprovalHistory: React.FC<ApprovalHistoryProps> = ({ history, currentStatu
                                 className="text-blue-600 hover:text-blue-800 text-sm font-medium px-2 py-1 rounded bg-blue-50 hover:bg-blue-100 self-start xs:self-auto whitespace-nowrap"
                               >
                                 View File
+                              </a>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Clarification Attachments */}
+                    {(historyItem as any).clarificationAttachments && (historyItem as any).clarificationAttachments.length > 0 && (
+                      <div className="mt-3">
+                        <p className="text-sm font-medium text-gray-700 mb-2">Clarification Attachments:</p>
+                        <div className="space-y-2">
+                          {(historyItem as any).clarificationAttachments.map((attachment: string, index: number) => (
+                            <div key={index} className="flex flex-col xs:flex-row xs:items-center xs:justify-between gap-2 p-2 border border-blue-200 rounded-md bg-blue-50">
+                              <div className="flex items-center min-w-0 flex-1">
+                                <svg className="flex-shrink-0 h-4 w-4 text-blue-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                  <path fillRule="evenodd" d="M8 4a3 3 0 00-3 3v4a5 5 0 0010 0V7a1 1 0 112 0v4a7 7 0 11-14 0V7a5 5 0 0110 0v4a3 3 0 11-6 0V7a1 1 0 012 0v4a1 1 0 102 0V7a3 3 0 00-3-3z" clipRule="evenodd" />
+                                </svg>
+                                <span className="ml-2 text-sm text-blue-700 truncate">{getFileNameFromUrl(attachment)}</span>
+                                <span className="ml-2 text-xs text-blue-600 bg-blue-100 px-2 py-0.5 rounded-full">Clarification</span>
+                              </div>
+                              <a 
+                                href={attachment} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="text-blue-600 hover:text-blue-800 text-sm font-medium px-2 py-1 rounded bg-blue-100 hover:bg-blue-200 self-start xs:self-auto whitespace-nowrap"
+                              >
+                                Download
                               </a>
                             </div>
                           ))}

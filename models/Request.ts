@@ -17,6 +17,10 @@ const approvalHistorySchema = new mongoose.Schema({
   // 🔹 Clarification tracking
   clarificationTarget: { type: String }, // For Dean -> Department clarifications
   clarificationType: { type: String }, // For Institution Manager -> SOP/Accountant
+  clarificationRequest: { type: String }, // Question/note when rejecting for clarification
+  clarificationResponse: { type: String }, // Response from lower level user
+  clarificationAttachments: [{ type: String }], // Attachments for clarification response
+  requiresClarification: { type: Boolean, default: false }, // Flag to indicate this is a clarification request
   timestamp: { type: Date, default: Date.now },
 });
 
@@ -46,6 +50,8 @@ const requestSchema = new mongoose.Schema(
       enum: Object.values(RequestStatus),
       default: RequestStatus.MANAGER_REVIEW,
     },
+    pendingClarification: { type: Boolean, default: false }, // Flag to indicate request is pending clarification
+    clarificationLevel: { type: String }, // The level that needs to provide clarification
     history: [approvalHistorySchema],
   },
   {

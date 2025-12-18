@@ -8,10 +8,7 @@ import {
   DocumentPlusIcon,
   ClipboardDocumentListIcon,
   ClockIcon,
-  UserGroupIcon,
-  ChartBarIcon,
-  CogIcon,
-  ArrowRightOnRectangleIcon
+  ArrowRightStartOnRectangleIcon
 } from '@heroicons/react/24/outline';
 import { UserRole } from '../../lib/types';
 import { AuthUser } from '../../lib/auth';
@@ -29,6 +26,7 @@ const navigation: NavItem[] = [
   { name: 'Dashboard', href: '/dashboard', icon: HomeIcon, roles: Object.values(UserRole) },
   { name: 'My Requests', href: '/dashboard/requests', icon: ClipboardDocumentListIcon, roles: [UserRole.REQUESTER] },
   { name: 'Create Request', href: '/dashboard/requests/create', icon: DocumentPlusIcon, roles: [UserRole.REQUESTER] },
+  { name: 'Clarifications', href: '/dashboard/clarifications', icon: ClockIcon, roles: [UserRole.REQUESTER, UserRole.DEAN] },
   {
     name: 'Pending Approvals',
     href: '/dashboard/approvals',
@@ -40,12 +38,21 @@ const navigation: NavItem[] = [
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [clarificationCount, setClarificationCount] = useState(0);
   const router = useRouter();
 
   useEffect(() => {
     checkAuth();
   }, []);
+
+  useEffect(() => {
+    if (user && (user.role === 'requester' || user.role === 'dean')) {
+      fetchClarificationCount();
+      // Set up interval to refresh count every 30 seconds
+      const interval = setInterval(fetchClarificationCount, 30000);
+      return () => clearInterval(interval);
+    }
+  }, [user]);
 
   const checkAuth = async () => {
     try {
@@ -59,6 +66,24 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       router.push('/login');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchClarificationCount = async () => {
+    try {
+      const response = await fetch('/api/requests', { credentials: 'include' });
+      if (!response.ok) return;
+      
+      const data = await response.json();
+      
+      // Filter for requests that need clarification from current user
+      const clarificationRequests = data.requests.filter((request: any) => 
+        request.pendingClarification && request.clarificationLevel === user?.role
+      );
+
+      setClarificationCount(clarificationRequests.length);
+    } catch (err) {
+      console.error('Error fetching clarification count:', err);
     }
   };
 
@@ -95,7 +120,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 className="flex items-center px-2 py-2 text-sm rounded-md text-blue-200 hover:text-white hover:bg-blue-700"
               >
                 <item.icon className="h-6 w-6 mr-4 text-blue-300" />
-                {item.name}
+                <span className="flex-1">{item.name}</span>
+                {item.name === 'Clarifications' && clarificationCount > 0 && (
+                  <span className="ml-2 bg-yellow-500 text-yellow-900 text-xs font-bold px-2 py-1 rounded-full min-w-[20px] text-center">
+                    {clarificationCount}
+                  </span>
+                )}
               </Link>
             ))}
           </nav>
@@ -137,7 +167,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               className="text-gray-500 hover:text-gray-700 p-1 rounded-md"
               title="Logout"
             >
-              <ArrowRightOnRectangleIcon className="h-6 w-6" />
+              <ArrowRightStartOnRectangleIcon className="h-6 w-6" />
             </button>
           </div>
         </div>

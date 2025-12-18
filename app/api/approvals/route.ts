@@ -102,18 +102,68 @@ export async function GET(request: NextRequest) {
       );
       console.log('[DEBUG] Filtered to user-approved requests:', visibleRequests.length);
     } else if (statusFilter === 'rejected') {
-      // For non-requesters: show requests they approved but were later rejected by someone else
-      visibleRequests = allRequests.filter(req => {
-        // Request must be rejected
-        if (req.status !== RequestStatus.REJECTED) return false;
+      const rejectedRequests = allRequests.filter(req => req.status === RequestStatus.REJECTED);
+      console.log('[DEBUG] Total rejected requests in system:', rejectedRequests.length);
+      
+      // For non-requesters: show requests they have rejected OR requests they approved but were later rejected by someone else
+      visibleRequests = rejectedRequests.filter(req => {
+        // Check if this user has rejected this request
+        const userHasRejected = req.history?.some((h: any) => {
+          // Handle both populated and unpopulated actor references
+          let actorId: string | null = null;
+          
+          if (h.actor) {
+            if (typeof h.actor === 'object' && h.actor._id) {
+              // Actor is populated
+              actorId = h.actor._id.toString();
+            } else {
+              // Actor is just an ObjectId
+              actorId = h.actor.toString();
+            }
+          }
+          
+          const isUserActor = actorId === dbUser._id.toString();
+          const isRejectionAction = h.action === ActionType.REJECT;
+          
+          return isUserActor && isRejectionAction;
+        });
         
         // Check if this user has approved this request in the history
-        const userHasApproved = req.history?.some((h: any) => 
-          (h.actor?._id?.toString() === dbUser._id.toString() || h.actor?.toString() === dbUser._id.toString()) &&
-          (h.action === ActionType.APPROVE || h.action === ActionType.FORWARD)
-        );
+        const userHasApproved = req.history?.some((h: any) => {
+          // Handle both populated and unpopulated actor references
+          let actorId: string | null = null;
+          
+          if (h.actor) {
+            if (typeof h.actor === 'object' && h.actor._id) {
+              // Actor is populated
+              actorId = h.actor._id.toString();
+            } else {
+              // Actor is just an ObjectId
+              actorId = h.actor.toString();
+            }
+          }
+          
+          const isUserActor = actorId === dbUser._id.toString();
+          const isApprovalAction = h.action === ActionType.APPROVE || h.action === ActionType.FORWARD;
+          
+          return isUserActor && isApprovalAction;
+        });
         
-        return userHasApproved;
+        console.log(`[DEBUG] Request "${req.title}" - User approved: ${userHasApproved}`);
+        if (req.history && req.history.length > 0) {
+          console.log(`[DEBUG] Request history:`, req.history.map((h: any) => ({
+            actorId: h.actor?._id?.toString() || h.actor?.toString(),
+            actorEmail: h.actor?.email,
+            action: h.action,
+            notes: h.notes?.substring(0, 50)
+          })));
+          console.log(`[DEBUG] Current user ID: ${dbUser._id.toString()}, Email: ${dbUser.email}`);
+        }
+        
+        console.log(`[DEBUG] Request "${req.title}" - User rejected: ${userHasRejected}, User approved: ${userHasApproved}`);
+        
+        // Show if user rejected it OR if user approved it but someone else rejected it later
+        return userHasRejected || userHasApproved;
       });
       console.log('[DEBUG] Filtered to user-approved but later rejected requests:', visibleRequests.length);
     } else if (statusFilter === 'in_progress') {

@@ -4,6 +4,7 @@ import Request from '../../../../../models/Request';
 import { getCurrentUser } from '../../../../../lib/auth';
 import { RequestStatus, ActionType, UserRole } from '../../../../../lib/types';
 import { approvalEngine } from '../../../../../lib/approval-engine';
+import { clarificationEngine } from '../../../../../lib/clarification-engine';
 
 export async function POST(
   request: NextRequest,
@@ -45,8 +46,8 @@ export async function POST(
       userRole: user.role
     });
 
-    // Validate action - add new actions for budget routing
-    if (!['approve', 'reject', 'clarify', 'forward', 'budget_available', 'budget_not_available'].includes(action)) {
+    // Validate action - add new actions for budget routing and clarification workflow
+    if (!['approve', 'reject', 'clarify', 'forward', 'budget_available', 'budget_not_available', 'reject_with_clarification', 'clarify_and_reapprove', 'dean_send_to_requester'].includes(action)) {
       console.log('[DEBUG] Invalid action:', action);
       return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
     }
@@ -226,6 +227,98 @@ export async function POST(
         }
         actionType = ActionType.FORWARD;
         break;
+
+      case 'reject_with_clarification':
+        // Validate that clarification request is provided
+        if (!notes || notes.trim() === '') {
+          return NextResponse.json({ error: 'Clarification request is required when rejecting for clarification' }, { status: 400 });
+        }
+        
+        // Get the clarification target based on new workflow
+        const clarificationTarget = clarificationEngine.getClarificationTarget(requestRecord.status, user.role as UserRole);
+        if (!clarificationTarget) {
+          return NextResponse.json({ error: 'Cannot send clarification request - no target found' }, { status: 400 });
+        }
+        
+        console.log('[DEBUG] Reject with clarification (NEW WORKFLOW):', {
+          currentStatus: requestRecord.status,
+          currentRole: user.role,
+          clarificationTarget: clarificationTarget,
+          clarificationRequest: notes,
+          isDeanMediated: clarificationTarget.isDeanMediated
+        });
+        
+        // Set the request to pending clarification at the target level
+        nextStatus = clarificationTarget.status;
+        actionType = ActionType.REJECT_WITH_CLARIFICATION;
+        break;
+
+      case 'clarify_and_reapprove':
+        // Validate that clarification response is provided
+        if (!notes || notes.trim() === '') {
+          return NextResponse.json({ error: 'Clarification response is required' }, { status: 400 });
+        }
+        
+        // Check if this request is actually pending clarification for this user
+        if (!clarificationEngine.canProvideClarification(requestRecord, user.role as UserRole, user.id)) {
+          return NextResponse.json({ error: 'This request is not pending clarification from you' }, { status: 400 });
+        }
+        
+        // Handle different clarification workflows
+        if (user.role === UserRole.REQUESTER) {
+          // Requester providing clarification
+          if (clarificationEngine.isDeanMediatedClarification(requestRecord)) {
+            // Dean-mediated: Requester → Dean
+            nextStatus = RequestStatus.DEAN_REVIEW;
+          } else {
+            // Direct: Requester → Original Rejector
+            const returnStatus = clarificationEngine.getReturnStatus(requestRecord);
+            if (!returnStatus) {
+              return NextResponse.json({ error: 'Cannot determine return status for clarification' }, { status: 400 });
+            }
+            nextStatus = returnStatus;
+          }
+        } else if (user.role === UserRole.DEAN) {
+          // Dean reviewing requester's clarification and re-approving
+          const returnStatus = clarificationEngine.getReturnStatus(requestRecord);
+          if (!returnStatus) {
+            return NextResponse.json({ error: 'Cannot determine return status for Dean re-approval' }, { status: 400 });
+          }
+          nextStatus = returnStatus;
+        } else {
+          return NextResponse.json({ error: 'Invalid role for clarification response' }, { status: 400 });
+        }
+        
+        actionType = ActionType.CLARIFY_AND_REAPPROVE;
+        
+        console.log('[DEBUG] Clarify and reapprove (NEW WORKFLOW):', {
+          currentStatus: requestRecord.status,
+          targetStatus: nextStatus,
+          userRole: user.role,
+          clarificationResponse: notes,
+          isDeanMediated: clarificationEngine.isDeanMediatedClarification(requestRecord)
+        });
+        break;
+
+      case 'dean_send_to_requester':
+        // Dean forwards rejection to requester for clarification
+        if (user.role !== UserRole.DEAN) {
+          return NextResponse.json({ error: 'Only Dean can send requests to requester for clarification' }, { status: 400 });
+        }
+        
+        if (!notes || notes.trim() === '') {
+          return NextResponse.json({ error: 'Clarification message is required' }, { status: 400 });
+        }
+        
+        nextStatus = RequestStatus.SUBMITTED;
+        actionType = ActionType.REJECT_WITH_CLARIFICATION;
+        
+        console.log('[DEBUG] Dean sending to requester for clarification:', {
+          currentStatus: requestRecord.status,
+          targetStatus: nextStatus,
+          clarificationMessage: notes
+        });
+        break;
     }
 
     // 🔹 **SPECIAL FIX — VP → HOI**
@@ -281,6 +374,32 @@ export async function POST(
       historyEntry.sopReference = sopReference;
     }
 
+    // Handle clarification workflow fields
+    if (action === 'reject_with_clarification' || action === 'dean_send_to_requester') {
+      historyEntry.clarificationRequest = notes;
+      historyEntry.requiresClarification = true;
+      if (attachments?.length) historyEntry.attachments = attachments;
+      
+      // Store original rejector info for Dean-mediated clarifications
+      if (action === 'reject_with_clarification') {
+        const clarificationTarget = clarificationEngine.getClarificationTarget(requestRecord.status, user.role as UserRole);
+        if (clarificationTarget?.isDeanMediated) {
+          historyEntry.originalRejector = user.id;
+          historyEntry.isDeanMediated = true;
+        }
+      }
+    }
+
+    if (action === 'clarify_and_reapprove') {
+      historyEntry.clarificationResponse = notes;
+      if (attachments?.length) historyEntry.clarificationAttachments = attachments;
+      
+      // Mark if this is a Dean re-approval after reviewing requester's clarification
+      if (user.role === UserRole.DEAN && clarificationEngine.isDeanMediatedClarification(requestRecord)) {
+        historyEntry.isDeanReapproval = true;
+      }
+    }
+
     // 🔹 ACCOUNTANT BUDGET AVAILABILITY
     if (user.role === UserRole.ACCOUNTANT && typeof budgetAvailable === 'boolean') {
       historyEntry.budgetAvailable = budgetAvailable;
@@ -293,6 +412,48 @@ export async function POST(
 
     if (nextStatus !== previousStatus) {
       updateData.$set = { status: nextStatus };
+    }
+
+    // Handle clarification workflow updates
+    if (action === 'reject_with_clarification' || action === 'dean_send_to_requester') {
+      if (!updateData.$set) updateData.$set = {};
+      updateData.$set.pendingClarification = true;
+      
+      if (action === 'reject_with_clarification') {
+        const clarificationTarget = clarificationEngine.getClarificationTarget(requestRecord.status, user.role as UserRole);
+        updateData.$set.clarificationLevel = clarificationTarget?.role;
+      } else {
+        // dean_send_to_requester
+        updateData.$set.clarificationLevel = UserRole.REQUESTER;
+      }
+    }
+
+    if (action === 'clarify_and_reapprove') {
+      if (!updateData.$set) updateData.$set = {};
+      
+      if (user.role === UserRole.REQUESTER) {
+        // Requester provided clarification
+        if (clarificationEngine.isDeanMediatedClarification(requestRecord)) {
+          // Dean-mediated: Requester → Dean for review
+          updateData.$set.clarificationLevel = UserRole.DEAN;
+          updateData.$set.pendingClarification = true; // Still pending, but now with Dean
+        } else {
+          // Direct: Requester → Original Rejector
+          // Find the original rejector and set them as the clarification level
+          const originalRejector = clarificationEngine.getOriginalRejector(requestRecord);
+          if (originalRejector) {
+            updateData.$set.clarificationLevel = originalRejector.role;
+            updateData.$set.pendingClarification = true; // Now pending with original rejector
+          } else {
+            updateData.$set.pendingClarification = false;
+            updateData.$set.clarificationLevel = null;
+          }
+        }
+      } else {
+        // Dean or other reviewer approved after clarification - workflow complete
+        updateData.$set.pendingClarification = false;
+        updateData.$set.clarificationLevel = null;
+      }
     }
 
     // Save accountant budget availability to Request document
