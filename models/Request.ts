@@ -26,10 +26,10 @@ const requestSchema = new mongoose.Schema(
     purpose: { type: String, required: true },
     college: { type: String, required: true },
     department: { type: String, required: true },
-    costEstimate: { type: Number, required: true },
-    expenseCategory: { type: String, required: true },
+    costEstimate: { type: Number, default: 0 },
+    expenseCategory: { type: String, default: '' },
     sopReference: { type: String },
-    attachments: [{ type: String }],
+    attachments: [{ type: String, required: true, validate: [(v: string[]) => v.length > 0, 'At least one document is required'],}],
 
     // 🔹 NEW: Accountant budget fields (live values for current request)
     budgetAllocated: { type: Number, default: 0 },
@@ -44,7 +44,7 @@ const requestSchema = new mongoose.Schema(
     status: {
       type: String,
       enum: Object.values(RequestStatus),
-      default: RequestStatus.MANAGER_REVIEW,
+      default: RequestStatus.SUBMITTED,
     },
     history: [approvalHistorySchema],
   },
