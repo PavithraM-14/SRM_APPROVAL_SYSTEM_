@@ -131,35 +131,47 @@ export default function CreateRequestPage() {
     setError(null);
 
     try {
-      for (const file of validFiles) {
-        const formData = new FormData();
-        formData.append('file', file);
+      const formData = new FormData();
+      
+      // Add all files to the form data (fixed to use 'files' parameter)
+      validFiles.forEach(file => {
+        formData.append('files', file);
+      });
 
-        const res = await fetch('/api/upload', {
-          method: 'POST',
-          credentials: 'include',
-          body: formData,
-        });
+      const res = await fetch('/api/upload', {
+        method: 'POST',
+        credentials: 'include',
+        body: formData,
+      });
 
-        if (!res.ok) throw new Error();
-
-        const uploaded = await res.json();
-
-        setUploadedFiles(prev => {
-          const updated = [...prev, uploaded];
-
-          // ✅ CRITICAL: sync with react-hook-form
-          setValue(
-            'attachments',
-            updated.map(f => f.url),
-            { shouldValidate: true }
-          );
-
-          return updated;
-        });
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || 'Upload failed');
       }
-    } catch {
-      setError('File upload failed.');
+
+      const uploaded = await res.json();
+
+      // Convert the uploaded files to the expected format
+      const newFiles = uploaded.files.map((filePath: string) => ({
+        url: filePath,
+        filename: filePath.split('/').pop() || 'unknown',
+        size: 0 // We don't have size info from the API response
+      }));
+
+      setUploadedFiles(prev => {
+        const updated = [...prev, ...newFiles];
+
+        // ✅ CRITICAL: sync with react-hook-form
+        setValue(
+          'attachments',
+          updated.map(f => f.url),
+          { shouldValidate: true }
+        );
+
+        return updated;
+      });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'File upload failed.');
     } finally {
       setIsUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = '';

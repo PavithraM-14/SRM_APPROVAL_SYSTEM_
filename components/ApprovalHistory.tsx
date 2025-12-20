@@ -251,7 +251,7 @@ const ApprovalHistory: React.FC<ApprovalHistoryProps> = ({ history, currentStatu
                                 <span className="ml-2 text-sm text-gray-600 truncate">{getFileNameFromUrl(attachment)}</span>
                               </div>
                               <a 
-                                href={attachment} 
+                                href={`/api/download?file=${encodeURIComponent(attachment)}`} 
                                 target="_blank" 
                                 rel="noopener noreferrer"
                                 className="text-blue-600 hover:text-blue-800 text-sm font-medium px-2 py-1 rounded bg-blue-50 hover:bg-blue-100 self-start xs:self-auto whitespace-nowrap"
@@ -279,7 +279,7 @@ const ApprovalHistory: React.FC<ApprovalHistoryProps> = ({ history, currentStatu
                                 <span className="ml-2 text-xs text-blue-600 bg-blue-100 px-2 py-0.5 rounded-full">Clarification</span>
                               </div>
                               <a 
-                                href={attachment} 
+                                href={`/api/download?file=${encodeURIComponent(attachment)}`} 
                                 target="_blank" 
                                 rel="noopener noreferrer"
                                 className="text-blue-600 hover:text-blue-800 text-sm font-medium px-2 py-1 rounded bg-blue-100 hover:bg-blue-200 self-start xs:self-auto whitespace-nowrap"

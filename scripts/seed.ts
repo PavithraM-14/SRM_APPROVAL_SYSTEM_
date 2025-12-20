@@ -44,7 +44,7 @@ async function seed() {
       const plainPassword = 'password123'; // Default password for all users
       
       const user = await User.create({
-        email: `${role}@srmrmp.edu.in`, // Updated to use correct domain
+        email: `${role}@gmail.com`, // Updated to use correct domain
         name: getRoleDisplayName(role),
         empId: `EMP${role.toUpperCase()}`, // Add employee ID
         contactNo: `+91 ${contactCounter.toString().slice(-10)}`, // Format contact number correctly
@@ -993,11 +993,142 @@ async function seed() {
       });
       requests.push(atChairmanLevel);
 
+      // ===== LEAVE REQUEST SCENARIOS (Bypass Manager, Go Directly to VP) =====
+      
+      // Leave Request 1: Pending at VP level
+      const leaveRequestPendingVP = await Request.create({
+        title: 'Annual Leave Request - 10 Days',
+        purpose: 'Annual vacation leave for family trip to Kerala from March 15-25, 2024.',
+        college: colleges[0],
+        department: departments[0],
+        costEstimate: 0, // Leave requests typically have no cost
+        expenseCategory: 'Leave',
+        sopReference: 'SOP-LEAVE-001',
+        attachments: [],
+        requester: requester._id,
+        status: RequestStatus.VP_APPROVAL, // Directly at VP level
+        history: [
+          {
+            action: ActionType.CREATE,
+            actor: requester._id,
+            timestamp: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
+            newStatus: RequestStatus.VP_APPROVAL,
+            notes: 'Leave request created and forwarded directly to VP for approval'
+          }
+        ]
+      });
+      requests.push(leaveRequestPendingVP);
+
+      // Leave Request 2: Approved by VP, now at HOI
+      const leaveRequestAtHOI = await Request.create({
+        title: 'Medical Leave Request - 5 Days',
+        purpose: 'Medical leave for surgery and recovery period from February 20-25, 2024.',
+        college: colleges[1],
+        department: departments[1],
+        costEstimate: 0,
+        expenseCategory: 'Leave',
+        sopReference: 'SOP-LEAVE-002',
+        attachments: [],
+        requester: requester._id,
+        status: RequestStatus.HOI_APPROVAL,
+        history: [
+          {
+            action: ActionType.CREATE,
+            actor: requester._id,
+            timestamp: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+            newStatus: RequestStatus.VP_APPROVAL,
+            notes: 'Leave request created and forwarded directly to VP for approval'
+          },
+          {
+            action: ActionType.APPROVE,
+            actor: vp._id,
+            timestamp: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
+            newStatus: RequestStatus.HOI_APPROVAL,
+            notes: 'VP approved medical leave, forwarded to HOI'
+          }
+        ]
+      });
+      requests.push(leaveRequestAtHOI);
+
+      // Leave Request 3: Fully approved
+      const leaveRequestApproved = await Request.create({
+        title: 'Emergency Leave Request - 2 Days',
+        purpose: 'Emergency leave due to family emergency - immediate departure required.',
+        college: colleges[2],
+        department: departments[2],
+        costEstimate: 0,
+        expenseCategory: 'Leave',
+        sopReference: 'SOP-LEAVE-003',
+        attachments: [],
+        requester: requester._id,
+        status: RequestStatus.APPROVED,
+        history: [
+          {
+            action: ActionType.CREATE,
+            actor: requester._id,
+            timestamp: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000),
+            newStatus: RequestStatus.VP_APPROVAL,
+            notes: 'Emergency leave request created and forwarded directly to VP for approval'
+          },
+          {
+            action: ActionType.APPROVE,
+            actor: vp._id,
+            timestamp: new Date(Date.now() - 9 * 24 * 60 * 60 * 1000),
+            newStatus: RequestStatus.HOI_APPROVAL,
+            notes: 'VP approved emergency leave, forwarded to HOI'
+          },
+          {
+            action: ActionType.APPROVE,
+            actor: hoi._id,
+            timestamp: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000),
+            newStatus: RequestStatus.DEAN_REVIEW,
+            notes: 'HOI approved emergency leave, forwarded to Dean'
+          },
+          {
+            action: ActionType.APPROVE,
+            actor: dean._id,
+            timestamp: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+            newStatus: RequestStatus.APPROVED,
+            notes: 'Dean approved emergency leave - request completed'
+          }
+        ]
+      });
+      requests.push(leaveRequestApproved);
+
+      // Leave Request 4: Mixed case title test
+      const leaveRequestMixedCase = await Request.create({
+        title: 'Maternity LEAVE Application - 90 Days',
+        purpose: 'Maternity leave application for 90 days starting from April 1, 2024.',
+        college: colleges[0],
+        department: departments[3],
+        costEstimate: 0,
+        expenseCategory: 'Leave',
+        sopReference: 'SOP-LEAVE-004',
+        attachments: [],
+        requester: requester._id,
+        status: RequestStatus.VP_APPROVAL,
+        history: [
+          {
+            action: ActionType.CREATE,
+            actor: requester._id,
+            timestamp: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
+            newStatus: RequestStatus.VP_APPROVAL,
+            notes: 'Maternity leave request created and forwarded directly to VP for approval'
+          }
+        ]
+      });
+      requests.push(leaveRequestMixedCase);
+
       console.log(`✅ Created ${requests.length} sample requests with realistic workflow scenarios`);
       console.log('📊 Request scenarios created:');
       console.log('   • 3 Fully approved requests (Chairman approved)');
       console.log('   • 3 Rejected requests (at different stages)');
       console.log('   • 4 In-progress requests (at various approval stages)');
+      console.log('   • 4 LEAVE REQUESTS (bypass manager, go directly to VP):');
+      console.log('     - Annual leave (pending at VP)');
+      console.log('     - Medical leave (approved by VP, at HOI)');
+      console.log('     - Emergency leave (fully approved)');
+      console.log('     - Maternity leave (pending at VP, mixed case title)');
       console.log('   • 5 CORRECTED CLARIFICATION WORKFLOW scenarios:');
       console.log('     - Chairman rejected → Dean handling (Above Dean)');
       console.log('     - Manager rejected → Requester clarifying (Below Dean)');

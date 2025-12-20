@@ -112,7 +112,7 @@ export default function DeanClarificationModal({
                     <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded">
                       <span className="text-sm text-gray-700">📎 {attachment.split('/').pop()}</span>
                       <a 
-                        href={attachment} 
+                        href={`/api/download?file=${encodeURIComponent(attachment)}`} 
                         target="_blank" 
                         rel="noopener noreferrer"
                         className="text-blue-600 hover:text-blue-800 text-sm font-medium"

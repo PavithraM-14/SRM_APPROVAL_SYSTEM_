@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { ExclamationTriangleIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import FileUpload from './FileUpload';
 
 interface ClarificationModalProps {
   isOpen: boolean;
@@ -102,7 +103,7 @@ export default function ClarificationModal({
                       <span className="text-sm text-gray-700 truncate">{attachment.split('/').pop() || attachment}</span>
                     </div>
                     <a 
-                      href={attachment} 
+                      href={`/api/download?file=${encodeURIComponent(attachment)}`} 
                       target="_blank" 
                       rel="noopener noreferrer"
                       className="text-blue-600 hover:text-blue-800 text-sm font-medium px-2 py-1 rounded bg-blue-50 hover:bg-blue-100 whitespace-nowrap ml-2"
@@ -137,17 +138,19 @@ export default function ClarificationModal({
             {/* File Upload - Only for Requesters */}
             {isRequester && (
               <div className="mt-4">
-                <label className="text-sm font-medium text-gray-700">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
                   Attach Supporting Documents (Optional):
                 </label>
-                <div className="mt-2 border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
-                  <p className="text-sm text-gray-500">
-                    File upload functionality will be implemented here
-                  </p>
-                  <p className="text-xs text-blue-600 mt-1">
-                    Only requesters can attach files during clarification
-                  </p>
-                </div>
+                <FileUpload
+                  onFilesUploaded={setAttachments}
+                  maxFiles={3}
+                  disabled={loading}
+                  existingFiles={attachments}
+                  isClarification={true}
+                />
+                <p className="text-xs text-blue-600 mt-2">
+                  Only PDF files can be attached during clarification responses
+                </p>
               </div>
             )}
 

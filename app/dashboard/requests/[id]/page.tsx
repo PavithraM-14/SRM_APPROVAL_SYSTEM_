@@ -11,6 +11,115 @@ import ApprovalWorkflow from '../../../../components/ApprovalWorkflow';
 import { RequestStatus, ActionType, UserRole } from '../../../../lib/types';
 import { approvalEngine } from '../../../../lib/approval-engine';
 import { clarificationEngine } from '../../../../lib/clarification-engine';
+import { ExclamationTriangleIcon } from '@heroicons/react/24/outline';
+
+// Simple Direct Clarification Modal Component
+interface DirectClarificationModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  request: {
+    _id: string;
+    title: string;
+    requester: { name: string };
+  };
+  onSubmit: (clarificationRequest: string, attachments: string[]) => void;
+  loading?: boolean;
+}
+
+function DirectClarificationModal({
+  isOpen,
+  onClose,
+  request,
+  onSubmit,
+  loading = false
+}: DirectClarificationModalProps) {
+  const [clarificationRequest, setClarificationRequest] = useState('');
+
+  if (!isOpen) return null;
+
+  const handleSubmit = () => {
+    if (!clarificationRequest.trim()) {
+      alert('Please provide a clarification request');
+      return;
+    }
+    onSubmit(clarificationRequest, []);
+    setClarificationRequest('');
+  };
+
+  const handleClose = () => {
+    setClarificationRequest('');
+    onClose();
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        {/* Header */}
+        <div className="flex items-center justify-between p-6 border-b border-gray-200">
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center">
+              <ExclamationTriangleIcon className="w-6 h-6 text-yellow-600" />
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900">
+                Request Clarification
+              </h3>
+              <p className="text-sm text-gray-500">
+                {request.title}
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={handleClose}
+            className="text-gray-400 hover:text-gray-600 transition-colors"
+          >
+            ×
+          </button>
+        </div>
+
+        {/* Form */}
+        <div className="p-6">
+          <div className="mb-4">
+            <p className="text-sm text-gray-600 mb-4">
+              Send this request back to <strong>{request.requester.name}</strong> with questions or requests for additional information.
+            </p>
+          </div>
+
+          <div className="mb-6">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Clarification Request *
+            </label>
+            <textarea
+              value={clarificationRequest}
+              onChange={(e) => setClarificationRequest(e.target.value)}
+              placeholder="What additional information or clarification do you need from the requester?"
+              className="w-full h-32 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 resize-none"
+              disabled={loading}
+            />
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex justify-between">
+            <button
+              onClick={handleClose}
+              className="px-4 py-2 text-gray-600 hover:text-gray-800 font-medium transition-colors"
+              disabled={loading}
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleSubmit}
+              className="px-6 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 font-medium transition-colors disabled:opacity-50"
+              disabled={loading || !clarificationRequest.trim()}
+            >
+              {loading ? 'Sending...' : 'Send Clarification Request'}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 interface User {
   _id: string;
@@ -66,6 +175,7 @@ export default function RequestDetailPage({ params }: { params: { id: string } }
   const [isApprovalModalOpen, setIsApprovalModalOpen] = useState(false);
   const [isClarificationModalOpen, setIsClarificationModalOpen] = useState(false);
   const [isDeanClarificationModalOpen, setIsDeanClarificationModalOpen] = useState(false);
+  const [isDirectClarificationModalOpen, setIsDirectClarificationModalOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [showApprovalHistory, setShowApprovalHistory] = useState(false);
   const [processingApproval, setProcessingApproval] = useState(false);
@@ -487,12 +597,15 @@ export default function RequestDetailPage({ params }: { params: { id: string } }
                   <div key={i} className="p-3 flex flex-col xs:flex-row xs:justify-between xs:items-center gap-2">
                     <span className="text-xs sm:text-sm break-all flex-1 min-w-0">{a.split('/').pop()}</span>
                     <a 
-                      href={a} 
+                      href={`/api/download?file=${encodeURIComponent(a)}`} 
                       target="_blank" 
                       rel="noopener noreferrer"
-                      className="text-blue-600 hover:text-blue-800 transition-colors text-xs sm:text-sm font-medium px-2 py-1 rounded bg-blue-50 hover:bg-blue-100 self-start xs:self-auto whitespace-nowrap"
+                      className="text-blue-600 hover:text-blue-800 transition-colors text-xs sm:text-sm font-medium px-2 py-1 rounded bg-blue-50 hover:bg-blue-100 self-start xs:self-auto whitespace-nowrap flex items-center gap-1"
                     >
-                      View File
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                      Download
                     </a>
                   </div>
                 ))}
@@ -564,12 +677,22 @@ export default function RequestDetailPage({ params }: { params: { id: string } }
             const isAuthorized = requiredApprovers.includes(currentUser?.role as UserRole);
             
             return isAuthorized ? (
-              <div className="mt-4 sm:mt-6 flex justify-center sm:justify-start">
+              <div className="mt-4 sm:mt-6 flex flex-col sm:flex-row gap-3 justify-center sm:justify-start">
+                {/* Main Process Request Button */}
                 <button
                   onClick={() => setIsApprovalModalOpen(true)}
                   className="w-full sm:w-auto min-w-[200px] px-4 sm:px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm sm:text-base font-medium active:scale-95 shadow-sm"
                 >
                   Process Request
+                </button>
+                
+                {/* Dedicated Request Clarification Button */}
+                <button
+                  onClick={() => setIsDirectClarificationModalOpen(true)}
+                  className="w-full sm:w-auto min-w-[200px] px-4 sm:px-6 py-3 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors text-sm sm:text-base font-medium active:scale-95 shadow-sm flex items-center justify-center gap-2"
+                >
+                  <ExclamationTriangleIcon className="w-5 h-5" />
+                  Request Clarification
                 </button>
               </div>
             ) : null;
@@ -637,7 +760,8 @@ export default function RequestDetailPage({ params }: { params: { id: string } }
           title: request.title,
           purpose: request.purpose,
           costEstimate: request.costEstimate,
-          requester: { name: request.requester.name }
+          requester: { name: request.requester.name },
+          status: request.status
         }}
         userRole={currentUser?.role || ''}
         onApprove={handleApprove}
@@ -717,6 +841,19 @@ export default function RequestDetailPage({ params }: { params: { id: string } }
           />
         );
       })()}
+
+      {/* Direct Clarification Modal */}
+      <DirectClarificationModal
+        isOpen={isDirectClarificationModalOpen}
+        onClose={() => setIsDirectClarificationModalOpen(false)}
+        request={{
+          _id: request._id,
+          title: request.title,
+          requester: { name: request.requester.name }
+        }}
+        onSubmit={handleRejectWithClarification}
+        loading={processingApproval}
+      />
 
     </div>
   );

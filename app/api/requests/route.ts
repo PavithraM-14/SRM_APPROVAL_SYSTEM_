@@ -212,16 +212,25 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'User not found. Please ensure you are properly authenticated.' }, { status: 404 });
     }
 
+    // Check if this is a leave request (case-insensitive)
+    const isLeaveRequest = validatedData.title.toLowerCase().includes('leave');
+    
+    // Determine initial status based on request type
+    const initialStatus = isLeaveRequest ? RequestStatus.VP_APPROVAL : RequestStatus.MANAGER_REVIEW;
+    const initialNotes = isLeaveRequest 
+      ? 'Leave request created and forwarded directly to VP for approval'
+      : 'Request created and forwarded to manager for review';
+
     const newRequest = await Request.create({
       ...validatedData,
       requester: requesterUser._id,
-      status: RequestStatus.MANAGER_REVIEW, // Directly go to manager review
+      status: initialStatus,
       history: [{
         action: ActionType.CREATE,
         actor: requesterUser._id,
         timestamp: new Date(),
-        notes: 'Request created and forwarded to manager for review',
-        newStatus: RequestStatus.MANAGER_REVIEW,
+        notes: initialNotes,
+        newStatus: initialStatus,
       }],
     });
 
