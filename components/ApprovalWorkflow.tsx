@@ -35,10 +35,10 @@ const getStatusDisplayName = (status: string) => {
     'chairman_approval': 'Chairman Approval',
     'approved': 'Approved',
     'rejected': 'Rejected',
-    'clarification_required': 'Clarification Required',
-    'sop_clarification': 'SOP Clarification',
-    'budget_clarification': 'Budget Clarification',
-    'department_clarification': 'Department Clarification'
+    'clarification_required': 'Queries Required',
+    'sop_clarification': 'SOP Queries',
+    'budget_clarification': 'Budget Queries',
+    'department_clarification': 'Department Queries'
   };
   
   return statusMap[status.toLowerCase()] || status;
@@ -59,7 +59,7 @@ const ApprovalWorkflow: React.FC<ApprovalWorkflowProps> = ({ currentStatus }) =>
     { id: 'approved', name: 'Approved' },
   ];
 
-  // Check if current status is a clarification status
+  // Check if current status is a queries status
   const isClarificationStatus = ['sop_clarification', 'budget_clarification', 'clarification_required', 'department_checks'].includes(currentStatus);
   
   // Check if current status is a parallel verification status
@@ -75,7 +75,7 @@ const ApprovalWorkflow: React.FC<ApprovalWorkflowProps> = ({ currentStatus }) =>
         <p className="mt-1 text-sm text-gray-500">Current status of this request in the approval process</p>
       </div>
       <div className="border-t border-gray-200 px-4 py-5 sm:p-6">
-        {/* Show clarification status if applicable */}
+        {/* Show queries status if applicable */}
         {isClarificationStatus && (
           <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
             <div className="flex items-center">
@@ -89,10 +89,10 @@ const ApprovalWorkflow: React.FC<ApprovalWorkflowProps> = ({ currentStatus }) =>
                   {getStatusDisplayName(currentStatus)}
                 </h4>
                 <p className="text-sm text-yellow-700">
-                  {currentStatus === 'sop_clarification' && 'Waiting for SOP verification clarification from Institution Manager'}
-                  {currentStatus === 'budget_clarification' && 'Waiting for budget clarification from Institution Manager'}
-                  {currentStatus === 'clarification_required' && 'Waiting for clarification from Requester'}
-                  {currentStatus === 'department_checks' && 'Waiting for department clarification response'}
+                  {currentStatus === 'sop_clarification' && 'Waiting for SOP verification queries from Institution Manager'}
+                  {currentStatus === 'budget_clarification' && 'Waiting for budget queries from Institution Manager'}
+                  {currentStatus === 'clarification_required' && 'Waiting for response from Requester'}
+                  {currentStatus === 'department_checks' && 'Waiting for department response'}
                 </p>
               </div>
             </div>
@@ -220,7 +220,7 @@ const ApprovalWorkflow: React.FC<ApprovalWorkflowProps> = ({ currentStatus }) =>
                     <p className="mt-1">The request has been rejected and cannot proceed further in the workflow.</p>
                   )}
                   {currentStatus === 'clarification_required' && (
-                    <p className="mt-1">Additional information is required before this request can proceed.</p>
+                    <p className="mt-1">Response to queries is required before this request can proceed.</p>
                   )}
                 </div>
               </div>

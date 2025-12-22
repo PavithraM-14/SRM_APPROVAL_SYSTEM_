@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { ExclamationTriangleIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import FileUpload from './FileUpload';
 
-interface ClarificationModalProps {
+interface QueriesModalProps {
   isOpen: boolean;
   onClose: () => void;
   clarificationRequest: {
@@ -29,7 +29,7 @@ export default function ClarificationModal({
   loading = false,
   userRole = '',
   isRequester = false
-}: ClarificationModalProps) {
+}: QueriesModalProps) {
   const [clarificationResponse, setClarificationResponse] = useState('');
   const [rejectReason, setRejectReason] = useState('');
   const [showRejectForm, setShowRejectForm] = useState(false);
@@ -39,7 +39,7 @@ export default function ClarificationModal({
 
   const handleClarifyAndApprove = () => {
     if (!clarificationResponse.trim()) {
-      alert('Please provide a clarification response');
+      alert('Please provide a response to the queries');
       return;
     }
     onClarifyAndApprove(clarificationResponse, attachments);
@@ -64,7 +64,7 @@ export default function ClarificationModal({
             </div>
             <div>
               <h3 className="text-lg font-semibold text-gray-900">
-                Clarification Required
+                Queries Required
               </h3>
               <p className="text-sm text-gray-500">
                 Response needed from {clarificationRequest.actor.name}
@@ -79,7 +79,7 @@ export default function ClarificationModal({
           </button>
         </div>
 
-        {/* Clarification Request */}
+        {/* Queries Request */}
         <div className="p-6 border-b border-gray-200">
           <div className="mb-4">
             <h4 className="text-sm font-medium text-gray-900 mb-2">
@@ -125,12 +125,12 @@ export default function ClarificationModal({
         {!showRejectForm ? (
           <div className="p-6">
             <h4 className="text-sm font-medium text-gray-900 mb-3">
-              Your Clarification Response:
+              Your Response to Queries:
             </h4>
             <textarea
               value={clarificationResponse}
               onChange={(e) => setClarificationResponse(e.target.value)}
-              placeholder="Provide your clarification response here..."
+              placeholder="Provide your response to the queries here..."
               className="w-full h-32 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
               disabled={loading}
             />
@@ -149,7 +149,7 @@ export default function ClarificationModal({
                   isClarification={true}
                 />
                 <p className="text-xs text-blue-600 mt-2">
-                  Only PDF files can be attached during clarification responses
+                  Only PDF files can be attached during query responses
                 </p>
               </div>
             )}
@@ -161,7 +161,7 @@ export default function ClarificationModal({
                 className="px-4 py-2 text-red-600 hover:text-red-800 font-medium transition-colors"
                 disabled={loading}
               >
-                Cannot Clarify - Reject
+                Cannot Answer - Reject
               </button>
               <div className="space-x-3">
                 <button
@@ -176,7 +176,7 @@ export default function ClarificationModal({
                   className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium transition-colors disabled:opacity-50"
                   disabled={loading || !clarificationResponse.trim()}
                 >
-                  {loading ? 'Processing...' : 'Approve with Clarification'}
+                  {loading ? 'Processing...' : 'Approve with Response'}
                 </button>
               </div>
             </div>
@@ -190,7 +190,7 @@ export default function ClarificationModal({
             <textarea
               value={rejectReason}
               onChange={(e) => setRejectReason(e.target.value)}
-              placeholder="Explain why you cannot provide the requested clarification..."
+              placeholder="Explain why you cannot provide the requested information..."
               className="w-full h-32 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 resize-none"
               disabled={loading}
             />
@@ -201,7 +201,7 @@ export default function ClarificationModal({
                 className="px-4 py-2 text-gray-600 hover:text-gray-800 font-medium transition-colors"
                 disabled={loading}
               >
-                Back to Clarification
+                Back to Response
               </button>
               <div className="space-x-3">
                 <button

@@ -25,13 +25,16 @@ export const approvalEngine = {
     { from: RequestStatus.HOI_APPROVAL, to: RequestStatus.DEAN_REVIEW, requiredRole: UserRole.HEAD_OF_INSTITUTION },
 
     { from: RequestStatus.DEAN_REVIEW, to: RequestStatus.DEPARTMENT_CHECKS, requiredRole: UserRole.DEAN },
+    { from: RequestStatus.DEAN_REVIEW, to: RequestStatus.DEAN_VERIFICATION, requiredRole: UserRole.DEAN },
     { from: RequestStatus.DEAN_REVIEW, to: RequestStatus.CHIEF_DIRECTOR_APPROVAL, requiredRole: UserRole.DEAN },
 
     {
       from: RequestStatus.DEPARTMENT_CHECKS,
-      to: RequestStatus.DEAN_REVIEW,
+      to: RequestStatus.DEAN_VERIFICATION,
       requiredRole: [UserRole.MMA, UserRole.HR, UserRole.AUDIT, UserRole.IT],
     },
+
+    { from: RequestStatus.DEAN_VERIFICATION, to: RequestStatus.CHIEF_DIRECTOR_APPROVAL, requiredRole: UserRole.DEAN },
 
     { from: RequestStatus.CHIEF_DIRECTOR_APPROVAL, to: RequestStatus.CHAIRMAN_APPROVAL, requiredRole: UserRole.CHIEF_DIRECTOR },
     { from: RequestStatus.CHAIRMAN_APPROVAL, to: RequestStatus.APPROVED, requiredRole: UserRole.CHAIRMAN },
@@ -121,6 +124,10 @@ export const approvalEngine = {
           // Normal flow (budget available) → Dean → Chief Director
           return RequestStatus.CHIEF_DIRECTOR_APPROVAL;
         }
+        if (currentStatus === RequestStatus.DEAN_VERIFICATION && action === ActionType.APPROVE) {
+          // After department verification, Dean approves to Chief Director
+          return RequestStatus.CHIEF_DIRECTOR_APPROVAL;
+        }
         break;
 
       case UserRole.CHIEF_DIRECTOR:
@@ -144,6 +151,15 @@ export const approvalEngine = {
       case UserRole.CHAIRMAN:
         if (currentStatus === RequestStatus.CHAIRMAN_APPROVAL) {
           return RequestStatus.APPROVED;
+        }
+        break;
+
+      case UserRole.HR:
+      case UserRole.IT:
+      case UserRole.AUDIT:
+      case UserRole.MMA:
+        if (currentStatus === RequestStatus.DEPARTMENT_CHECKS && action === ActionType.FORWARD) {
+          return RequestStatus.DEAN_VERIFICATION;
         }
         break;
     }

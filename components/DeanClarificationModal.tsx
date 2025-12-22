@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { ExclamationTriangleIcon, XMarkIcon, UserIcon } from '@heroicons/react/24/outline';
 
-interface DeanClarificationModalProps {
+interface DeanQueriesModalProps {
   isOpen: boolean;
   onClose: () => void;
   rejectionInfo: {
@@ -29,7 +29,7 @@ export default function DeanClarificationModal({
   onSendToRequester,
   onReapprove,
   loading = false
-}: DeanClarificationModalProps) {
+}: DeanQueriesModalProps) {
   const [message, setMessage] = useState('');
   const [reapprovalNotes, setReapprovalNotes] = useState('');
   const [showReapprovalForm, setShowReapprovalForm] = useState(false);
@@ -94,11 +94,11 @@ export default function DeanClarificationModal({
           </div>
         </div>
 
-        {/* Requester Clarification (if provided) */}
+        {/* Requester Response (if provided) */}
         {requesterClarification && (
           <div className="p-6 border-b border-gray-200">
             <h4 className="text-sm font-medium text-gray-900 mb-2">
-              Requester's Clarification Response:
+              Requester's Response to Queries:
             </h4>
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
               <p className="text-gray-800">{requesterClarification.response}</p>
@@ -136,12 +136,12 @@ export default function DeanClarificationModal({
           /* Send to Requester Form */
           <div className="p-6">
             <h4 className="text-sm font-medium text-gray-900 mb-3">
-              Send to Requester for Clarification:
+              Send to Requester for Response:
             </h4>
             <textarea
               value={message}
               onChange={(e) => setMessage(e.target.value)}
-              placeholder="Explain what clarification is needed from the requester regarding the rejection..."
+              placeholder="Explain what information is needed from the requester regarding the rejection..."
               className="w-full h-32 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
               disabled={loading}
             />
@@ -164,12 +164,12 @@ export default function DeanClarificationModal({
             </div>
           </div>
         ) : (
-          /* Review Clarification and Re-approve */
+          /* Review Response and Re-approve */
           <div className="p-6">
             {!showReapprovalForm ? (
               <div>
                 <h4 className="text-sm font-medium text-gray-900 mb-4">
-                  Review the requester's clarification and decide:
+                  Review the requester's response and decide:
                 </h4>
                 
                 <div className="space-y-3">
@@ -196,7 +196,7 @@ export default function DeanClarificationModal({
                 <textarea
                   value={reapprovalNotes}
                   onChange={(e) => setReapprovalNotes(e.target.value)}
-                  placeholder="Add notes about why you're re-approving this request after reviewing the clarification..."
+                  placeholder="Add notes about why you're re-approving this request after reviewing the response..."
                   className="w-full h-24 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 resize-none"
                   disabled={loading}
                 />

@@ -42,13 +42,13 @@ function getRequesterCategory(
     case RequestStatus.APPROVED:
       return 'approved';
     case RequestStatus.REJECTED:
-      // If request is rejected but pending clarification from requester, show as pending
+      // If request is rejected but pending response from requester, show as pending
       if (pendingClarification && clarificationLevel === UserRole.REQUESTER) {
         return 'pending';
       }
       return 'completed';
     case RequestStatus.SUBMITTED:
-      // If request is back to submitted status due to clarification, show as pending
+      // If request is back to submitted status due to queries, show as pending
       if (pendingClarification && clarificationLevel === UserRole.REQUESTER) {
         return 'pending';
       }
@@ -72,13 +72,13 @@ function analyzeApproverVisibility(
   // Check if request currently needs user's approval
   const needsCurrentApproval = doesRequestNeedUserApproval(request, userRole, userId, history);
   
-  // Check if request is pending clarification from this user
+  // Check if request is pending response from this user
   const needsClarification = request.pendingClarification && request.clarificationLevel === userRole;
   
   // Check if request has reached or passed through user's workflow level
   const hasReachedUserLevel = hasRequestReachedUserLevel(request, userRole, history);
   
-  // Special handling for Dean - can see requests they sent for department clarification
+  // Special handling for Dean - can see requests they sent for department queries
   const deanCanSeeClariRequest = userRole === UserRole.DEAN && 
     request.status === RequestStatus.DEPARTMENT_CHECKS &&
     history.some((h: any) => 
@@ -88,11 +88,11 @@ function analyzeApproverVisibility(
     );
   
   // User can see request if:
-  // 1. They have been involved in any way (approved, rejected, or clarified), OR
+  // 1. They have been involved in any way (approved, rejected, or responded to queries), OR
   // 2. It currently needs their approval, OR
-  // 3. It needs clarification from them, OR
+  // 3. It needs response from them, OR
   // 4. The request has reached their level in the workflow (and wasn't rejected before reaching them), OR
-  // 5. (Dean only) They sent it for department clarification
+  // 5. (Dean only) They sent it for department queries
   const canSee = userInvolvement.hasBeenInvolved || needsCurrentApproval || needsClarification || hasReachedUserLevel || deanCanSeeClariRequest;
   
   if (!canSee) {
@@ -240,11 +240,11 @@ function doesRequestNeedUserApproval(
   
   const currentStatus = request.status;
   
-  // Special handling for department clarifications
+  // Special handling for department queries
   if (currentStatus === RequestStatus.DEPARTMENT_CHECKS && 
       [UserRole.MMA, UserRole.HR, UserRole.AUDIT, UserRole.IT].includes(userRole)) {
     
-    // Find the latest clarification request from Dean
+    // Find the latest queries request from Dean
     const latestClarification = history
       .filter((h: any) => h.action === ActionType.CLARIFY && h.clarificationTarget)
       .sort((a: any, b: any) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())[0];
@@ -256,7 +256,7 @@ function doesRequestNeedUserApproval(
       return targetedRole === currentUserRole;
     }
     
-    return false; // No clarification found, don't show to any department
+    return false; // No queries found, don't show to any department
   }
   
   // Check if current status requires this user's role
@@ -341,10 +341,10 @@ function categorizeRequestForUser(
     };
   }
 
-  // Special handling for clarification workflow states
-  // Requests pending clarification should show as "rejected" to the original rejector until clarification is provided
+  // Special handling for queries workflow states
+  // Requests pending response should show as "rejected" to the original rejector until response is provided
   if (request.pendingClarification) {
-    // Find the latest rejection with clarification
+    // Find the latest rejection with queries
     const latestRejectionWithClarification = request.history
       ?.filter((h: any) => h.action === ActionType.REJECT_WITH_CLARIFICATION)
       ?.sort((a: any, b: any) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())[0];

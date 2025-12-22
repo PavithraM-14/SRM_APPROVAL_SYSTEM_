@@ -35,7 +35,7 @@ export default function ClarificationIndicator({
       </div>
       {showText && (
         <span className={`${textSizeClasses[size]} text-yellow-700 font-medium`}>
-          Needs Clarification
+          Needs Response
         </span>
       )}
     </div>

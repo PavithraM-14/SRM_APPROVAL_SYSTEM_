@@ -19,6 +19,7 @@ interface ApprovalModalProps {
   onReject: (notes: string) => void;
   onRejectWithClarification: (clarificationRequest: string, attachments: string[]) => void;
   onForward?: (notes: string, attachments: string[]) => void;
+  onClarify?: (notes: string, attachments: string[], target?: string) => void;
   loading?: boolean;
 }
 
@@ -31,15 +32,23 @@ export default function ApprovalModal({
   onReject,
   onRejectWithClarification,
   onForward,
+  onClarify,
   loading = false
 }: ApprovalModalProps) {
-  const [action, setAction] = useState<'approve' | 'reject' | 'reject_with_clarification' | 'forward'>(
-    userRole === 'institution_manager' && request.status === 'manager_review' ? 'forward' : 'approve'
-  );
+  const [action, setAction] = useState<'approve' | 'reject' | 'reject_with_clarification' | 'forward' | 'clarify'>(() => {
+    if (userRole === 'institution_manager' && request.status === 'manager_review') {
+      return 'forward';
+    }
+    if (['hr', 'it', 'audit', 'mma'].includes(userRole) && request.status === 'department_checks') {
+      return 'forward';
+    }
+    return 'approve';
+  });
   const [notes, setNotes] = useState('');
   const [attachments, setAttachments] = useState<string[]>([]);
   const [urlInput, setUrlInput] = useState('');
   const [showUrlInput, setShowUrlInput] = useState(false);
+  const [target, setTarget] = useState(''); // For Dean department selection
   
   // SOP specific fields
   const [sopReference, setSopReference] = useState('');
@@ -90,6 +99,33 @@ export default function ApprovalModal({
       return;
     }
 
+    // For Department users in department_checks status, handle their actions
+    if (['hr', 'it', 'audit', 'mma'].includes(userRole) && request.status === 'department_checks') {
+      if (action === 'forward') {
+        if (onForward) {
+          onForward(notes, attachments);
+        } else {
+          alert('Forward action not configured');
+        }
+        return;
+      }
+      // For reject and reject_with_clarification, fall through to the switch statement below
+    }
+
+    // For Dean clarify action (send to department)
+    if (userRole === 'dean' && action === 'clarify') {
+      if (!target) {
+        alert('Please select a department for verification');
+        return;
+      }
+      if (onClarify) {
+        onClarify(notes, attachments, target);
+      } else {
+        alert('Clarify action not configured');
+      }
+      return;
+    }
+
     // For other roles and actions, handle different actions
     switch (action) {
       case 'approve':
@@ -105,10 +141,21 @@ export default function ApprovalModal({
         break;
       case 'reject_with_clarification':
         if (!notes.trim()) {
-          alert('Please provide a clarification request');
+          alert('Please provide queries for the requester');
           return;
         }
         onRejectWithClarification(notes, attachments);
+        break;
+      case 'clarify':
+        if (!notes.trim()) {
+          alert('Please provide instructions for the department');
+          return;
+        }
+        if (onClarify) {
+          onClarify(notes, attachments, target);
+        } else {
+          alert('Clarify action not configured');
+        }
         break;
     }
   };
@@ -119,6 +166,7 @@ export default function ApprovalModal({
     setAttachments([]);
     setUrlInput('');
     setShowUrlInput(false);
+    setTarget('');
     setSopReference('');
     setSopReferenceAvailable(null);
     setBudgetAvailable(null);
@@ -462,6 +510,154 @@ export default function ApprovalModal({
                   }
                 </p>
               </div>
+            ) : userRole === 'dean' && (request.status === 'dean_review' || request.status === 'dean_verification') ? (
+              // Special interface for Dean in dean_review or dean_verification status
+              <>
+                <select
+                  value={action}
+                  onChange={(e) => setAction(e.target.value as any)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                  disabled={loading}
+                >
+                  {request.status === 'dean_review' ? (
+                    <>
+                      <option value="approve">Approve to Chief Director</option>
+                      <option value="clarify">Send to Department for Verification</option>
+                      <option value="reject">Reject</option>
+                      <option value="reject_with_clarification">Raise Queries</option>
+                    </>
+                  ) : (
+                    // dean_verification status - after department verification
+                    <>
+                      <option value="approve">Approve to Chief Director</option>
+                      <option value="reject">Reject</option>
+                      <option value="reject_with_clarification">Raise Queries</option>
+                    </>
+                  )}
+                </select>
+
+                {/* Action Options Display */}
+                <div className="mt-3 space-y-2">
+                  {action === 'approve' && (
+                    <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
+                      <div className="flex items-center">
+                        <CheckCircleIcon className="w-5 h-5 text-green-600 mr-2" />
+                        <span className="font-medium text-green-700">Approve to Chief Director</span>
+                      </div>
+                      <p className="text-sm text-green-600 mt-1">
+                        {request.status === 'dean_verification' 
+                          ? 'Department verification complete. Approve and send to Chief Director.'
+                          : 'Approve and send directly to Chief Director.'
+                        }
+                      </p>
+                    </div>
+                  )}
+                  
+                  {action === 'clarify' && request.status === 'dean_review' && (
+                    <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                      <div className="flex items-center">
+                        <ExclamationTriangleIcon className="w-5 h-5 text-blue-600 mr-2" />
+                        <span className="font-medium text-blue-700">Send to Department for Verification</span>
+                      </div>
+                      <p className="text-sm text-blue-600 mt-1">
+                        Send this request to HR, IT, AUDIT, or MMA department for verification. They will review and return it to you for final approval.
+                      </p>
+                      
+                      {/* Department Selection */}
+                      <div className="mt-3">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Select Department for Verification:
+                        </label>
+                        <select
+                          value={target || ''}
+                          onChange={(e) => setTarget(e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                          disabled={loading}
+                        >
+                          <option value="">Choose department...</option>
+                          <option value="hr">HR Department</option>
+                          <option value="it">IT Department</option>
+                          <option value="audit">Audit Department</option>
+                          <option value="mma">MMA Department</option>
+                        </select>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {action === 'reject' && (
+                    <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+                      <div className="flex items-center">
+                        <XCircleIcon className="w-5 h-5 text-red-600 mr-2" />
+                        <span className="font-medium text-red-700">Reject</span>
+                      </div>
+                      <p className="text-sm text-red-600 mt-1">Permanently reject this request</p>
+                    </div>
+                  )}
+                  
+                  {action === 'reject_with_clarification' && (
+                    <div className="p-3 bg-orange-50 border border-orange-200 rounded-lg">
+                      <div className="flex items-center">
+                        <ExclamationTriangleIcon className="w-5 h-5 text-orange-600 mr-2" />
+                        <span className="font-medium text-orange-700">Raise Queries</span>
+                      </div>
+                      <p className="text-sm text-orange-600 mt-1">
+                        Request additional information from the requester
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </>
+            ) : ['hr', 'it', 'audit', 'mma'].includes(userRole) && request.status === 'department_checks' ? (
+              // Special interface for Department users in department_checks status
+              <>
+                <select
+                  value={action}
+                  onChange={(e) => setAction(e.target.value as any)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                  disabled={loading}
+                >
+                  <option value="forward">Complete Verification & Send to Dean</option>
+                  <option value="reject">Reject</option>
+                  <option value="reject_with_clarification">Raise Queries</option>
+                </select>
+
+                {/* Action Options Display */}
+                <div className="mt-3 space-y-2">
+                  {action === 'forward' && (
+                    <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
+                      <div className="flex items-center">
+                        <CheckCircleIcon className="w-5 h-5 text-green-600 mr-2" />
+                        <span className="font-medium text-green-700">Complete Verification & Send to Dean</span>
+                      </div>
+                      <p className="text-sm text-green-600 mt-1">
+                        Complete your department verification and send back to Dean for final approval.
+                      </p>
+                    </div>
+                  )}
+                  
+                  {action === 'reject' && (
+                    <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+                      <div className="flex items-center">
+                        <XCircleIcon className="w-5 h-5 text-red-600 mr-2" />
+                        <span className="font-medium text-red-700">Reject</span>
+                      </div>
+                      <p className="text-sm text-red-600 mt-1">Permanently reject this request</p>
+                    </div>
+                  )}
+                  
+                  {action === 'reject_with_clarification' && (
+                    <div className="p-3 bg-orange-50 border border-orange-200 rounded-lg">
+                      <div className="flex items-center">
+                        <ExclamationTriangleIcon className="w-5 h-5 text-orange-600 mr-2" />
+                        <span className="font-medium text-orange-700">Raise Queries</span>
+                      </div>
+                      <p className="text-sm text-orange-600 mt-1">
+                        Request additional information from the requester
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </>
             ) : userRole === 'institution_manager' && request.status === 'manager_review' ? (
               // Special interface for Institution Manager in manager_review status
               <>
@@ -473,7 +669,7 @@ export default function ApprovalModal({
                 >
                   <option value="forward">Send to SOP & Budget Verification</option>
                   <option value="reject">Reject</option>
-                  <option value="reject_with_clarification">Request Clarification</option>
+                  <option value="reject_with_clarification">Raise Queries</option>
                 </select>
 
                 {/* Action Options Display */}
@@ -504,7 +700,7 @@ export default function ApprovalModal({
                     <div className="p-3 bg-orange-50 border border-orange-200 rounded-lg">
                       <div className="flex items-center">
                         <ExclamationTriangleIcon className="w-5 h-5 text-orange-600 mr-2" />
-                        <span className="font-medium text-orange-700">Request Clarification</span>
+                        <span className="font-medium text-orange-700">Raise Queries</span>
                       </div>
                       <p className="text-sm text-orange-600 mt-1">
                         Request additional information from the requester
@@ -524,7 +720,7 @@ export default function ApprovalModal({
                 >
                   <option value="approve">Approve</option>
                   <option value="reject">Reject</option>
-                  <option value="reject_with_clarification">Request Clarification</option>
+                  <option value="reject_with_clarification">Raise Queries</option>
                 </select>
 
                 {/* Action Options Display */}
@@ -553,7 +749,7 @@ export default function ApprovalModal({
                     <div className="p-3 bg-orange-50 border border-orange-200 rounded-lg">
                       <div className="flex items-center">
                         <ExclamationTriangleIcon className="w-5 h-5 text-orange-600 mr-2" />
-                        <span className="font-medium text-orange-700">Request Clarification</span>
+                        <span className="font-medium text-orange-700">Raise Queries</span>
                       </div>
                       <p className="text-sm text-orange-600 mt-1">
                         Request additional information from the requester
@@ -568,7 +764,9 @@ export default function ApprovalModal({
           {/* Notes Section */}
           <div>
             <h4 className="text-lg font-medium text-gray-900 mb-3">
-              {(isSopVerifier || isAccountant) ? 'Comments (Optional)' : action === 'approve' ? 'Comments (Optional)' : 'Notes'}
+              {(isSopVerifier || isAccountant) ? 'Comments (Optional)' : 
+               (['hr', 'it', 'audit', 'mma'].includes(userRole) && action === 'forward') ? 'Comments (Optional)' :
+               action === 'approve' ? 'Comments (Optional)' : 'Notes'}
             </h4>
             <textarea
               value={notes}
@@ -578,16 +776,18 @@ export default function ApprovalModal({
                   ? "Add any comments about the SOP verification... (Optional)"
                   : isAccountant
                   ? "Add any comments about the budget verification... (Optional)"
+                  : (['hr', 'it', 'audit', 'mma'].includes(userRole) && action === 'forward')
+                  ? "Add any comments about your department verification... (Optional)"
                   : action === 'approve' 
                   ? "Add any comments or notes for this approval..."
                   : action === 'reject_with_clarification'
-                  ? "What additional information or clarification do you need?"
+                  ? "What additional information do you need from the requester?"
                   : "Please provide a reason for rejection..."
               }
               className="w-full h-32 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
               disabled={loading}
             />
-            {(isSopVerifier || isAccountant) && (
+            {((isSopVerifier || isAccountant) || (['hr', 'it', 'audit', 'mma'].includes(userRole) && action === 'forward')) && (
               <p className="text-xs text-gray-500 mt-1">
                 Comments are optional. You can leave this blank if no additional notes are needed.
               </p>
@@ -611,8 +811,10 @@ export default function ApprovalModal({
                 (isSopVerifier && sopReferenceAvailable === null) ||
                 (isSopVerifier && sopReferenceAvailable === true && !sopReference.trim()) ||
                 (isAccountant && budgetAvailable === null) ||
+                // For department users, notes are optional for forward action, required for reject actions
+                (['hr', 'it', 'audit', 'mma'].includes(userRole) && action !== 'forward' && !notes.trim()) ||
                 // For other roles, check notes requirement for non-approve actions
-                (!isSopVerifier && !isAccountant && action !== 'approve' && !notes.trim())
+                (!isSopVerifier && !isAccountant && !['hr', 'it', 'audit', 'mma'].includes(userRole) && action !== 'approve' && !notes.trim())
               )}
             >
               {loading ? 'Processing...' : 'Submit'}

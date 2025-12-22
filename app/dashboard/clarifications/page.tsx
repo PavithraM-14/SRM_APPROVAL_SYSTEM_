@@ -26,7 +26,7 @@ interface Request {
   clarificationLevel?: string;
 }
 
-export default function ClarificationsPage() {
+export default function QueriesPage() {
   const router = useRouter();
   const [requests, setRequests] = useState<Request[]>([]);
   const [loading, setLoading] = useState(true);
@@ -43,7 +43,7 @@ export default function ClarificationsPage() {
 
   useEffect(() => {
     if (currentUser) {
-      fetchClarificationRequests();
+      fetchQueriesRequests();
     }
   }, [currentUser]);
 
@@ -65,26 +65,26 @@ export default function ClarificationsPage() {
     }
   };
 
-  const fetchClarificationRequests = async () => {
+  const fetchQueriesRequests = async () => {
     try {
       setLoading(true);
       setError(null);
 
-      // Fetch all requests and filter for clarifications
+      // Fetch all requests and filter for queries
       const response = await fetch('/api/requests', { credentials: 'include' });
       if (!response.ok) throw new Error('Failed to fetch requests');
       
       const data = await response.json();
       
-      // Filter for requests that need clarification from current user
-      const clarificationRequests = data.requests.filter((request: Request) => 
+      // Filter for requests that need response from current user
+      const queriesRequests = data.requests.filter((request: Request) => 
         request.pendingClarification && request.clarificationLevel === currentUser.role
       );
 
-      setRequests(clarificationRequests);
+      setRequests(queriesRequests);
     } catch (err) {
-      console.error('Error fetching clarification requests:', err);
-      setError('Failed to load clarification requests');
+      console.error('Error fetching queries requests:', err);
+      setError('Failed to load queries requests');
     } finally {
       setLoading(false);
     }
@@ -118,16 +118,16 @@ export default function ClarificationsPage() {
       
       if (!apiResponse.ok) {
         const errorData = await apiResponse.json();
-        throw new Error(errorData.error || 'Failed to provide clarification');
+        throw new Error(errorData.error || 'Failed to provide response');
       }
 
       // Refresh the list
-      await fetchClarificationRequests();
+      await fetchQueriesRequests();
       setIsClarificationModalOpen(false);
       setSelectedRequest(null);
     } catch (err) {
-      console.error('Clarification response error:', err);
-      alert(err instanceof Error ? err.message : 'Failed to provide clarification');
+      console.error('Response error:', err);
+      alert(err instanceof Error ? err.message : 'Failed to provide response');
     } finally {
       setProcessingClarification(false);
     }
@@ -153,11 +153,11 @@ export default function ClarificationsPage() {
       }
 
       // Refresh the list
-      await fetchClarificationRequests();
+      await fetchQueriesRequests();
       setIsClarificationModalOpen(false);
       setSelectedRequest(null);
     } catch (err) {
-      console.error('Clarification rejection error:', err);
+      console.error('Rejection error:', err);
       alert(err instanceof Error ? err.message : 'Failed to reject request');
     } finally {
       setProcessingClarification(false);
@@ -184,7 +184,7 @@ export default function ClarificationsPage() {
       }
 
       // Refresh the list
-      await fetchClarificationRequests();
+      await fetchQueriesRequests();
       setIsDeanClarificationModalOpen(false);
       setSelectedRequest(null);
     } catch (err) {
@@ -215,7 +215,7 @@ export default function ClarificationsPage() {
       }
 
       // Refresh the list
-      await fetchClarificationRequests();
+      await fetchQueriesRequests();
       setIsDeanClarificationModalOpen(false);
       setSelectedRequest(null);
     } catch (err) {
@@ -256,7 +256,7 @@ export default function ClarificationsPage() {
       <div className="max-w-7xl mx-auto p-4 sm:p-6">
         <div className="flex justify-center items-center h-64">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-          <span className="ml-3 text-gray-500">Loading clarification requests...</span>
+          <span className="ml-3 text-gray-500">Loading queries...</span>
         </div>
       </div>
     );
@@ -287,12 +287,12 @@ export default function ClarificationsPage() {
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center gap-3">
               <ClarificationIndicator size="lg" showText={false} />
-              Clarification Requests
+              Queries
             </h1>
             <p className="text-gray-600 mt-2">
               {currentUser?.role === 'requester' 
-                ? 'Requests that need your clarification response'
-                : 'Rejection clarifications that need your review'
+                ? 'Requests that need your response'
+                : 'Rejection queries that need your review'
               }
             </p>
           </div>
@@ -314,8 +314,8 @@ export default function ClarificationsPage() {
           <h3 className="text-lg font-medium text-gray-900 mb-2">All Caught Up!</h3>
           <p className="text-gray-600">
             {currentUser?.role === 'requester' 
-              ? 'You have no pending clarification requests to respond to.'
-              : 'You have no rejection clarifications to review.'
+              ? 'You have no pending queries to respond to.'
+              : 'You have no rejection queries to review.'
             }
           </p>
           <button
@@ -360,7 +360,7 @@ export default function ClarificationsPage() {
                         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-3">
                           <div className="flex items-center gap-2 mb-1">
                             <span className="text-sm font-medium text-yellow-800">
-                              Clarification from {clarificationInfo.from} ({clarificationInfo.role.toUpperCase()})
+                              Query from {clarificationInfo.from} ({clarificationInfo.role.toUpperCase()})
                             </span>
                           </div>
                           <p className="text-sm text-yellow-700 line-clamp-2">

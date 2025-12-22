@@ -26,7 +26,7 @@ const navigation: NavItem[] = [
   { name: 'Dashboard', href: '/dashboard', icon: HomeIcon, roles: Object.values(UserRole) },
   { name: 'My Requests', href: '/dashboard/requests', icon: ClipboardDocumentListIcon, roles: [UserRole.REQUESTER] },
   { name: 'Create Request', href: '/dashboard/requests/create', icon: DocumentPlusIcon, roles: [UserRole.REQUESTER] },
-  { name: 'Clarifications', href: '/dashboard/clarifications', icon: ClockIcon, roles: [UserRole.REQUESTER, UserRole.DEAN] },
+  { name: 'Queries', href: '/dashboard/clarifications', icon: ClockIcon, roles: [UserRole.REQUESTER, UserRole.DEAN] },
   {
     name: 'Pending Approvals',
     href: '/dashboard/approvals',
@@ -38,7 +38,7 @@ const navigation: NavItem[] = [
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
-  const [clarificationCount, setClarificationCount] = useState(0);
+  const [queriesCount, setQueriesCount] = useState(0);
   const router = useRouter();
 
   useEffect(() => {
@@ -47,9 +47,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   useEffect(() => {
     if (user && (user.role === 'requester' || user.role === 'dean')) {
-      fetchClarificationCount();
+      fetchQueriesCount();
       // Set up interval to refresh count every 30 seconds
-      const interval = setInterval(fetchClarificationCount, 30000);
+      const interval = setInterval(fetchQueriesCount, 30000);
       return () => clearInterval(interval);
     }
   }, [user]);
@@ -69,21 +69,21 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     }
   };
 
-  const fetchClarificationCount = async () => {
+  const fetchQueriesCount = async () => {
     try {
       const response = await fetch('/api/requests', { credentials: 'include' });
       if (!response.ok) return;
       
       const data = await response.json();
       
-      // Filter for requests that need clarification from current user
-      const clarificationRequests = data.requests.filter((request: any) => 
+      // Filter for requests that need response from current user
+      const queriesRequests = data.requests.filter((request: any) => 
         request.pendingClarification && request.clarificationLevel === user?.role
       );
 
-      setClarificationCount(clarificationRequests.length);
+      setQueriesCount(queriesRequests.length);
     } catch (err) {
-      console.error('Error fetching clarification count:', err);
+      console.error('Error fetching queries count:', err);
     }
   };
 
@@ -121,9 +121,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               >
                 <item.icon className="h-6 w-6 mr-4 text-blue-300" />
                 <span className="flex-1">{item.name}</span>
-                {item.name === 'Clarifications' && clarificationCount > 0 && (
+                {item.name === 'Queries' && queriesCount > 0 && (
                   <span className="ml-2 bg-yellow-500 text-yellow-900 text-xs font-bold px-2 py-1 rounded-full min-w-[20px] text-center">
-                    {clarificationCount}
+                    {queriesCount}
                   </span>
                 )}
               </Link>

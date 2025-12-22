@@ -1460,19 +1460,19 @@ async function seed() {
 
 function getRoleDisplayName(role: UserRole): string {
   const roleNames = {
-    [UserRole.REQUESTER]: 'John Requester',
-    [UserRole.INSTITUTION_MANAGER]: 'Sarah Manager',
-    [UserRole.SOP_VERIFIER]: 'Diana SOP Verifier',
-    [UserRole.ACCOUNTANT]: 'Mike Accountant',
-    [UserRole.VP]: 'Lisa VP',
-    [UserRole.HEAD_OF_INSTITUTION]: 'David HOI',
-    [UserRole.DEAN]: 'Dr. Emily Dean',
-    [UserRole.MMA]: 'Robert MMA',
-    [UserRole.HR]: 'Jennifer HR',
-    [UserRole.AUDIT]: 'Tom Audit',
-    [UserRole.IT]: 'Alex IT',
+    [UserRole.REQUESTER]: 'Requester',
+    [UserRole.INSTITUTION_MANAGER]: 'Institution Manager',
+    [UserRole.SOP_VERIFIER]: 'SOP Verifier',
+    [UserRole.ACCOUNTANT]: 'Accountant',
+    [UserRole.VP]: 'VP Admin',
+    [UserRole.HEAD_OF_INSTITUTION]: 'Head of Institution',
+    [UserRole.DEAN]: 'Dean',
+    [UserRole.MMA]: 'MMA Department',
+    [UserRole.HR]: 'HR Department',
+    [UserRole.AUDIT]: 'Audit Department',
+    [UserRole.IT]: 'IT Department',
     [UserRole.CHIEF_DIRECTOR]: 'Chief Director',
-    [UserRole.CHAIRMAN]: 'Chairman Smith',
+    [UserRole.CHAIRMAN]: 'Chairman',
   };
   return roleNames[role] || role;
 }

@@ -134,13 +134,13 @@ export default function InProgressPage() {
       'vp_approval': 'VP Approval',
       'hoi_approval': 'Head of Institution Approval',
       'dean_review': 'Dean Review',
-      'department_checks': 'Department Clarification',
+      'department_checks': 'Department Queries',
       'dean_verification': 'Dean Verification',
       'chief_director_approval': 'Chief Director Approval',
       'chairman_approval': 'Chairman Approval',
-      'sop_clarification': 'SOP Clarification Required',
-      'budget_clarification': 'Budget Clarification Required',
-      'department_clarification': 'Department Clarification Required',
+      'sop_clarification': 'SOP Queries Required',
+      'budget_clarification': 'Budget Queries Required',
+      'department_clarification': 'Department Queries Required',
       'approved': 'Fully Approved',
       'rejected': 'Rejected'
     };
@@ -160,13 +160,13 @@ export default function InProgressPage() {
       'vp_approval': 'Awaiting Vice President approval',
       'hoi_approval': 'Awaiting Head of Institution approval',
       'dean_review': 'Awaiting Dean review and decision',
-      'department_checks': 'Awaiting department clarification response',
+      'department_checks': 'Awaiting department response',
       'dean_verification': 'Awaiting Dean verification',
       'chief_director_approval': 'Awaiting Chief Director approval',
       'chairman_approval': 'Awaiting Chairman final approval',
-      'sop_clarification': 'SOP clarification required from manager',
-      'budget_clarification': 'Budget clarification required from manager',
-      'department_clarification': 'Department clarification required',
+      'sop_clarification': 'SOP queries required from manager',
+      'budget_clarification': 'Budget queries required from manager',
+      'department_clarification': 'Department queries required',
       'approved': 'Request has been fully approved by Chairman'
     };
     

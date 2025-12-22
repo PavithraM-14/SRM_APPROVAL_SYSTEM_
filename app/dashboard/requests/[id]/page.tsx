@@ -39,7 +39,7 @@ function DirectClarificationModal({
 
   const handleSubmit = () => {
     if (!clarificationRequest.trim()) {
-      alert('Please provide a clarification request');
+      alert('Please provide a query request');
       return;
     }
     onSubmit(clarificationRequest, []);
@@ -62,7 +62,7 @@ function DirectClarificationModal({
             </div>
             <div>
               <h3 className="text-lg font-semibold text-gray-900">
-                Request Clarification
+                Raise Query
               </h3>
               <p className="text-sm text-gray-500">
                 {request.title}
@@ -87,12 +87,12 @@ function DirectClarificationModal({
 
           <div className="mb-6">
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Clarification Request *
+              Query Request *
             </label>
             <textarea
               value={clarificationRequest}
               onChange={(e) => setClarificationRequest(e.target.value)}
-              placeholder="What additional information or clarification do you need from the requester?"
+              placeholder="What additional information do you need from the requester?"
               className="w-full h-32 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 resize-none"
               disabled={loading}
             />
@@ -112,7 +112,7 @@ function DirectClarificationModal({
               className="px-6 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 font-medium transition-colors disabled:opacity-50"
               disabled={loading || !clarificationRequest.trim()}
             >
-              {loading ? 'Sending...' : 'Send Clarification Request'}
+              {loading ? 'Sending...' : 'Send Queries to Requester'}
             </button>
           </div>
         </div>
@@ -221,8 +221,8 @@ export default function RequestDetailPage({ params }: { params: { id: string } }
       const data = await response.json();
       setRequest(data);
 
-      // Auto-open appropriate clarification modal if request needs clarification from current user
-      // IMPORTANT: Only REQUESTERS and DEAN (in Dean-mediated cases) can provide clarification responses
+      // Auto-open appropriate queries modal if request needs response from current user
+      // IMPORTANT: Only REQUESTERS and DEAN (in Dean-mediated cases) can provide responses to queries
       if (currentUser && data.pendingClarification && data.clarificationLevel === currentUser.role) {
         if (currentUser.role === 'dean' && clarificationEngine.isDeanMediatedClarification(data)) {
           setIsDeanClarificationModalOpen(true);
@@ -265,6 +265,36 @@ export default function RequestDetailPage({ params }: { params: { id: string } }
 
     } catch (err) {
       console.error('Forward error:', err);
+      throw err;
+    } finally {
+      setProcessingApproval(false);
+    }
+  };
+
+  const handleClarify = async (notes: string, attachments: string[], target?: string) => {
+    try {
+      setProcessingApproval(true);
+      const response = await fetch(`/api/requests/${params.id}/approve`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'clarify',
+          notes,
+          attachments,
+          target
+        }),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to send for department verification');
+      }
+
+      await fetchRequest();
+      setIsApprovalModalOpen(false);
+
+    } catch (err) {
+      console.error('Clarify error:', err);
       throw err;
     } finally {
       setProcessingApproval(false);
@@ -381,7 +411,7 @@ export default function RequestDetailPage({ params }: { params: { id: string } }
       setIsClarificationModalOpen(false);
 
     } catch (err) {
-      console.error('Clarification response error:', err);
+      console.error('Response error:', err);
       throw err;
     } finally {
       setProcessingApproval(false);
@@ -619,35 +649,59 @@ export default function RequestDetailPage({ params }: { params: { id: string } }
 
           </div>
 
-          {/* Attachments */}
+          {/* ✅ UPDATED Attachments Section with View Button */}
           {request.attachments?.length > 0 && (
             <div className="mt-4 sm:mt-6">
               <h4 className="text-xs sm:text-sm font-medium text-gray-500 mb-2">Attachments</h4>
               <div className="border rounded-lg divide-y divide-gray-200">
-                {request.attachments.map((a, i) => (
-                  <div key={i} className="p-3 flex flex-col xs:flex-row xs:justify-between xs:items-center gap-2">
-                    <span className="text-xs sm:text-sm break-all flex-1 min-w-0">{a.split('/').pop()}</span>
-                    <a 
-                      href={`/api/download?file=${encodeURIComponent(a)}`} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="text-blue-600 hover:text-blue-800 transition-colors text-xs sm:text-sm font-medium px-2 py-1 rounded bg-blue-50 hover:bg-blue-100 self-start xs:self-auto whitespace-nowrap flex items-center gap-1"
-                    >
-                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                      </svg>
-                      Download
-                    </a>
-                  </div>
-                ))}
+                {request.attachments.map((a, i) => {
+                  const fileName = a.split('/').pop();
+                  const isPDF = fileName?.toLowerCase().endsWith('.pdf');
+                  
+                  return (
+                    <div key={i} className="p-3 flex flex-col xs:flex-row xs:justify-between xs:items-center gap-2">
+                      <span className="text-xs sm:text-sm break-all flex-1 min-w-0">{fileName}</span>
+                      <div className="flex gap-2">
+                        {/* View Button (only for PDFs) */}
+                        {isPDF && (
+                          <a 
+                            href={`/api/view?file=${encodeURIComponent(a)}`} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="text-green-600 hover:text-green-800 transition-colors text-xs sm:text-sm font-medium px-2 py-1 rounded bg-green-50 hover:bg-green-100 whitespace-nowrap flex items-center gap-1"
+                          >
+                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                            </svg>
+                            View
+                          </a>
+                        )}
+                        
+                        {/* Download Button */}
+                        <a 
+                          href={`/api/download?file=${encodeURIComponent(a)}`} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:text-blue-800 transition-colors text-xs sm:text-sm font-medium px-2 py-1 rounded bg-blue-50 hover:bg-blue-100 whitespace-nowrap flex items-center gap-1"
+                        >
+                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                          </svg>
+                          Download
+                        </a>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           )}
 
           {/* Process Request Button */}
           {(() => {
-            // Check if request needs clarification from this user
-            // IMPORTANT: Only REQUESTERS and DEAN (in Dean-mediated cases) can provide clarification responses
+            // Check if request needs response from this user
+            // IMPORTANT: Only REQUESTERS and DEAN (in Dean-mediated cases) can provide responses to queries
             const needsClarification = request.pendingClarification && request.clarificationLevel === currentUser?.role;
             
             // If requester needs to provide clarification, show the button
@@ -684,8 +738,8 @@ export default function RequestDetailPage({ params }: { params: { id: string } }
                 );
               }
               
-              // Only show clarification response button for requesters
-              // Other roles (VP, Manager, etc.) who requested clarification should NOT see this button
+              // Only show response button for requesters
+              // Other roles (VP, Manager, etc.) who raised queries should NOT see this button
               if (currentUser?.role === 'requester') {
                 return (
                   <div className="mt-4 sm:mt-6 flex justify-center sm:justify-start">
@@ -700,8 +754,8 @@ export default function RequestDetailPage({ params }: { params: { id: string } }
                 );
               }
               
-              // For other roles (VP, Manager, etc.), don't show any clarification response button
-              // They requested the clarification, so they should wait for the requester to respond
+              // For other roles (VP, Manager, etc.), don't show any response button
+              // They raised the queries, so they should wait for the requester to respond
             }
             
             const requiredApprovers = approvalEngine.getRequiredApprover(request.status as RequestStatus);
@@ -717,13 +771,13 @@ export default function RequestDetailPage({ params }: { params: { id: string } }
                   Process Request
                 </button>
                 
-                {/* Dedicated Request Clarification Button */}
+                {/* Dedicated Raise Query Button */}
                 <button
                   onClick={() => setIsDirectClarificationModalOpen(true)}
                   className="w-full sm:w-auto min-w-[200px] px-4 sm:px-6 py-3 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors text-sm sm:text-base font-medium active:scale-95 shadow-sm flex items-center justify-center gap-2"
                 >
                   <ExclamationTriangleIcon className="w-5 h-5" />
-                  Request Clarification
+                  Raise Query
                 </button>
               </div>
             ) : null;
@@ -799,6 +853,7 @@ export default function RequestDetailPage({ params }: { params: { id: string } }
         onReject={handleReject}
         onRejectWithClarification={handleRejectWithClarification}
         onForward={handleForward}
+        onClarify={handleClarify}
         loading={processingApproval}
       />
 

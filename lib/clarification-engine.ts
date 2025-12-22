@@ -1,14 +1,14 @@
 import { RequestStatus, UserRole } from './types';
 
 /**
- * Clarification Engine - Handles backward flow when requests are rejected for clarification
+ * Queries Engine - Handles backward flow when requests are rejected for queries
  */
 export const clarificationEngine = {
   
   /**
-   * Get the clarification target based on rejection level
+   * Get the queries target based on rejection level
    * NEW LOGIC:
-   * - Above Dean level (HOI, Chief Director, Chairman) → Dean handles clarification with requester
+   * - Above Dean level (HOI, Chief Director, Chairman) → Dean handles queries with requester
    * - Dean and below → Direct to requester
    */
   getClarificationTarget(currentStatus: RequestStatus, currentRole: UserRole): { status: RequestStatus; role: UserRole; isDeanMediated: boolean } | null {
@@ -34,7 +34,7 @@ export const clarificationEngine = {
   },
 
   /**
-   * Get the previous level in the workflow for clarification (legacy method for backward compatibility)
+   * Get the previous level in the workflow for queries (legacy method for backward compatibility)
    */
   getPreviousLevel(currentStatus: RequestStatus, currentRole: UserRole): { status: RequestStatus; role: UserRole } | null {
     const target = this.getClarificationTarget(currentStatus, currentRole);
@@ -42,26 +42,26 @@ export const clarificationEngine = {
   },
 
   /**
-   * Check if a request is pending clarification for a specific user
+   * Check if a request is pending response for a specific user
    */
   isPendingClarificationForUser(request: any, userRole: UserRole, userId: string): boolean {
     if (!request.pendingClarification) {
       return false;
     }
 
-    // Check if this user is at the level that needs to provide clarification
+    // Check if this user is at the level that needs to provide response
     return request.clarificationLevel === userRole;
   },
 
   /**
-   * Get the latest clarification request for a request
+   * Get the latest queries request for a request
    */
   getLatestClarificationRequest(request: any): any | null {
     if (!request.history || request.history.length === 0) {
       return null;
     }
 
-    // Find the most recent clarification request
+    // Find the most recent queries request
     const clarificationEntries = request.history
       .filter((h: any) => h.requiresClarification && h.clarificationRequest)
       .sort((a: any, b: any) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
@@ -70,28 +70,28 @@ export const clarificationEngine = {
   },
 
   /**
-   * Check if user can provide clarification for a request
-   * IMPORTANT: Only REQUESTERS and DEAN (in Dean-mediated cases) can provide clarification responses
+   * Check if user can provide response for a request
+   * IMPORTANT: Only REQUESTERS and DEAN (in Dean-mediated cases) can provide responses to queries
    */
   canProvideClarification(request: any, userRole: UserRole, userId: string): boolean {
-    // Only requesters can provide clarification responses (except for Dean in special cases)
+    // Only requesters can provide responses to queries (except for Dean in special cases)
     if (userRole === UserRole.REQUESTER) {
       return this.isPendingClarificationForUser(request, userRole, userId);
     }
     
-    // Dean can provide clarification only in Dean-mediated cases (above Dean level rejections)
+    // Dean can provide response only in Dean-mediated cases (above Dean level rejections)
     if (userRole === UserRole.DEAN) {
       return this.isPendingClarificationForUser(request, userRole, userId) && 
              this.isDeanMediatedClarification(request);
     }
     
-    // All other roles (VP, Manager, etc.) cannot provide clarification responses
-    // They can only request clarification, not respond to it
+    // All other roles (VP, Manager, etc.) cannot provide responses to queries
+    // They can only Raise Queries, not respond to them
     return false;
   },
 
   /**
-   * Check if this is a Dean-mediated clarification (from above Dean level)
+   * Check if this is a Dean-mediated queries process (from above Dean level)
    */
   isDeanMediatedClarification(request: any): boolean {
     if (!request.history || request.history.length === 0) return false;
@@ -108,7 +108,7 @@ export const clarificationEngine = {
   },
 
   /**
-   * Get the original rejector for Dean-mediated clarifications
+   * Get the original rejector for Dean-mediated queries
    */
   getOriginalRejector(request: any): any | null {
     if (!request.history || request.history.length === 0) return null;
@@ -121,7 +121,7 @@ export const clarificationEngine = {
   },
 
   /**
-   * Get the status to return to after clarification is provided
+   * Get the status to return to after response is provided
    */
   getReturnStatus(request: any): RequestStatus | null {
     const originalRejector = this.getOriginalRejector(request);

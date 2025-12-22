@@ -112,7 +112,7 @@ export async function POST(
           actual: user.role
         });
         return NextResponse.json(
-          { error: `This clarification was sent to ${latestClarification.clarificationTarget.toUpperCase()} department, not ${user.role.toUpperCase()}. Only ${latestClarification.clarificationTarget.toUpperCase()} users can respond to this clarification.` },
+          { error: `These queries were sent to ${latestClarification.clarificationTarget.toUpperCase()} department, not ${user.role.toUpperCase()}. Only ${latestClarification.clarificationTarget.toUpperCase()} users can respond to these queries.` },
           { status: 403 }
         );
       }
@@ -239,7 +239,7 @@ export async function POST(
             ActionType.FORWARD,
             user.role as UserRole,
             context
-          ) || RequestStatus.DEAN_REVIEW;
+          ) || RequestStatus.DEAN_VERIFICATION; // Changed from DEAN_REVIEW to DEAN_VERIFICATION
         } else {
           nextStatus =
             approvalEngine.getNextStatus(
@@ -255,13 +255,13 @@ export async function POST(
       case 'reject_with_clarification':
         // Validate that clarification request is provided
         if (!notes || notes.trim() === '') {
-          return NextResponse.json({ error: 'Clarification request is required when rejecting for clarification' }, { status: 400 });
+          return NextResponse.json({ error: 'Queries for the requester are required when raising queries' }, { status: 400 });
         }
         
         // Get the clarification target based on new workflow
         const clarificationTarget = clarificationEngine.getClarificationTarget(requestRecord.status, user.role as UserRole);
         if (!clarificationTarget) {
-          return NextResponse.json({ error: 'Cannot send clarification request - no target found' }, { status: 400 });
+          return NextResponse.json({ error: 'Cannot send queries - no target found' }, { status: 400 });
         }
         
         console.log('[DEBUG] Reject with clarification (NEW WORKFLOW):', {
@@ -280,12 +280,12 @@ export async function POST(
       case 'clarify_and_reapprove':
         // Validate that clarification response is provided
         if (!notes || notes.trim() === '') {
-          return NextResponse.json({ error: 'Clarification response is required' }, { status: 400 });
+          return NextResponse.json({ error: 'Response to queries is required' }, { status: 400 });
         }
         
         // Check if this request is actually pending clarification for this user
         if (!clarificationEngine.canProvideClarification(requestRecord, user.role as UserRole, user.id)) {
-          return NextResponse.json({ error: 'This request is not pending clarification from you' }, { status: 400 });
+          return NextResponse.json({ error: 'This request is not pending response from you' }, { status: 400 });
         }
         
         // Handle different clarification workflows
