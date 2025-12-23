@@ -44,7 +44,8 @@ async function seed() {
       const plainPassword = 'password123'; // Default password for all users
       
       const user = await User.create({
-        email: `${role}@gmail.com`, // Updated to use correct domain
+        // Match README: requester@srmrmp.edu.in, institution_manager@srmrmp.edu.in, etc.
+        email: `${role}@srmrmp.edu.in`,
         name: getRoleDisplayName(role),
         empId: `EMP${role.toUpperCase()}`, // Add employee ID
         contactNo: `+91 ${contactCounter.toString().slice(-10)}`, // Format contact number correctly
