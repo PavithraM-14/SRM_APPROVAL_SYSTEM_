@@ -47,7 +47,7 @@ export async function POST(
     });
 
     // Validate action - add new actions for budget routing and clarification workflow
-    if (!['approve', 'reject', 'clarify', 'forward', 'budget_available', 'budget_not_available', 'reject_with_clarification', 'clarify_and_reapprove', 'dean_send_to_requester'].includes(action)) {
+    if (!['approve', 'reject', 'clarify', 'forward', 'reject_with_clarification', 'clarify_and_reapprove', 'dean_send_to_requester'].includes(action)) {
       console.log('[DEBUG] Invalid action:', action);
       return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
     }
@@ -125,10 +125,10 @@ export async function POST(
         }))
       });
 
-      if (latestClarification && latestClarification.clarificationTarget !== user.role) {
+      if (latestClarification && latestClarification.clarificationTarget !== user.role.toLowerCase()) {
         console.log('[DEBUG] Authorization failed:', {
           expected: latestClarification.clarificationTarget,
-          actual: user.role
+          actual: user.role.toLowerCase()
         });
         return NextResponse.json(
           { error: `These queries were sent to ${latestClarification.clarificationTarget.toUpperCase()} department, not ${user.role.toUpperCase()}. Only ${latestClarification.clarificationTarget.toUpperCase()} users can respond to these queries.` },
@@ -168,7 +168,23 @@ export async function POST(
           nextStatus = RequestStatus.MANAGER_REVIEW;
         } else if (requestRecord.status === RequestStatus.INSTITUTION_VERIFIED && user.role === UserRole.INSTITUTION_MANAGER) {
           // Institution Manager approves after both SOP and Accountant verification
-          nextStatus = RequestStatus.VP_APPROVAL;
+          // Check if accountant marked budget as not available
+          const accountantBudgetDecision = requestRecord.history
+            .filter((h: any) => h.actor && h.budgetAvailable !== undefined)
+            .sort((a: any, b: any) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())[0];
+          
+          const budgetNotAvailable = accountantBudgetDecision?.budgetAvailable === false;
+          
+          if (budgetNotAvailable) {
+            // Budget not available → Send directly to Dean (bypass VP/HOI)
+            nextStatus = RequestStatus.DEAN_REVIEW;
+            // Mark this request as coming from budget not available path
+            if (!updateData.$set) updateData.$set = {};
+            updateData.$set.budgetNotAvailable = true;
+          } else {
+            // Normal flow → Send to VP
+            nextStatus = RequestStatus.VP_APPROVAL;
+          }
         } else {
   // ✅ COST-BASED FINAL APPROVAL LOGIC
   if (
@@ -200,25 +216,6 @@ export async function POST(
 
         actionType = ActionType.APPROVE;
         break;
-
-      case 'budget_available':
-        if (user.role === UserRole.INSTITUTION_MANAGER && requestRecord.status === RequestStatus.MANAGER_REVIEW) {
-          nextStatus = RequestStatus.VP_APPROVAL;
-          actionType = ActionType.FORWARD;
-        }
-        break;
-
-      case 'budget_not_available':
-        if (user.role === UserRole.INSTITUTION_MANAGER && requestRecord.status === RequestStatus.MANAGER_REVIEW) {
-          nextStatus = RequestStatus.DEAN_REVIEW;
-          actionType = ActionType.FORWARD;
-          // Mark this request as coming from budget not available path
-          if (!updateData.$set) updateData.$set = {};
-          updateData.$set.budgetNotAvailable = true;
-        }
-        break;
-
-
 
       case 'reject':
         nextStatus = RequestStatus.REJECTED;

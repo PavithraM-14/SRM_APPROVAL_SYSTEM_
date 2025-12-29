@@ -79,6 +79,13 @@ export const approvalEngine = {
           return RequestStatus.PARALLEL_VERIFICATION;
         }
         if (currentStatus === RequestStatus.INSTITUTION_VERIFIED && action === ActionType.APPROVE) {
+          // Check if accountant marked budget as not available
+          const budgetNotAvailable = context?.budgetNotAvailable;
+          if (budgetNotAvailable) {
+            // Budget not available → Send directly to Dean (bypass VP/HOI)
+            return RequestStatus.DEAN_REVIEW;
+          }
+          // Normal flow → Send to VP
           return RequestStatus.VP_APPROVAL;
         }
         break;

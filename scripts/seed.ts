@@ -45,7 +45,7 @@ async function seed() {
       
       const user = await User.create({
         // Match README: requester@srmrmp.edu.in, institution_manager@srmrmp.edu.in, etc.
-        email: `${role}@srmrmp.edu.in`,
+        email: `${role}@gmail.com`,
         name: getRoleDisplayName(role),
         empId: `EMP${role.toUpperCase()}`, // Add employee ID
         contactNo: `+91 ${contactCounter.toString().slice(-10)}`, // Format contact number correctly
