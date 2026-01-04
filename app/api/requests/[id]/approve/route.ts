@@ -47,7 +47,7 @@ export async function POST(
     });
 
     // Validate action - add new actions for budget routing and clarification workflow
-    if (!['approve', 'reject', 'clarify', 'forward', 'reject_with_clarification', 'clarify_and_reapprove', 'dean_send_to_requester'].includes(action)) {
+    if (!['approve', 'reject', 'clarify', 'forward', 'send_to_dean', 'send_to_vp', 'reject_with_clarification', 'clarify_and_reapprove', 'dean_send_to_requester'].includes(action)) {
       console.log('[DEBUG] Invalid action:', action);
       return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
     }
@@ -166,25 +166,6 @@ export async function POST(
           // Simplified: accountant just confirms budget availability
           // After accountant approval, always go back to manager for routing decision
           nextStatus = RequestStatus.MANAGER_REVIEW;
-        } else if (requestRecord.status === RequestStatus.INSTITUTION_VERIFIED && user.role === UserRole.INSTITUTION_MANAGER) {
-          // Institution Manager approves after both SOP and Accountant verification
-          // Check if accountant marked budget as not available
-          const accountantBudgetDecision = requestRecord.history
-            .filter((h: any) => h.actor && h.budgetAvailable !== undefined)
-            .sort((a: any, b: any) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())[0];
-          
-          const budgetNotAvailable = accountantBudgetDecision?.budgetAvailable === false;
-          
-          if (budgetNotAvailable) {
-            // Budget not available → Send directly to Dean (bypass VP/HOI)
-            nextStatus = RequestStatus.DEAN_REVIEW;
-            // Mark this request as coming from budget not available path
-            if (!updateData.$set) updateData.$set = {};
-            updateData.$set.budgetNotAvailable = true;
-          } else {
-            // Normal flow → Send to VP
-            nextStatus = RequestStatus.VP_APPROVAL;
-          }
         } else {
   // ✅ COST-BASED FINAL APPROVAL LOGIC
   if (
@@ -208,7 +189,8 @@ export async function POST(
         user.role as UserRole,
         { budgetAvailable,
           costEstimate: requestRecord.costEstimate,
-          budgetNotAvailable: requestRecord.budgetNotAvailable
+          budgetNotAvailable: requestRecord.budgetNotAvailable,
+          sentDirectlyToDean: requestRecord.sentDirectlyToDean
          }
       ) || requestRecord.status;
   }
@@ -229,6 +211,24 @@ export async function POST(
           nextStatus = RequestStatus.CLARIFICATION_REQUIRED;
         }
         actionType = ActionType.CLARIFY;
+        break;
+
+      case 'send_to_dean':
+        if (user.role === UserRole.INSTITUTION_MANAGER && requestRecord.status === RequestStatus.INSTITUTION_VERIFIED) {
+          nextStatus = RequestStatus.DEAN_REVIEW;
+          actionType = ActionType.APPROVE;
+          // Mark this request as coming from direct send to dean path
+          if (!updateData.$set) updateData.$set = {};
+          updateData.$set.sentDirectlyToDean = true;
+        }
+        break;
+
+      case 'send_to_vp':
+        if (user.role === UserRole.INSTITUTION_MANAGER && requestRecord.status === RequestStatus.INSTITUTION_VERIFIED) {
+          nextStatus = RequestStatus.VP_APPROVAL;
+          actionType = ActionType.APPROVE;
+          // This follows normal flow through VP → HOI → Dean → Chief Director
+        }
         break;
 
       case 'forward':

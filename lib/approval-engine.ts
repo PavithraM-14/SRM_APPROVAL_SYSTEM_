@@ -78,16 +78,8 @@ export const approvalEngine = {
         if (currentStatus === RequestStatus.MANAGER_REVIEW && action === ActionType.FORWARD) {
           return RequestStatus.PARALLEL_VERIFICATION;
         }
-        if (currentStatus === RequestStatus.INSTITUTION_VERIFIED && action === ActionType.APPROVE) {
-          // Check if accountant marked budget as not available
-          const budgetNotAvailable = context?.budgetNotAvailable;
-          if (budgetNotAvailable) {
-            // Budget not available → Send directly to Dean (bypass VP/HOI)
-            return RequestStatus.DEAN_REVIEW;
-          }
-          // Normal flow → Send to VP
-          return RequestStatus.VP_APPROVAL;
-        }
+        // Institution Manager no longer has automatic routing from institution_verified
+        // They use the "send_to_dean" action instead
         break;
 
       case UserRole.SOP_VERIFIER:
@@ -122,6 +114,13 @@ export const approvalEngine = {
 
       case UserRole.DEAN:
         if (currentStatus === RequestStatus.DEAN_REVIEW && action !== ActionType.CLARIFY) {
+          // Check if this request came from direct send to dean path
+          const sentDirectlyToDean = context?.sentDirectlyToDean;
+          if (sentDirectlyToDean) {
+            // Direct send to dean path → Always go to Chairman
+            return RequestStatus.CHAIRMAN_APPROVAL;
+          }
+          
           // Check if this request came from budget not available path
           const budgetNotAvailable = context?.budgetNotAvailable;
           if (budgetNotAvailable) {

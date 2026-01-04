@@ -99,6 +99,26 @@ export default function ApprovalModal({
       return;
     }
 
+    // For Institution Manager in institution_verified status, handle send_to_dean action
+    if (userRole === 'institution_manager' && request.status === 'institution_verified' && action === 'send_to_dean') {
+      if (onApprove) {
+        onApprove(notes, attachments, undefined, undefined);
+      } else {
+        alert('Send to Dean action not configured');
+      }
+      return;
+    }
+
+    // For Institution Manager in institution_verified status, handle send_to_vp action
+    if (userRole === 'institution_manager' && request.status === 'institution_verified' && action === 'send_to_vp') {
+      if (onApprove) {
+        onApprove(notes, attachments, undefined, undefined);
+      } else {
+        alert('Send to VP action not configured');
+      }
+      return;
+    }
+
     // For Department users in department_checks status, handle their actions
     if (['hr', 'it', 'audit', 'mma'].includes(userRole) && request.status === 'department_checks') {
       if (action === 'forward') {
@@ -710,95 +730,68 @@ export default function ApprovalModal({
                 </div>
               </>
             ) : userRole === 'institution_manager' && request.status === 'institution_verified' ? (
-              // Special interface for Institution Manager after verification is complete
+              // Interface for Institution Manager after verification is complete
               <>
-                {(() => {
-                  // Check accountant's budget decision from history
-                  const accountantBudgetDecision = request.history
-                    ?.filter((h: any) => h.budgetAvailable !== undefined)
-                    ?.sort((a: any, b: any) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())[0];
-                  
-                  const budgetNotAvailable = accountantBudgetDecision?.budgetAvailable === false;
-                  
-                  return (
-                    <>
-                      {/* Budget Status Display */}
-                      <div className={`p-3 border rounded-lg mb-3 ${budgetNotAvailable ? 'bg-red-50 border-red-200' : 'bg-green-50 border-green-200'}`}>
-                        <div className="flex items-center">
-                          {budgetNotAvailable ? (
-                            <ExclamationTriangleIcon className="w-5 h-5 text-red-600 mr-2" />
-                          ) : (
-                            <CheckCircleIcon className="w-5 h-5 text-green-600 mr-2" />
-                          )}
-                          <span className={`font-medium ${budgetNotAvailable ? 'text-red-700' : 'text-green-700'}`}>
-                            Budget Status: {budgetNotAvailable ? 'Not Available' : 'Available'}
-                          </span>
-                        </div>
-                        <p className={`text-sm mt-1 ${budgetNotAvailable ? 'text-red-600' : 'text-green-600'}`}>
-                          {budgetNotAvailable 
-                            ? 'Accountant marked budget as not available. This request will be sent directly to Dean, then Chairman.'
-                            : 'Accountant confirmed budget is available. This request will follow normal approval flow through VP and HOI.'
-                          }
-                        </p>
-                      </div>
+                <select
+                  value={action}
+                  onChange={(e) => setAction(e.target.value as any)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                  disabled={loading}
+                >
+                  <option value="send_to_dean">Send to Dean</option>
+                  <option value="send_to_vp">Send to VP</option>
+                  <option value="reject_with_clarification">Raise Query</option>
+                  <option value="reject">Reject</option>
+                </select>
 
-                      <select
-                        value={action}
-                        onChange={(e) => setAction(e.target.value as any)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
-                        disabled={loading}
-                      >
-                        <option value="approve">
-                          {budgetNotAvailable ? 'Send to Dean (Budget Not Available)' : 'Send to VP (Normal Flow)'}
-                        </option>
-                        <option value="reject">Reject</option>
-                        <option value="reject_with_clarification">Raise Queries</option>
-                      </select>
-
-                      {/* Action Options Display */}
-                      <div className="mt-3 space-y-2">
-                        {action === 'approve' && (
-                          <div className={`p-3 border rounded-lg ${budgetNotAvailable ? 'bg-orange-50 border-orange-200' : 'bg-green-50 border-green-200'}`}>
-                            <div className="flex items-center">
-                              <CheckCircleIcon className={`w-5 h-5 mr-2 ${budgetNotAvailable ? 'text-orange-600' : 'text-green-600'}`} />
-                              <span className={`font-medium ${budgetNotAvailable ? 'text-orange-700' : 'text-green-700'}`}>
-                                {budgetNotAvailable ? 'Send to Dean (Budget Not Available)' : 'Send to VP (Normal Flow)'}
-                              </span>
-                            </div>
-                            <p className={`text-sm mt-1 ${budgetNotAvailable ? 'text-orange-600' : 'text-green-600'}`}>
-                              {budgetNotAvailable 
-                                ? 'Request will bypass VP and HOI, going directly to Dean, then Chairman for final approval.'
-                                : 'Request will continue through normal approval flow: VP → HOI → Dean → Chief Director.'
-                              }
-                            </p>
-                          </div>
-                        )}
-                        
-                        {action === 'reject' && (
-                          <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
-                            <div className="flex items-center">
-                              <XCircleIcon className="w-5 h-5 text-red-600 mr-2" />
-                              <span className="font-medium text-red-700">Reject</span>
-                            </div>
-                            <p className="text-sm text-red-600 mt-1">Permanently reject this request</p>
-                          </div>
-                        )}
-                        
-                        {action === 'reject_with_clarification' && (
-                          <div className="p-3 bg-orange-50 border border-orange-200 rounded-lg">
-                            <div className="flex items-center">
-                              <ExclamationTriangleIcon className="w-5 h-5 text-orange-600 mr-2" />
-                              <span className="font-medium text-orange-700">Raise Queries</span>
-                            </div>
-                            <p className="text-sm text-orange-600 mt-1">
-                              Request additional information from the requester
-                            </p>
-                          </div>
-                        )}
+                {/* Action Options Display */}
+                <div className="mt-3 space-y-2">
+                  {action === 'send_to_dean' && (
+                    <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                      <div className="flex items-center">
+                        <CheckCircleIcon className="w-5 h-5 text-blue-600 mr-2" />
+                        <span className="font-medium text-blue-700">Send to Dean</span>
                       </div>
-                    </>
-                  );
-                })()}
+                      <p className="text-sm text-blue-600 mt-1">
+                        Send this request directly to Dean for review. Dean will then forward to Chairman for final approval.
+                      </p>
+                    </div>
+                  )}
+
+                  {action === 'send_to_vp' && (
+                    <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
+                      <div className="flex items-center">
+                        <CheckCircleIcon className="w-5 h-5 text-green-600 mr-2" />
+                        <span className="font-medium text-green-700">Send to VP</span>
+                      </div>
+                      <p className="text-sm text-green-600 mt-1">
+                        Send this request through normal approval flow: VP → HOI → Dean → Chief Director.
+                      </p>
+                    </div>
+                  )}
+                  
+                  {action === 'reject_with_clarification' && (
+                    <div className="p-3 bg-orange-50 border border-orange-200 rounded-lg">
+                      <div className="flex items-center">
+                        <ExclamationTriangleIcon className="w-5 h-5 text-orange-600 mr-2" />
+                        <span className="font-medium text-orange-700">Raise Query</span>
+                      </div>
+                      <p className="text-sm text-orange-600 mt-1">
+                        Request additional information from the requester
+                      </p>
+                    </div>
+                  )}
+                  
+                  {action === 'reject' && (
+                    <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+                      <div className="flex items-center">
+                        <XCircleIcon className="w-5 h-5 text-red-600 mr-2" />
+                        <span className="font-medium text-red-700">Reject</span>
+                      </div>
+                      <p className="text-sm text-red-600 mt-1">Permanently reject this request</p>
+                    </div>
+                  )}
+                </div>
               </>
             ) : (
               // Full interface for other roles
