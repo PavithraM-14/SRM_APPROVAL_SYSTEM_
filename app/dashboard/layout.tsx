@@ -1,7 +1,7 @@
  'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import {
   HomeIcon,
@@ -26,7 +26,7 @@ const navigation: NavItem[] = [
   { name: 'Dashboard', href: '/dashboard', icon: HomeIcon, roles: Object.values(UserRole) },
   { name: 'My Requests', href: '/dashboard/requests', icon: ClipboardDocumentListIcon, roles: [UserRole.REQUESTER] },
   { name: 'Create Request', href: '/dashboard/requests/create', icon: DocumentPlusIcon, roles: [UserRole.REQUESTER] },
-  { name: 'Queries', href: '/dashboard/clarifications', icon: ClockIcon, roles: [UserRole.REQUESTER, UserRole.DEAN] },
+  { name: 'Clarifications', href: '/dashboard/clarifications', icon: ClockIcon, roles: [UserRole.REQUESTER, UserRole.DEAN] },
   {
     name: 'Pending Approvals',
     href: '/dashboard/approvals',
@@ -38,8 +38,17 @@ const navigation: NavItem[] = [
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
-  const [queriesCount, setQueriesCount] = useState(0);
+  const [clarificationCount, setClarificationCount] = useState(0);
   const router = useRouter();
+  const pathname = usePathname();
+
+  // Function to check if navigation item is active
+  const isActiveRoute = (href: string) => {
+    if (href === '/dashboard') {
+      return pathname === '/dashboard';
+    }
+    return pathname.startsWith(href);
+  };
 
   useEffect(() => {
     checkAuth();
@@ -47,9 +56,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   useEffect(() => {
     if (user && (user.role === 'requester' || user.role === 'dean')) {
-      fetchQueriesCount();
+      fetchClarificationCount();
       // Set up interval to refresh count every 30 seconds
-      const interval = setInterval(fetchQueriesCount, 30000);
+      const interval = setInterval(fetchClarificationCount, 30000);
       return () => clearInterval(interval);
     }
   }, [user]);
@@ -69,21 +78,21 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     }
   };
 
-  const fetchQueriesCount = async () => {
+  const fetchClarificationCount = async () => {
     try {
       const response = await fetch('/api/requests', { credentials: 'include' });
       if (!response.ok) return;
       
       const data = await response.json();
       
-      // Filter for requests that need response from current user
-      const queriesRequests = data.requests.filter((request: any) => 
+      // Filter for requests that need clarification from current user
+      const clarificationRequests = data.requests.filter((request: any) => 
         request.pendingClarification && request.clarificationLevel === user?.role
       );
 
-      setQueriesCount(queriesRequests.length);
+      setClarificationCount(clarificationRequests.length);
     } catch (err) {
-      console.error('Error fetching queries count:', err);
+      console.error('Error fetching clarification count:', err);
     }
   };
 
@@ -113,21 +122,30 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             SRM-RMP 
           </div>
           <nav className="mt-6 px-2 space-y-1">
-            {filteredNavigation.map(item => (
-              <Link
-                key={item.name}
-                href={item.href}
-                className="flex items-center px-2 py-2 text-sm rounded-md text-blue-200 hover:text-white hover:bg-blue-700"
-              >
-                <item.icon className="h-6 w-6 mr-4 text-blue-300" />
-                <span className="flex-1">{item.name}</span>
-                {item.name === 'Queries' && queriesCount > 0 && (
-                  <span className="ml-2 bg-yellow-500 text-yellow-900 text-xs font-bold px-2 py-1 rounded-full min-w-[20px] text-center">
-                    {queriesCount}
-                  </span>
-                )}
-              </Link>
-            ))}
+            {filteredNavigation.map(item => {
+              const isActive = isActiveRoute(item.href);
+              return (
+                <Link
+                  key={item.name}
+                  href={item.href}
+                  className={`flex items-center px-2 py-2 text-sm rounded-md transition-colors ${
+                    isActive
+                      ? 'bg-blue-700 text-white'
+                      : 'text-blue-200 hover:text-white hover:bg-blue-700'
+                  }`}
+                >
+                  <item.icon className={`h-6 w-6 mr-4 ${
+                    isActive ? 'text-white' : 'text-blue-300'
+                  }`} />
+                  <span className="flex-1">{item.name}</span>
+                  {item.name === 'Clarifications' && clarificationCount > 0 && (
+                    <span className="ml-2 bg-yellow-500 text-yellow-900 text-xs font-bold px-2 py-1 rounded-full min-w-[20px] text-center">
+                      {clarificationCount}
+                    </span>
+                  )}
+                </Link>
+              );
+            })}
           </nav>
         </div>
       </div>
