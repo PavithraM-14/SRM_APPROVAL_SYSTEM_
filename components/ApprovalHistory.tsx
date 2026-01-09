@@ -143,7 +143,7 @@ const ApprovalHistory: React.FC<ApprovalHistoryProps> = ({ history, currentStatu
       <div className="border-t border-gray-200">
         <div className="flow-root">
           <ul className="divide-y divide-gray-200">
-            {sortedHistory.map((historyItem, index) => (
+            {sortedHistory.map((historyItem) => (
               <li key={historyItem._id} className="px-4 py-6 sm:px-6">
                 <div className="flex items-start">
                   <div className="flex-shrink-0">
@@ -154,11 +154,13 @@ const ApprovalHistory: React.FC<ApprovalHistoryProps> = ({ history, currentStatu
                     </div>
                   </div>
                   <div className="ml-4 flex-1">
+                    {/* Action and Actor in single line */}
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                      <div className="flex flex-col xs:flex-row xs:items-center gap-2">
+                      <div className="flex items-center gap-2">
                         <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getActionBadgeClass(historyItem.action)} self-start xs:self-auto`}>
                           {getActionDisplayName(historyItem.action)}
                         </span>
+                        <span className="text-sm text-gray-600">by</span>
                         <span className="text-sm font-medium text-gray-900">
                           {historyItem.actor.name}
                         </span>
@@ -168,79 +170,73 @@ const ApprovalHistory: React.FC<ApprovalHistoryProps> = ({ history, currentStatu
                       </div>
                     </div>
                     
-                    {/* Status Change Information */}
+                    {/* Status Change Information - Inline format */}
                     {historyItem.previousStatus && historyItem.newStatus && historyItem.previousStatus !== historyItem.newStatus && historyItem.previousStatus.toLowerCase() !== 'draft' ? (
-                      <div className="mt-2 flex flex-col xs:flex-row xs:items-center gap-1 text-sm">
-                        <span className="text-gray-500">Status changed from </span>
-                        <div className="flex flex-wrap items-center gap-1">
-                          <span className={`px-2 py-0.5 rounded text-xs font-medium ${getStatusBadgeClass(historyItem.previousStatus)}`}>
-                            {getStatusDisplayName(historyItem.previousStatus)}
-                          </span>
-                          <span className="text-gray-500">to</span>
-                          <span className={`px-2 py-0.5 rounded text-xs font-medium ${getStatusBadgeClass(historyItem.newStatus)}`}>
-                            {getStatusDisplayName(historyItem.newStatus)}
-                          </span>
-                        </div>
+                      <div className="mt-1 text-sm">
+                        <span className="font-medium text-gray-700">Status: </span>
+                        <span className={`px-2 py-0.5 rounded text-xs font-medium ${getStatusBadgeClass(historyItem.previousStatus)}`}>
+                          {getStatusDisplayName(historyItem.previousStatus)}
+                        </span>
+                        <span className="text-gray-500"> → </span>
+                        <span className={`px-2 py-0.5 rounded text-xs font-medium ${getStatusBadgeClass(historyItem.newStatus)}`}>
+                          {getStatusDisplayName(historyItem.newStatus)}
+                        </span>
                       </div>
                     ) : historyItem.action === 'create' && historyItem.newStatus && historyItem.newStatus.toLowerCase() === 'manager_review' ? (
-                      <div className="mt-2 flex flex-col xs:flex-row xs:items-center gap-1 text-sm">
-                        <span className="text-gray-500">Status: </span>
+                      <div className="mt-1 text-sm">
+                        <span className="font-medium text-gray-700">Status: </span>
                         <span className={`px-2 py-0.5 rounded text-xs font-medium ${getStatusBadgeClass(historyItem.newStatus)}`}>
                           {getStatusDisplayName(historyItem.newStatus)}
                         </span>
                       </div>
                     ) : null}
                     
-                    {/* Notes */}
+                    {/* Notes - Inline format */}
                     {historyItem.notes && (
-                      <div className="mt-2 text-sm text-gray-600">
-                        <p className="font-medium text-gray-700">Notes:</p>
-                        <p className="mt-1">{historyItem.notes}</p>
+                      <div className="mt-1 text-sm">
+                        <span className="font-medium text-gray-700">Notes: </span>
+                        <span className="text-gray-600">{historyItem.notes}</span>
                       </div>
                     )}
                     
-                    {/* Forward Message */}
+                    {/* Forward Message - Inline format */}
                     {historyItem.forwardedMessage && (
-                      <div className="mt-2 text-sm text-gray-600">
-                        <p className="font-medium text-gray-700">Forward Message:</p>
-                        <p className="mt-1">{historyItem.forwardedMessage}</p>
+                      <div className="mt-1 text-sm">
+                        <span className="font-medium text-gray-700">Forward Message: </span>
+                        <span className="text-gray-600">{historyItem.forwardedMessage}</span>
                       </div>
                     )}
 
-                    {/* Clarification Request */}
+                    {/* Clarification Request - Inline format */}
                     {(historyItem as any).clarificationRequest && (
-                      <div className="mt-2 text-sm text-gray-600">
-                        <p className="font-medium text-gray-700">Clarification Request:</p>
-                        <div className="mt-1 p-2 bg-yellow-50 border border-yellow-200 rounded">
-                          <p className="text-yellow-800">{(historyItem as any).clarificationRequest}</p>
-                        </div>
+                      <div className="mt-1 text-sm">
+                        <span className="font-medium text-gray-700">Clarification Request: </span>
+                        <span className="text-yellow-800">{(historyItem as any).clarificationRequest}</span>
                       </div>
                     )}
 
-                    {/* Clarification Response */}
+                    {/* Clarification Response - Inline format */}
                     {(historyItem as any).clarificationResponse && (
-                      <div className="mt-2 text-sm text-gray-600">
-                        <p className="font-medium text-gray-700">Clarification Response:</p>
-                        <div className="mt-1 p-2 bg-blue-50 border border-blue-200 rounded">
-                          <p className="text-blue-800">{(historyItem as any).clarificationResponse}</p>
-                        </div>
+                      <div className="mt-1 text-sm">
+                        <span className="font-medium text-gray-700">Clarification Response: </span>
+                        <span className="text-blue-800">{(historyItem as any).clarificationResponse}</span>
                       </div>
                     )}
                     
-                    {/* Budget Information */}
+                    {/* Budget Information - Inline format */}
                     {historyItem.budgetAvailable !== undefined && (
-                      <div className="mt-2 text-sm">
-                        <span className="font-medium text-gray-700">Budget Available:</span>{' '}
-                        <span className={historyItem.budgetAvailable ? 'text-green-600 font-medium' : 'text-red-600 font-medium'}>
+                      <div className="mt-1 text-sm">
+                        <span className="font-medium text-gray-700">Budget Available: </span>
+                        <span className={`font-medium ${historyItem.budgetAvailable ? 'text-green-600' : 'text-red-600'}`}>
                           {historyItem.budgetAvailable ? 'Yes' : 'No'}
                         </span>
                       </div>
                     )}
 
-                    {/* SOP Reference */}
+                    {/* SOP Reference - Inline format */}
                     {(historyItem as any).sopReference && (
-                      <div className="mt-2 text-sm">
-                        <span className="font-medium text-gray-700">SOP Reference:</span>{' '}
+                      <div className="mt-1 text-sm">
+                        <span className="font-medium text-gray-700">SOP Reference: </span>
                         <span className="text-blue-600 font-mono font-medium">
                           {(historyItem as any).sopReference}
                         </span>

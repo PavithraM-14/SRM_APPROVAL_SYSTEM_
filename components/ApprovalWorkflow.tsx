@@ -208,20 +208,7 @@ const ApprovalWorkflow: React.FC<ApprovalWorkflowProps> = ({ currentStatus }) =>
               <div className="ml-3">
                 <h3 className="text-sm font-medium text-blue-800">Current Status</h3>
                 <div className="mt-2 text-sm text-blue-700">
-                  <p>
-                    This request is currently in the{' '}
-                    <span className="font-semibold">{getStatusDisplayName(currentStatus)}</span>{' '}
-                    stage of the approval workflow.
-                  </p>
-                  {currentStatus === 'approved' && (
-                    <p className="mt-1">The request has been fully approved and can now be processed.</p>
-                  )}
-                  {currentStatus === 'rejected' && (
-                    <p className="mt-1">The request has been rejected and cannot proceed further in the workflow.</p>
-                  )}
-                  {currentStatus === 'clarification_required' && (
-                    <p className="mt-1">Response to queries is required before this request can proceed.</p>
-                  )}
+                  <p className="font-semibold">{getStatusDisplayName(currentStatus)} stage</p>
                 </div>
               </div>
             </div>
