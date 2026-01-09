@@ -318,9 +318,6 @@ const ApprovalHistory: React.FC<ApprovalHistoryProps> = ({ history, currentStatu
                       <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusBadgeClass(currentStatus)}`}>
                         Current Status
                       </span>
-                      <span className="ml-3 text-sm font-medium text-gray-900">
-                        System
-                      </span>
                     </div>
                     <div className="text-sm text-gray-500">
                       Now

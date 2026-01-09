@@ -155,7 +155,6 @@ export default function DashboardPage() {
       <div className="mb-6 sm:mb-8">
         <div className="flex-1 min-w-0">
           <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900">Dashboard</h2>
-          <p className="mt-1 text-sm sm:text-base text-gray-500">Overview of your requests and activity</p>
         </div>
       </div>
 

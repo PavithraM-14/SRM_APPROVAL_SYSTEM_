@@ -220,27 +220,37 @@ export default function CreateRequestPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
 
           <div className="sm:col-span-2">
-            <label className="text-sm font-medium">Title</label>
+            <label className="text-sm font-medium">Title*</label>
             <input {...register('title')} className="mt-1 w-full border p-2 rounded" />
             {errors.title && <p className={errorText}>{errors.title.message}</p>}
           </div>
 
           <div className="sm:col-span-2">
-            <label className="text-sm font-medium">Purpose</label>
+            <label className="text-sm font-medium">Purpose*</label>
             <textarea rows={3} {...register('purpose')} className="mt-1 w-full border p-2 rounded" />
             {errors.purpose && <p className={errorText}>{errors.purpose.message}</p>}
           </div>
 
           <div>
-            <label className="text-sm font-medium">College</label>
-            <input {...register('college')} className="mt-1 w-full border p-2 rounded" />
-            {errors.purpose && <p className={errorText}>{errors.purpose.message}</p>}
+            <label className="text-sm font-medium">Institution* </label>
+            <select {...register('college')} className="mt-1 w-full border p-2 rounded">
+              <option value="">Select Institution </option>
+              <option value="SRM">SRM</option>
+              <option value="EEC">EEC</option>
+              <option value="DENTAL">DENTAL</option>
+            </select>
+            {errors.college && <p className={errorText}>{errors.college.message}</p>}
           </div>
 
           <div>
-            <label className="text-sm font-medium">Department</label>
-            <input {...register('department')} className="mt-1 w-full border p-2 rounded" />
-            {errors.purpose && <p className={errorText}>{errors.purpose.message}</p>}
+            <label className="text-sm font-medium">Department* </label>
+            <select {...register('department')} className="mt-1 w-full border p-2 rounded" >
+            <option value="">Select Department </option>
+            <option value="SRM">CSE</option>
+              <option value="EEC">ECE</option>
+              <option value="DENTAL">EEE</option>
+            </select>
+            {errors.department && <p className={errorText}>{errors.department.message}</p>}
           </div>
 
           <div>
