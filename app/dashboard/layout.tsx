@@ -26,7 +26,7 @@ const navigation: NavItem[] = [
   { name: 'Dashboard', href: '/dashboard', icon: HomeIcon, roles: Object.values(UserRole) },
   { name: 'My Requests', href: '/dashboard/requests', icon: ClipboardDocumentListIcon, roles: [UserRole.REQUESTER] },
   { name: 'Create Request', href: '/dashboard/requests/create', icon: DocumentPlusIcon, roles: [UserRole.REQUESTER] },
-  { name: 'Queries', href: '/dashboard/queries', icon: ClockIcon, roles: [UserRole.REQUESTER, UserRole.DEAN] },
+  { name: 'Clarifications', href: '/dashboard/queries', icon: ClockIcon, roles: [UserRole.REQUESTER, UserRole.DEAN] },
   {
     name: 'Pending Approvals',
     href: '/dashboard/approvals',
@@ -138,7 +138,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     isActive ? 'text-white' : 'text-blue-300'
                   }`} />
                   <span className="flex-1">{item.name}</span>
-                  {item.name === 'Queries' && queryCount > 0 && (
+                  {item.name === 'Clarifications' && queryCount > 0 && (
                     <span className="ml-2 bg-yellow-500 text-yellow-900 text-xs font-bold px-2 py-1 rounded-full min-w-[20px] text-center">
                       {queryCount}
                     </span>

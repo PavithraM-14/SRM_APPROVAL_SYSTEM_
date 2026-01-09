@@ -64,7 +64,7 @@ export default function QueryModal({
             </div>
             <div>
               <h3 className="text-lg font-semibold text-gray-900">
-                Queries Required
+                Clarification Required
               </h3>
               <p className="text-sm text-gray-500">
                 Response needed from {queryRequest.actor.name}
@@ -125,12 +125,12 @@ export default function QueryModal({
         {!showRejectForm ? (
           <div className="p-6">
             <h4 className="text-sm font-medium text-gray-900 mb-3">
-              Your Response to Queries:
+              Your Response to Clarification:
             </h4>
             <textarea
               value={queryResponse}
               onChange={(e) => setQueryResponse(e.target.value)}
-              placeholder="Provide your response to the queries here..."
+              placeholder="Provide your response to the clarification here..."
               className="w-full h-32 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
               disabled={loading}
             />
@@ -149,7 +149,7 @@ export default function QueryModal({
                   isQuery={true}
                 />
                 <p className="text-xs text-blue-600 mt-2">
-                  Only PDF files can be attached during query responses
+                  Only PDF files can be attached during clarification responses
                 </p>
               </div>
             )}

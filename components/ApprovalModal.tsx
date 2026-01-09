@@ -41,7 +41,7 @@ export default function ApprovalModal({
   onSendToChairman,
   loading = false
 }: ApprovalModalProps) {
-  const [action, setAction] = useState<'approve' | 'reject' | 'reject_with_query' | 'forward' | 'clarify' | 'send_to_dean' | 'send_to_vp' | 'send_to_chairman'>(() => {
+  const [action, setAction] = useState<'approve' | 'reject' | 'reject_with_clarification' | 'forward' | 'clarify' | 'send_to_dean' | 'send_to_vp' | 'send_to_chairman'>(() => {
     if (userRole === 'institution_manager' && request.status === 'manager_review') {
       return 'forward';
     }
@@ -148,7 +148,7 @@ export default function ApprovalModal({
         }
         return;
       }
-      // For reject and reject_with_query, fall through to the switch statement below
+      // For reject and reject_with_clarification, fall through to the switch statement below
     }
 
     // For Dean clarify action (send to department)
@@ -178,9 +178,9 @@ export default function ApprovalModal({
         }
         onReject(notes);
         break;
-      case 'reject_with_query':
+      case 'reject_with_clarification':
         if (!notes.trim()) {
-          alert('Please provide queries for the requester');
+          alert('Please provide clarification request for the requester');
           return;
         }
         onRejectWithClarification(notes, attachments);
@@ -564,7 +564,7 @@ export default function ApprovalModal({
                       <option value="send_to_chairman">Send to Chairman</option>
                       <option value="clarify">Send to Department for Verification</option>
                       <option value="reject">Reject</option>
-                      <option value="reject_with_query">Raise Queries</option>
+                      <option value="reject_with_clarification">Raise Clarification</option>
                     </>
                   ) : (
                     // dean_verification status - after department verification
@@ -572,7 +572,7 @@ export default function ApprovalModal({
                       <option value="approve">Approve to Chief Director</option>
                       <option value="send_to_chairman">Send to Chairman</option>
                       <option value="reject">Reject</option>
-                      <option value="reject_with_query">Raise Queries</option>
+                      <option value="reject_with_clarification">Raise Clarification</option>
                     </>
                   )}
                 </select>
@@ -647,11 +647,11 @@ export default function ApprovalModal({
                     </div>
                   )}
                   
-                  {action === 'reject_with_query' && (
+                  {action === 'reject_with_clarification' && (
                     <div className="p-3 bg-orange-50 border border-orange-200 rounded-lg">
                       <div className="flex items-center">
                         <ExclamationTriangleIcon className="w-5 h-5 text-orange-600 mr-2" />
-                        <span className="font-medium text-orange-700">Raise Queries</span>
+                        <span className="font-medium text-orange-700">Raise Clarification</span>
                       </div>
                       <p className="text-sm text-orange-600 mt-1">
                         Request additional information from the requester
@@ -671,7 +671,7 @@ export default function ApprovalModal({
                 >
                   <option value="forward">Complete Verification & Send to Dean</option>
                   <option value="reject">Reject</option>
-                  <option value="reject_with_query">Raise Queries</option>
+                  <option value="reject_with_clarification">Raise Clarification</option>
                 </select>
 
                 {/* Action Options Display */}
@@ -698,11 +698,11 @@ export default function ApprovalModal({
                     </div>
                   )}
                   
-                  {action === 'reject_with_query' && (
+                  {action === 'reject_with_clarification' && (
                     <div className="p-3 bg-orange-50 border border-orange-200 rounded-lg">
                       <div className="flex items-center">
                         <ExclamationTriangleIcon className="w-5 h-5 text-orange-600 mr-2" />
-                        <span className="font-medium text-orange-700">Raise Queries</span>
+                        <span className="font-medium text-orange-700">Raise Clarification</span>
                       </div>
                       <p className="text-sm text-orange-600 mt-1">
                         Request additional information from the requester
@@ -722,7 +722,7 @@ export default function ApprovalModal({
                 >
                   <option value="forward">Send to SOP & Budget Verification</option>
                   <option value="reject">Reject</option>
-                  <option value="reject_with_query">Raise Queries</option>
+                  <option value="reject_with_clarification">Raise Clarification</option>
                 </select>
 
                 {/* Action Options Display */}
@@ -749,11 +749,11 @@ export default function ApprovalModal({
                     </div>
                   )}
                   
-                  {action === 'reject_with_query' && (
+                  {action === 'reject_with_clarification' && (
                     <div className="p-3 bg-orange-50 border border-orange-200 rounded-lg">
                       <div className="flex items-center">
                         <ExclamationTriangleIcon className="w-5 h-5 text-orange-600 mr-2" />
-                        <span className="font-medium text-orange-700">Raise Queries</span>
+                        <span className="font-medium text-orange-700">Raise Clarification</span>
                       </div>
                       <p className="text-sm text-orange-600 mt-1">
                         Request additional information from the requester
@@ -773,7 +773,7 @@ export default function ApprovalModal({
                 >
                   <option value="send_to_dean">Send to Dean</option>
                   <option value="send_to_vp">Send to VP</option>
-                  <option value="reject_with_query">Raise Query</option>
+                  <option value="reject_with_clarification">Raise Clarification</option>
                   <option value="reject">Reject</option>
                 </select>
 
@@ -803,11 +803,11 @@ export default function ApprovalModal({
                     </div>
                   )}
                   
-                  {action === 'reject_with_query' && (
+                  {action === 'reject_with_clarification' && (
                     <div className="p-3 bg-orange-50 border border-orange-200 rounded-lg">
                       <div className="flex items-center">
                         <ExclamationTriangleIcon className="w-5 h-5 text-orange-600 mr-2" />
-                        <span className="font-medium text-orange-700">Raise Query</span>
+                        <span className="font-medium text-orange-700">Raise Clarification</span>
                       </div>
                       <p className="text-sm text-orange-600 mt-1">
                         Request additional information from the requester
@@ -837,7 +837,7 @@ export default function ApprovalModal({
                 >
                   <option value="approve">Approve</option>
                   <option value="reject">Reject</option>
-                  <option value="reject_with_query">Raise Queries</option>
+                  <option value="reject_with_clarification">Raise Clarification</option>
                 </select>
 
                 {/* Action Options Display */}
@@ -862,11 +862,11 @@ export default function ApprovalModal({
                     </div>
                   )}
                   
-                  {action === 'reject_with_query' && (
+                  {action === 'reject_with_clarification' && (
                     <div className="p-3 bg-orange-50 border border-orange-200 rounded-lg">
                       <div className="flex items-center">
                         <ExclamationTriangleIcon className="w-5 h-5 text-orange-600 mr-2" />
-                        <span className="font-medium text-orange-700">Raise Queries</span>
+                        <span className="font-medium text-orange-700">Raise Clarification</span>
                       </div>
                       <p className="text-sm text-orange-600 mt-1">
                         Request additional information from the requester
@@ -897,8 +897,8 @@ export default function ApprovalModal({
                   ? "Add any comments about your department verification... (Optional)"
                   : action === 'approve' 
                   ? "Add any comments or notes for this approval..."
-                  : action === 'reject_with_query'
-                  ? "What additional information do you need from the requester?"
+                  : action === 'reject_with_clarification'
+                  ? "What clarification do you need from the requester?"
                   : "Please provide a reason for rejection..."
               }
               className="w-full h-32 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"

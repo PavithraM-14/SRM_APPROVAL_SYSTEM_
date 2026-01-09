@@ -81,10 +81,10 @@ const getStatusDisplayName = (status: string) => {
     'chairman_approval': 'Chairman Approval',
     'approved': 'Approved',
     'rejected': 'Rejected',
-    'query_required': 'Query Required',
-    'sop_query': 'SOP Query',
-    'budget_query': 'Budget Query',
-    'department_query': 'Department Query'
+    'query_required': 'Clarification Required',
+    'sop_query': 'SOP Clarification',
+    'budget_query': 'Budget Clarification',
+    'department_query': 'Department Clarification'
   };
   
   return statusMap[status.toLowerCase()] || status;
@@ -96,7 +96,7 @@ const getActionDisplayName = (action: string) => {
     'submit': 'Submitted',
     'approve': 'Approved',
     'reject': 'Rejected',
-    'clarify': 'Requested Query',
+    'clarify': 'Requested Clarification',
     'budget_check': 'Budget Check',
     'sop_check': 'SOP Check',
     'forward': 'Forwarded'
@@ -207,18 +207,18 @@ const ApprovalHistory: React.FC<ApprovalHistoryProps> = ({ history, currentStatu
                       </div>
                     )}
 
-                    {/* Query Request - Inline format */}
+                    {/* Clarification Request - Inline format */}
                     {(historyItem as any).queryRequest && (
                       <div className="mt-1 text-sm">
-                        <span className="font-medium text-gray-700">Query Request: </span>
+                        <span className="font-medium text-gray-700">Clarification Request: </span>
                         <span className="text-yellow-800">{(historyItem as any).queryRequest}</span>
                       </div>
                     )}
 
-                    {/* Query Response - Inline format */}
+                    {/* Clarification Response - Inline format */}
                     {(historyItem as any).queryResponse && (
                       <div className="mt-1 text-sm">
-                        <span className="font-medium text-gray-700">Query Response: </span>
+                        <span className="font-medium text-gray-700">Clarification Response: </span>
                         <span className="text-blue-800">{(historyItem as any).queryResponse}</span>
                       </div>
                     )}
@@ -270,10 +270,10 @@ const ApprovalHistory: React.FC<ApprovalHistoryProps> = ({ history, currentStatu
                       </div>
                     )}
 
-                    {/* Query Attachments */}
+                    {/* Clarification Attachments */}
                     {(historyItem as any).queryAttachments && (historyItem as any).queryAttachments.length > 0 && (
                       <div className="mt-3">
-                        <p className="text-sm font-medium text-gray-700 mb-2">Query Attachments:</p>
+                        <p className="text-sm font-medium text-gray-700 mb-2">Clarification Attachments:</p>
                         <div className="space-y-2">
                           {(historyItem as any).queryAttachments.map((attachment: string, index: number) => (
                             <div key={index} className="flex flex-col xs:flex-row xs:items-center xs:justify-between gap-2 p-2 border border-blue-200 rounded-md bg-blue-50">
@@ -282,7 +282,7 @@ const ApprovalHistory: React.FC<ApprovalHistoryProps> = ({ history, currentStatu
                                   <path fillRule="evenodd" d="M8 4a3 3 0 00-3 3v4a5 5 0 0010 0V7a1 1 0 112 0v4a7 7 0 11-14 0V7a5 5 0 0110 0v4a3 3 0 11-6 0V7a1 1 0 012 0v4a1 1 0 102 0V7a3 3 0 00-3-3z" clipRule="evenodd" />
                                 </svg>
                                 <span className="ml-2 text-sm text-blue-700 truncate">{getFileNameFromUrl(attachment)}</span>
-                                <span className="ml-2 text-xs text-blue-600 bg-blue-100 px-2 py-0.5 rounded-full">Query</span>
+                                <span className="ml-2 text-xs text-blue-600 bg-blue-100 px-2 py-0.5 rounded-full">Clarification</span>
                               </div>
                               <a 
                                 href={`/api/download?file=${encodeURIComponent(attachment)}`} 
