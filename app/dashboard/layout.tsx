@@ -26,7 +26,7 @@ const navigation: NavItem[] = [
   { name: 'Dashboard', href: '/dashboard', icon: HomeIcon, roles: Object.values(UserRole) },
   { name: 'My Requests', href: '/dashboard/requests', icon: ClipboardDocumentListIcon, roles: [UserRole.REQUESTER] },
   { name: 'Create Request', href: '/dashboard/requests/create', icon: DocumentPlusIcon, roles: [UserRole.REQUESTER] },
-  { name: 'Clarifications', href: '/dashboard/clarifications', icon: ClockIcon, roles: [UserRole.REQUESTER, UserRole.DEAN] },
+  { name: 'Queries', href: '/dashboard/queries', icon: ClockIcon, roles: [UserRole.REQUESTER, UserRole.DEAN] },
   {
     name: 'Pending Approvals',
     href: '/dashboard/approvals',
@@ -38,7 +38,7 @@ const navigation: NavItem[] = [
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
-  const [clarificationCount, setClarificationCount] = useState(0);
+  const [queryCount, setClarificationCount] = useState(0);
   const router = useRouter();
   const pathname = usePathname();
 
@@ -85,14 +85,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       
       const data = await response.json();
       
-      // Filter for requests that need clarification from current user
-      const clarificationRequests = data.requests.filter((request: any) => 
-        request.pendingClarification && request.clarificationLevel === user?.role
+      // Filter for requests that need query from current user
+      const queryRequests = data.requests.filter((request: any) => 
+        request.pendingQuery && request.queryLevel === user?.role
       );
 
-      setClarificationCount(clarificationRequests.length);
+      setClarificationCount(queryRequests.length);
     } catch (err) {
-      console.error('Error fetching clarification count:', err);
+      console.error('Error fetching query count:', err);
     }
   };
 
@@ -138,9 +138,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     isActive ? 'text-white' : 'text-blue-300'
                   }`} />
                   <span className="flex-1">{item.name}</span>
-                  {item.name === 'Clarifications' && clarificationCount > 0 && (
+                  {item.name === 'Queries' && queryCount > 0 && (
                     <span className="ml-2 bg-yellow-500 text-yellow-900 text-xs font-bold px-2 py-1 rounded-full min-w-[20px] text-center">
-                      {clarificationCount}
+                      {queryCount}
                     </span>
                   )}
                 </Link>

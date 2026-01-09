@@ -8,7 +8,7 @@ export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
     const files = formData.getAll('files') as File[];
-    const isClarification = formData.get('isClarification') === 'true';
+    const isQuery = formData.get('isQuery') === 'true';
     
     if (!files || files.length === 0) {
       return NextResponse.json(
@@ -17,8 +17,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validate all files with clarification context
-    const validationResult = validateFiles(files, isClarification);
+    // Validate all files with query context
+    const validationResult = validateFiles(files, isQuery);
     if (!validationResult.isValid) {
       return NextResponse.json(
         { error: validationResult.error },
@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const uploadDir = join(process.cwd(), 'public', 'uploads', 'clarifications');
+    const uploadDir = join(process.cwd(), 'public', 'uploads', 'queries');
     
     // Create upload directory if it doesn't exist
     if (!existsSync(uploadDir)) {
@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
       await writeFile(filepath, buffer);
       
       // Store relative path for database
-      const relativePath = `/uploads/clarifications/${filename}`;
+      const relativePath = `/uploads/queries/${filename}`;
       uploadedFiles.push(relativePath);
     }
 

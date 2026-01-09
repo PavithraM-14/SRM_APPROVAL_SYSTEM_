@@ -88,4 +88,4 @@ When users click "Approved" or filter by approved status, they will only see req
 
 ## Status: ✅ COMPLETE
 
-The approved requests clarification has been implemented. "Approved" now consistently means requests that have been fully approved by the Chairman across all dashboard stats and filtering.
+The approved requests query has been implemented. "Approved" now consistently means requests that have been fully approved by the Chairman across all dashboard stats and filtering.

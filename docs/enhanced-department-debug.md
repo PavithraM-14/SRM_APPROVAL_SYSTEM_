@@ -1,7 +1,7 @@
 # Enhanced Department Clarification Debug
 
 ## Issue
-Department users still getting "Failed to process approval" error when responding to Dean clarifications, despite previous debugging attempts.
+Department users still getting "Failed to process approval" error when responding to Dean queries, despite previous debugging attempts.
 
 ## Enhanced Debug Logging Added
 
@@ -58,16 +58,16 @@ console.log('[DEBUG] Role authorization check:', {
 
 ### 6. Department Clarification Logging (Previously Added)
 ```typescript
-console.log('[DEBUG] Department clarification check:', {
+console.log('[DEBUG] Department query check:', {
   userRole: user.role,
   latestClarification: latestClarification ? {
-    clarificationTarget: latestClarification.clarificationTarget,
+    queryTarget: latestClarification.queryTarget,
     actor: latestClarification.actor,
     timestamp: latestClarification.timestamp
   } : null,
   requestHistory: requestRecord.history.map((h: any) => ({
     action: h.action,
-    clarificationTarget: h.clarificationTarget,
+    queryTarget: h.queryTarget,
     timestamp: h.timestamp
   }))
 });
@@ -87,9 +87,9 @@ console.log('[DEBUG] Department clarification check:', {
   userRole: 'hr', 
   isAuthorized: true 
 }
-[DEBUG] Department clarification check: { 
+[DEBUG] Department query check: { 
   userRole: 'hr', 
-  latestClarification: { clarificationTarget: 'hr', ... } 
+  latestClarification: { queryTarget: 'hr', ... } 
 }
 ```
 
@@ -114,9 +114,9 @@ console.log('[DEBUG] Department clarification check:', {
 
 #### Wrong Department:
 ```
-[DEBUG] Department clarification check: { 
+[DEBUG] Department query check: { 
   userRole: 'mma', 
-  latestClarification: { clarificationTarget: 'hr', ... } 
+  latestClarification: { queryTarget: 'hr', ... } 
 }
 [DEBUG] Authorization failed: { expected: 'hr', actual: 'mma' }
 ```
@@ -137,7 +137,7 @@ console.log('[DEBUG] Department clarification check:', {
 - Approval engine not returning expected roles for department_checks
 
 ### If Stops at Department Check:
-- User role doesn't match clarification target
+- User role doesn't match query target
 - Clarification target not properly stored
 - Role format mismatch
 
@@ -150,4 +150,4 @@ console.log('[DEBUG] Department clarification check:', {
 
 ## Status: 🔍 COMPREHENSIVE DEBUGGING
 
-Added extensive logging throughout the approval flow to identify the exact failure point in department clarification responses.
+Added extensive logging throughout the approval flow to identify the exact failure point in department query responses.

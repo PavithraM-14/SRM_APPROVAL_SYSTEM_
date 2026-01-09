@@ -2,10 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import ClarificationIndicator from '../../../components/ClarificationIndicator';
-import ClarificationModal from '../../../components/ClarificationModal';
-import DeanClarificationModal from '../../../components/DeanClarificationModal';
-import { clarificationEngine } from '../../../lib/clarification-engine';
+import QueryIndicator from '../../../components/QueryIndicator';
+import QueryModal from '../../../components/QueryModal';
+import DeanQueryModal from '../../../components/DeanQueryModal';
+import { queryEngine } from '../../../lib/query-engine';
 
 interface Request {
   _id: string;
@@ -22,8 +22,8 @@ interface Request {
     email: string;
   };
   history: any[];
-  pendingClarification?: boolean;
-  clarificationLevel?: string;
+  pendingQuery?: boolean;
+  queryLevel?: string;
 }
 
 export default function QueriesPage() {
@@ -33,8 +33,8 @@ export default function QueriesPage() {
   const [error, setError] = useState<string | null>(null);
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [selectedRequest, setSelectedRequest] = useState<Request | null>(null);
-  const [isClarificationModalOpen, setIsClarificationModalOpen] = useState(false);
-  const [isDeanClarificationModalOpen, setIsDeanClarificationModalOpen] = useState(false);
+  const [isQueryModalOpen, setIsQueryModalOpen] = useState(false);
+  const [isDeanQueryModalOpen, setIsDeanQueryModalOpen] = useState(false);
   const [processingClarification, setProcessingClarification] = useState(false);
 
   useEffect(() => {
@@ -78,7 +78,7 @@ export default function QueriesPage() {
       
       // Filter for requests that need response from current user
       const queriesRequests = data.requests.filter((request: Request) => 
-        request.pendingClarification && request.clarificationLevel === currentUser.role
+        request.pendingQuery && request.queryLevel === currentUser.role
       );
 
       setRequests(queriesRequests);
@@ -93,15 +93,15 @@ export default function QueriesPage() {
   const handleRequestClick = (request: Request) => {
     setSelectedRequest(request);
     
-    // Open appropriate modal based on user role and clarification type
-    if (currentUser.role === 'dean' && clarificationEngine.isDeanMediatedClarification(request)) {
-      setIsDeanClarificationModalOpen(true);
+    // Open appropriate modal based on user role and query type
+    if (currentUser.role === 'dean' && queryEngine.isDeanMediatedClarification(request)) {
+      setIsDeanQueryModalOpen(true);
     } else {
-      setIsClarificationModalOpen(true);
+      setIsQueryModalOpen(true);
     }
   };
 
-  const handleClarifyAndApprove = async (response: string, attachments: string[]) => {
+  const handleQueryAndApprove = async (response: string, attachments: string[]) => {
     if (!selectedRequest) return;
     
     try {
@@ -110,7 +110,7 @@ export default function QueriesPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          action: 'clarify_and_reapprove',
+          action: 'query_and_reapprove',
           notes: response,
           attachments
         }),
@@ -123,7 +123,7 @@ export default function QueriesPage() {
 
       // Refresh the list
       await fetchQueriesRequests();
-      setIsClarificationModalOpen(false);
+      setIsQueryModalOpen(false);
       setSelectedRequest(null);
     } catch (err) {
       console.error('Response error:', err);
@@ -154,7 +154,7 @@ export default function QueriesPage() {
 
       // Refresh the list
       await fetchQueriesRequests();
-      setIsClarificationModalOpen(false);
+      setIsQueryModalOpen(false);
       setSelectedRequest(null);
     } catch (err) {
       console.error('Rejection error:', err);
@@ -185,7 +185,7 @@ export default function QueriesPage() {
 
       // Refresh the list
       await fetchQueriesRequests();
-      setIsDeanClarificationModalOpen(false);
+      setIsDeanQueryModalOpen(false);
       setSelectedRequest(null);
     } catch (err) {
       console.error('Dean send to requester error:', err);
@@ -204,7 +204,7 @@ export default function QueriesPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          action: 'clarify_and_reapprove',
+          action: 'query_and_reapprove',
           notes
         }),
       });
@@ -216,7 +216,7 @@ export default function QueriesPage() {
 
       // Refresh the list
       await fetchQueriesRequests();
-      setIsDeanClarificationModalOpen(false);
+      setIsDeanQueryModalOpen(false);
       setSelectedRequest(null);
     } catch (err) {
       console.error('Dean re-approval error:', err);
@@ -240,14 +240,14 @@ export default function QueriesPage() {
   };
 
   const getClarificationInfo = (request: Request) => {
-    const latestClarificationRequest = clarificationEngine.getLatestClarificationRequest(request);
-    if (!latestClarificationRequest) return null;
+    const latestQueryRequest = queryEngine.getLatestQueryRequest(request);
+    if (!latestQueryRequest) return null;
 
     return {
-      from: latestClarificationRequest.actor?.name || 'Unknown',
-      role: latestClarificationRequest.actor?.role || 'Unknown',
-      message: latestClarificationRequest.clarificationRequest || '',
-      timestamp: latestClarificationRequest.timestamp || new Date().toISOString()
+      from: latestQueryRequest.actor?.name || 'Unknown',
+      role: latestQueryRequest.actor?.role || 'Unknown',
+      message: latestQueryRequest.queryRequest || '',
+      timestamp: latestQueryRequest.timestamp || new Date().toISOString()
     };
   };
 
@@ -286,7 +286,7 @@ export default function QueriesPage() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center gap-3">
-              <ClarificationIndicator size="lg" showText={false} />
+              <QueryIndicator size="lg" showText={false} />
               Queries
             </h1>
             <p className="text-gray-600 mt-2">
@@ -303,7 +303,7 @@ export default function QueriesPage() {
         </div>
       </div>
 
-      {/* Clarification Requests List */}
+      {/* Query Requests List */}
       {requests.length === 0 ? (
         <div className="text-center py-12 bg-white rounded-xl shadow-md border border-gray-100">
           <div className="w-16 h-16 mx-auto mb-4 bg-green-100 rounded-full flex items-center justify-center">
@@ -335,7 +335,7 @@ export default function QueriesPage() {
           
           <div className="divide-y divide-gray-200">
             {requests.map((request) => {
-              const clarificationInfo = getClarificationInfo(request);
+              const queryInfo = getClarificationInfo(request);
               
               return (
                 <div
@@ -346,7 +346,7 @@ export default function QueriesPage() {
                   <div className="flex items-start justify-between">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-3 mb-2">
-                        <ClarificationIndicator size="sm" showText={false} />
+                        <QueryIndicator size="sm" showText={false} />
                         <h3 className="text-lg font-semibold text-gray-900 truncate">
                           {request.title}
                         </h3>
@@ -356,18 +356,18 @@ export default function QueriesPage() {
                         {request.purpose}
                       </p>
                       
-                      {clarificationInfo && (
+                      {queryInfo && (
                         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-3">
                           <div className="flex items-center gap-2 mb-1">
                             <span className="text-sm font-medium text-yellow-800">
-                              Query from {clarificationInfo.from} ({clarificationInfo.role.toUpperCase()})
+                              Query from {queryInfo.from} ({queryInfo.role.toUpperCase()})
                             </span>
                           </div>
                           <p className="text-sm text-yellow-700 line-clamp-2">
-                            {clarificationInfo.message}
+                            {queryInfo.message}
                           </p>
                           <p className="text-xs text-yellow-600 mt-1">
-                            {new Date(clarificationInfo.timestamp).toLocaleString('en-GB')}
+                            {new Date(queryInfo.timestamp).toLocaleString('en-GB')}
                           </p>
                         </div>
                       )}
@@ -404,22 +404,22 @@ export default function QueriesPage() {
 
       {/* Clarification Modal */}
       {selectedRequest && (
-        <ClarificationModal
-          isOpen={isClarificationModalOpen}
+        <QueryModal
+          isOpen={isQueryModalOpen}
           onClose={() => {
-            setIsClarificationModalOpen(false);
+            setIsQueryModalOpen(false);
             setSelectedRequest(null);
           }}
-          clarificationRequest={{
+          queryRequest={{
             actor: {
               name: getClarificationInfo(selectedRequest)?.from || 'Unknown',
               role: getClarificationInfo(selectedRequest)?.role || 'Unknown'
             },
-            clarificationRequest: getClarificationInfo(selectedRequest)?.message || '',
+            queryRequest: getClarificationInfo(selectedRequest)?.message || '',
             timestamp: getClarificationInfo(selectedRequest)?.timestamp || new Date().toISOString(),
             attachments: []
           }}
-          onClarifyAndApprove={handleClarifyAndApprove}
+          onQueryAndApprove={handleQueryAndApprove}
           onReject={handleClarificationReject}
           loading={processingClarification}
           userRole={currentUser?.role || ''}
@@ -430,7 +430,7 @@ export default function QueriesPage() {
       {/* Dean Clarification Modal */}
       {selectedRequest && (
         (() => {
-          const originalRejector = clarificationEngine.getOriginalRejector(selectedRequest);
+          const originalRejector = queryEngine.getOriginalRejector(selectedRequest);
           const latestRejection = selectedRequest.history
             ?.filter((h: any) => h.action === 'REJECT_WITH_CLARIFICATION')
             ?.sort((a: any, b: any) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())[0];
@@ -442,10 +442,10 @@ export default function QueriesPage() {
           if (!originalRejector || !latestRejection) return null;
 
           return (
-            <DeanClarificationModal
-              isOpen={isDeanClarificationModalOpen}
+            <DeanQueryModal
+              isOpen={isDeanQueryModalOpen}
               onClose={() => {
-                setIsDeanClarificationModalOpen(false);
+                setIsDeanQueryModalOpen(false);
                 setSelectedRequest(null);
               }}
               rejectionInfo={{
@@ -453,12 +453,12 @@ export default function QueriesPage() {
                   name: originalRejector.name || 'Unknown',
                   role: originalRejector.role || 'Unknown'
                 },
-                rejectionReason: latestRejection.clarificationRequest || 'No reason provided',
+                rejectionReason: latestRejection.queryRequest || 'No reason provided',
                 timestamp: latestRejection.timestamp || new Date().toISOString()
               }}
               requesterClarification={requesterClarification ? {
-                response: requesterClarification.clarificationResponse || '',
-                attachments: requesterClarification.clarificationAttachments || [],
+                response: requesterClarification.queryResponse || '',
+                attachments: requesterClarification.queryAttachments || [],
                 timestamp: requesterClarification.timestamp ? new Date(requesterClarification.timestamp).toISOString() : new Date().toISOString()
               } : undefined}
               onSendToRequester={handleDeanSendToRequester}

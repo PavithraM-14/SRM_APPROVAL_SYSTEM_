@@ -12,12 +12,12 @@
 - Added a separate "Request Clarification" button to the request detail page
 - Users now have two options when processing requests:
   - **Process Request** - Opens the full ApprovalModal with all options (Approve, Request Clarification, Reject)
-  - **Request Clarification** - Direct clarification request without going through the full modal
+  - **Request Clarification** - Direct query request without going through the full modal
 
-### ✅ **3. Created DirectClarificationModal Component**
-- Simple, focused modal specifically for requesting clarifications
-- Streamlined interface with just a text area for the clarification request
-- Integrated with existing clarification workflow
+### ✅ **3. Created DirectQueryModal Component**
+- Simple, focused modal specifically for requesting queries
+- Streamlined interface with just a text area for the query request
+- Integrated with existing query workflow
 
 ## Implementation Details
 
@@ -47,14 +47,14 @@ const newFiles = uploaded.files.map((filePath: string) => ({
   Process Request
 </button>
 
-<button onClick={() => setIsDirectClarificationModalOpen(true)}>
+<button onClick={() => setIsDirectQueryModalOpen(true)}>
   Request Clarification
 </button>
 ```
 
-### DirectClarificationModal Component
-**Simple clarification interface:**
-- Clean, focused UI for clarification requests
+### DirectQueryModal Component
+**Simple query interface:**
+- Clean, focused UI for query requests
 - Integrates with existing `handleRejectWithClarification` handler
 - Maintains consistency with existing modal design patterns
 
@@ -62,7 +62,7 @@ const newFiles = uploaded.files.map((filePath: string) => ({
 
 ### For Approvers
 1. **Full Process Flow**: Click "Process Request" → Choose from Approve/Clarify/Reject
-2. **Quick Clarification**: Click "Request Clarification" → Direct clarification form
+2. **Quick Clarification**: Click "Request Clarification" → Direct query form
 
 ### For Requesters
 - File upload works correctly with PDF-only restriction
@@ -77,20 +77,20 @@ const newFiles = uploaded.files.map((filePath: string) => ({
 - **API Endpoint**: `/api/upload` with `files` parameter
 - **Validation**: Client-side and server-side PDF validation
 
-### Clarification Responses
+### Query Responses
 - **File Types**: PDF only (via FileUpload component)
-- **Context**: `isClarification=true` parameter
-- **Restriction**: Only requesters can upload files during clarifications
+- **Context**: `isQuery=true` parameter
+- **Restriction**: Only requesters can upload files during queries
 
 ## Benefits
 
 ### ✅ **Improved Workflow**
-1. **Faster Clarifications**: Direct clarification button for quick requests
+1. **Faster Queries**: Direct query button for quick requests
 2. **Familiar Interface**: Maintained original request creation UI
-3. **Dual Options**: Users can choose full process or quick clarification
+3. **Dual Options**: Users can choose full process or quick query
 
 ### ✅ **Better UX**
-1. **Less Clicks**: Direct clarification without modal navigation
+1. **Less Clicks**: Direct query without modal navigation
 2. **Clear Intent**: Separate buttons for different actions
 3. **Consistent Design**: Matches existing modal patterns
 
@@ -111,9 +111,9 @@ const newFiles = uploaded.files.map((filePath: string) => ({
 ### Clarification Workflow
 1. ✅ Open request detail page as authorized approver
 2. ✅ See both "Process Request" and "Request Clarification" buttons
-3. ✅ Test "Request Clarification" → Direct clarification form
+3. ✅ Test "Request Clarification" → Direct query form
 4. ✅ Test "Process Request" → Full approval modal with all options
-5. ✅ Verify clarification requests work correctly
+5. ✅ Verify query requests work correctly
 
 ## Files Modified
 
@@ -123,7 +123,7 @@ const newFiles = uploaded.files.map((filePath: string) => ({
    - Maintained PDF-only restriction
 
 2. **`app/dashboard/requests/[id]/page.tsx`**
-   - Added `DirectClarificationModal` component
+   - Added `DirectQueryModal` component
    - Added dedicated "Request Clarification" button
    - Created dual button layout for authorized users
 
@@ -139,7 +139,7 @@ const newFiles = uploaded.files.map((filePath: string) => ({
 
 ### Clarification Button Not Showing
 - **Check**: User must be authorized approver for current request status
-- **Verify**: Request is not already pending clarification from someone else
+- **Verify**: Request is not already pending query from someone else
 - **Confirm**: User role matches required approver roles
 
 ### Modal Not Opening
@@ -147,4 +147,4 @@ const newFiles = uploaded.files.map((filePath: string) => ({
 - **Verify**: All imports are correct
 - **Confirm**: Modal state management is working
 
-This implementation provides the best of both worlds: familiar request creation interface with working file uploads, plus enhanced clarification workflow with dedicated quick-access button.
+This implementation provides the best of both worlds: familiar request creation interface with working file uploads, plus enhanced query workflow with dedicated quick-access button.

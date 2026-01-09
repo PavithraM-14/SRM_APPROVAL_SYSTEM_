@@ -4,7 +4,7 @@ import Request from '../../../../../models/Request';
 import { getCurrentUser } from '../../../../../lib/auth';
 import { RequestStatus, ActionType, UserRole } from '../../../../../lib/types';
 import { approvalEngine } from '../../../../../lib/approval-engine';
-import { clarificationEngine } from '../../../../../lib/clarification-engine';
+import { queryEngine } from '../../../../../lib/query-engine';
 
 export async function POST(
   request: NextRequest,
@@ -46,8 +46,8 @@ export async function POST(
       userRole: user.role
     });
 
-    // Validate action - add new actions for budget routing and clarification workflow
-    if (!['approve', 'reject', 'clarify', 'forward', 'send_to_dean', 'send_to_vp', 'reject_with_clarification', 'clarify_and_reapprove', 'dean_send_to_requester'].includes(action)) {
+    // Validate action - add new actions for budget routing and query workflow
+    if (!['approve', 'reject', 'clarify', 'forward', 'send_to_dean', 'send_to_vp', 'reject_with_query', 'query_and_reapprove', 'dean_send_to_requester'].includes(action)) {
       console.log('[DEBUG] Invalid action:', action);
       return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
     }
@@ -71,10 +71,10 @@ export async function POST(
     );
 
     // Clarification responder bypass: allow the role currently responsible for responding
-    const isClarificationResponder = (
-      action === 'clarify_and_reapprove' &&
-      requestRecord.pendingClarification === true &&
-      requestRecord.clarificationLevel === (user.role as UserRole)
+    const isQueryResponder = (
+      action === 'query_and_reapprove' &&
+      requestRecord.pendingQuery === true &&
+      requestRecord.queryLevel === (user.role as UserRole)
     );
 
     const isDeanSendToRequester = (
@@ -85,16 +85,16 @@ export async function POST(
       currentStatus: requestRecord.status,
       requiredApprovers,
       userRole: user.role,
-      pendingClarification: requestRecord.pendingClarification,
-      clarificationLevel: requestRecord.clarificationLevel,
+      pendingQuery: requestRecord.pendingQuery,
+      queryLevel: requestRecord.queryLevel,
       isAuthorizedApprover: requiredApprovers.includes(user.role as UserRole),
-      isClarificationResponder,
+      isQueryResponder,
       isDeanSendToRequester
     });
 
     if (
       !requiredApprovers.includes(user.role as UserRole) &&
-      !isClarificationResponder &&
+      !isQueryResponder &&
       !isDeanSendToRequester
     ) {
       console.log('[DEBUG] Authorization failed - role not permitted for this action');
@@ -104,34 +104,34 @@ export async function POST(
       );
     }
 
-    // Special check for department clarifications
+    // Special check for department queries
     if (requestRecord.status === RequestStatus.DEPARTMENT_CHECKS) {
-      // Find the latest clarification request from Dean
+      // Find the latest query request from Dean
       const latestClarification = requestRecord.history
-        .filter((h: any) => h.action === ActionType.CLARIFY && h.clarificationTarget)
+        .filter((h: any) => h.action === ActionType.CLARIFY && h.queryTarget)
         .sort((a: any, b: any) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())[0];
 
-      console.log('[DEBUG] Department clarification check:', {
+      console.log('[DEBUG] Department query check:', {
         userRole: user.role,
         latestClarification: latestClarification ? {
-          clarificationTarget: latestClarification.clarificationTarget,
+          queryTarget: latestClarification.queryTarget,
           actor: latestClarification.actor,
           timestamp: latestClarification.timestamp
         } : null,
         requestHistory: requestRecord.history.map((h: any) => ({
           action: h.action,
-          clarificationTarget: h.clarificationTarget,
+          queryTarget: h.queryTarget,
           timestamp: h.timestamp
         }))
       });
 
-      if (latestClarification && latestClarification.clarificationTarget !== user.role.toLowerCase()) {
+      if (latestClarification && latestClarification.queryTarget !== user.role.toLowerCase()) {
         console.log('[DEBUG] Authorization failed:', {
-          expected: latestClarification.clarificationTarget,
+          expected: latestClarification.queryTarget,
           actual: user.role.toLowerCase()
         });
         return NextResponse.json(
-          { error: `These queries were sent to ${latestClarification.clarificationTarget.toUpperCase()} department, not ${user.role.toUpperCase()}. Only ${latestClarification.clarificationTarget.toUpperCase()} users can respond to these queries.` },
+          { error: `These queries were sent to ${latestClarification.queryTarget.toUpperCase()} department, not ${user.role.toUpperCase()}. Only ${latestClarification.queryTarget.toUpperCase()} users can respond to these queries.` },
           { status: 403 }
         );
       }
@@ -232,22 +232,22 @@ export async function POST(
         break;
 
       case 'forward':
-        // Handle department responses to Dean clarifications
+        // Handle department responses to Dean queries
         if ([UserRole.MMA, UserRole.HR, UserRole.AUDIT, UserRole.IT].includes(user.role as UserRole) && 
             requestRecord.status === RequestStatus.DEPARTMENT_CHECKS) {
-          // Find the latest clarification to get the target
+          // Find the latest query to get the target
           const latestClarification = requestRecord.history
-            .filter((h: any) => h.action === ActionType.CLARIFY && h.clarificationTarget)
+            .filter((h: any) => h.action === ActionType.CLARIFY && h.queryTarget)
             .sort((a: any, b: any) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())[0];
           
           // Use approval engine with proper context
-          const context = { clarificationTarget: latestClarification?.clarificationTarget };
+          const context = { queryTarget: latestClarification?.queryTarget };
           console.log('[DEBUG] Department forward context:', {
             userRole: user.role,
             currentStatus: requestRecord.status,
             context,
             latestClarification: latestClarification ? {
-              clarificationTarget: latestClarification.clarificationTarget,
+              queryTarget: latestClarification.queryTarget,
               timestamp: latestClarification.timestamp
             } : null
           });
@@ -270,59 +270,59 @@ export async function POST(
         actionType = ActionType.FORWARD;
         break;
 
-      case 'reject_with_clarification':
-        // Validate that clarification request is provided
+      case 'reject_with_query':
+        // Validate that query request is provided
         if (!notes || notes.trim() === '') {
           return NextResponse.json({ error: 'Queries for the requester are required when raising queries' }, { status: 400 });
         }
         
-        // Get the clarification target based on new workflow
-        const clarificationTarget = clarificationEngine.getClarificationTarget(requestRecord.status, user.role as UserRole);
-        if (!clarificationTarget) {
+        // Get the query target based on new workflow
+        const queryTarget = queryEngine.getQueryTarget(requestRecord.status, user.role as UserRole);
+        if (!queryTarget) {
           return NextResponse.json({ error: 'Cannot send queries - no target found' }, { status: 400 });
         }
         
-        console.log('[DEBUG] Reject with clarification (NEW WORKFLOW):', {
+        console.log('[DEBUG] Reject with query (NEW WORKFLOW):', {
           currentStatus: requestRecord.status,
           currentRole: user.role,
-          clarificationTarget: clarificationTarget,
-          clarificationRequest: notes,
-          isDeanMediated: clarificationTarget.isDeanMediated
+          queryTarget: queryTarget,
+          queryRequest: notes,
+          isDeanMediated: queryTarget.isDeanMediated
         });
         
-        // Set the request to pending clarification at the target level
-        nextStatus = clarificationTarget.status;
+        // Set the request to pending query at the target level
+        nextStatus = queryTarget.status;
         actionType = ActionType.REJECT_WITH_CLARIFICATION;
         break;
 
-      case 'clarify_and_reapprove':
-        // Validate that clarification response is provided
+      case 'query_and_reapprove':
+        // Validate that query response is provided
         if (!notes || notes.trim() === '') {
           return NextResponse.json({ error: 'Response to queries is required' }, { status: 400 });
         }
         
-        // Check if this request is actually pending clarification for this user
-        if (!clarificationEngine.canProvideClarification(requestRecord, user.role as UserRole, user.id)) {
+        // Check if this request is actually pending query for this user
+        if (!queryEngine.canProvideClarification(requestRecord, user.role as UserRole, user.id)) {
           return NextResponse.json({ error: 'This request is not pending response from you' }, { status: 400 });
         }
         
-        // Handle different clarification workflows
+        // Handle different query workflows
         if (user.role === UserRole.REQUESTER) {
-          // Requester providing clarification
-          if (clarificationEngine.isDeanMediatedClarification(requestRecord)) {
+          // Requester providing query
+          if (queryEngine.isDeanMediatedClarification(requestRecord)) {
             // Dean-mediated: Requester → Dean
             nextStatus = RequestStatus.DEAN_REVIEW;
           } else {
             // Direct: Requester → Original Rejector
-            const returnStatus = clarificationEngine.getReturnStatus(requestRecord);
+            const returnStatus = queryEngine.getReturnStatus(requestRecord);
             nextStatus = returnStatus || RequestStatus.MANAGER_REVIEW;
           }
         } else if (user.role === UserRole.DEAN) {
-          // Dean reviewing requester's clarification and re-approving
-          const returnStatus = clarificationEngine.getReturnStatus(requestRecord);
+          // Dean reviewing requester's query and re-approving
+          const returnStatus = queryEngine.getReturnStatus(requestRecord);
           nextStatus = returnStatus || RequestStatus.MANAGER_REVIEW;
         } else {
-          return NextResponse.json({ error: 'Invalid role for clarification response' }, { status: 400 });
+          return NextResponse.json({ error: 'Invalid role for query response' }, { status: 400 });
         }
         
         actionType = ActionType.CLARIFY_AND_REAPPROVE;
@@ -331,15 +331,15 @@ export async function POST(
           currentStatus: requestRecord.status,
           targetStatus: nextStatus,
           userRole: user.role,
-          clarificationResponse: notes,
-          isDeanMediated: clarificationEngine.isDeanMediatedClarification(requestRecord)
+          queryResponse: notes,
+          isDeanMediated: queryEngine.isDeanMediatedClarification(requestRecord)
         });
         break;
 
       case 'dean_send_to_requester':
-        // Dean forwards rejection to requester for clarification
+        // Dean forwards rejection to requester for query
         if (user.role !== UserRole.DEAN) {
-          return NextResponse.json({ error: 'Only Dean can send requests to requester for clarification' }, { status: 400 });
+          return NextResponse.json({ error: 'Only Dean can send requests to requester for query' }, { status: 400 });
         }
         
         if (!notes || notes.trim() === '') {
@@ -349,10 +349,10 @@ export async function POST(
         nextStatus = RequestStatus.SUBMITTED;
         actionType = ActionType.REJECT_WITH_CLARIFICATION;
         
-        console.log('[DEBUG] Dean sending to requester for clarification:', {
+        console.log('[DEBUG] Dean sending to requester for query:', {
           currentStatus: requestRecord.status,
           targetStatus: nextStatus,
-          clarificationMessage: notes
+          queryMessage: notes
         });
         break;
     }
@@ -399,44 +399,44 @@ export async function POST(
       historyEntry.budgetAvailable = budgetAvailable;
     }
 
-    // Store clarification target for Dean to department flow
+    // Store query target for Dean to department flow
     if (action === 'clarify' && user.role === UserRole.DEAN && target) {
-      historyEntry.clarificationTarget = target;
+      historyEntry.queryTarget = target;
     }
 
-    // Store clarification type for Institution Manager flow
+    // Store query type for Institution Manager flow
     if (action === 'clarify' && user.role === UserRole.INSTITUTION_MANAGER && target) {
-      historyEntry.clarificationType = target;
+      historyEntry.queryType = target;
     }
 
-    // Store department response for Dean clarifications
+    // Store department response for Dean queries
     if (action === 'forward' && [UserRole.MMA, UserRole.HR, UserRole.AUDIT, UserRole.IT].includes(user.role as UserRole) && 
         requestRecord.status === RequestStatus.DEPARTMENT_CHECKS) {
       historyEntry.departmentResponse = user.role;
     }
 
-    // Handle clarification workflow fields
-    if (action === 'reject_with_clarification' || action === 'dean_send_to_requester') {
-      historyEntry.clarificationRequest = notes;
+    // Handle query workflow fields
+    if (action === 'reject_with_query' || action === 'dean_send_to_requester') {
+      historyEntry.queryRequest = notes;
       historyEntry.requiresClarification = true;
       if (attachments?.length) historyEntry.attachments = attachments;
       
-      // Store original rejector info for Dean-mediated clarifications
-      if (action === 'reject_with_clarification') {
-        const clarificationTarget = clarificationEngine.getClarificationTarget(requestRecord.status, user.role as UserRole);
-        if (clarificationTarget?.isDeanMediated) {
+      // Store original rejector info for Dean-mediated queries
+      if (action === 'reject_with_query') {
+        const queryTarget = queryEngine.getQueryTarget(requestRecord.status, user.role as UserRole);
+        if (queryTarget?.isDeanMediated) {
           historyEntry.originalRejector = user.id;
           historyEntry.isDeanMediated = true;
         }
       }
     }
 
-    if (action === 'clarify_and_reapprove') {
-      historyEntry.clarificationResponse = notes;
-      if (attachments?.length) historyEntry.clarificationAttachments = attachments;
+    if (action === 'query_and_reapprove') {
+      historyEntry.queryResponse = notes;
+      if (attachments?.length) historyEntry.queryAttachments = attachments;
       
-      // Mark if this is a Dean re-approval after reviewing requester's clarification
-      if (user.role === UserRole.DEAN && clarificationEngine.isDeanMediatedClarification(requestRecord)) {
+      // Mark if this is a Dean re-approval after reviewing requester's query
+      if (user.role === UserRole.DEAN && queryEngine.isDeanMediatedClarification(requestRecord)) {
         historyEntry.isDeanReapproval = true;
       }
     }
@@ -455,45 +455,45 @@ export async function POST(
       updateData.$set = { status: nextStatus };
     }
 
-    // Handle clarification workflow updates
-    if (action === 'reject_with_clarification' || action === 'dean_send_to_requester') {
+    // Handle query workflow updates
+    if (action === 'reject_with_query' || action === 'dean_send_to_requester') {
       if (!updateData.$set) updateData.$set = {};
-      updateData.$set.pendingClarification = true;
+      updateData.$set.pendingQuery = true;
       
-      if (action === 'reject_with_clarification') {
-        const clarificationTarget = clarificationEngine.getClarificationTarget(requestRecord.status, user.role as UserRole);
-        updateData.$set.clarificationLevel = clarificationTarget?.role;
+      if (action === 'reject_with_query') {
+        const queryTarget = queryEngine.getQueryTarget(requestRecord.status, user.role as UserRole);
+        updateData.$set.queryLevel = queryTarget?.role;
       } else {
         // dean_send_to_requester
-        updateData.$set.clarificationLevel = UserRole.REQUESTER;
+        updateData.$set.queryLevel = UserRole.REQUESTER;
       }
     }
 
-    if (action === 'clarify_and_reapprove') {
+    if (action === 'query_and_reapprove') {
       if (!updateData.$set) updateData.$set = {};
       
       if (user.role === UserRole.REQUESTER) {
-        // Requester provided clarification
-        if (clarificationEngine.isDeanMediatedClarification(requestRecord)) {
+        // Requester provided query
+        if (queryEngine.isDeanMediatedClarification(requestRecord)) {
           // Dean-mediated: Requester → Dean for review
-          updateData.$set.clarificationLevel = UserRole.DEAN;
-          updateData.$set.pendingClarification = true; // Still pending, but now with Dean
+          updateData.$set.queryLevel = UserRole.DEAN;
+          updateData.$set.pendingQuery = true; // Still pending, but now with Dean
         } else {
           // Direct: Requester → Original Rejector
-          // Find the original rejector and set them as the clarification level
-          const originalRejector = clarificationEngine.getOriginalRejector(requestRecord);
+          // Find the original rejector and set them as the query level
+          const originalRejector = queryEngine.getOriginalRejector(requestRecord);
           if (originalRejector) {
-            updateData.$set.clarificationLevel = originalRejector.role;
-            updateData.$set.pendingClarification = true; // Now pending with original rejector
+            updateData.$set.queryLevel = originalRejector.role;
+            updateData.$set.pendingQuery = true; // Now pending with original rejector
           } else {
-            updateData.$set.pendingClarification = false;
-            updateData.$set.clarificationLevel = null;
+            updateData.$set.pendingQuery = false;
+            updateData.$set.queryLevel = null;
           }
         }
       } else {
-        // Dean or other reviewer approved after clarification - workflow complete
-        updateData.$set.pendingClarification = false;
-        updateData.$set.clarificationLevel = null;
+        // Dean or other reviewer approved after query - workflow complete
+        updateData.$set.pendingQuery = false;
+        updateData.$set.queryLevel = null;
       }
     }
 

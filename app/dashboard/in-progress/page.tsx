@@ -113,9 +113,9 @@ export default function InProgressPage() {
         return 'bg-amber-100 text-amber-700';
       case 'chairman_approval':
         return 'bg-emerald-100 text-emerald-700';
-      case 'sop_clarification':
-      case 'budget_clarification':
-      case 'department_clarification':
+      case 'sop_query':
+      case 'budget_query':
+      case 'department_query':
         return 'bg-red-100 text-red-700';
       default:
         return 'bg-gray-100 text-gray-700';
@@ -138,9 +138,9 @@ export default function InProgressPage() {
       'dean_verification': 'Dean Verification',
       'chief_director_approval': 'Chief Director Approval',
       'chairman_approval': 'Chairman Approval',
-      'sop_clarification': 'SOP Queries Required',
-      'budget_clarification': 'Budget Queries Required',
-      'department_clarification': 'Department Queries Required',
+      'sop_query': 'SOP Queries Required',
+      'budget_query': 'Budget Queries Required',
+      'department_query': 'Department Queries Required',
       'approved': 'Fully Approved',
       'rejected': 'Rejected'
     };
@@ -164,9 +164,9 @@ export default function InProgressPage() {
       'dean_verification': 'Awaiting Dean verification',
       'chief_director_approval': 'Awaiting Chief Director approval',
       'chairman_approval': 'Awaiting Chairman final approval',
-      'sop_clarification': 'SOP queries required from manager',
-      'budget_clarification': 'Budget queries required from manager',
-      'department_clarification': 'Department queries required',
+      'sop_query': 'SOP queries required from manager',
+      'budget_query': 'Budget queries required from manager',
+      'department_query': 'Department queries required',
       'approved': 'Request has been fully approved by Chairman'
     };
     

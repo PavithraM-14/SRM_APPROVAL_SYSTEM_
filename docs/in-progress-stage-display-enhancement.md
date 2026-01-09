@@ -33,7 +33,7 @@ Enhanced color coding for better visual distinction:
 - **VP Approval**: Purple
 - **Dean Review**: Indigo
 - **Chairman Approval**: Emerald
-- **Clarifications**: Red
+- **Queries**: Red
 - And more...
 
 ### 4. Prominent Current Stage Display

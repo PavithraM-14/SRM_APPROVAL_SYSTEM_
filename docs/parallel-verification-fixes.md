@@ -12,13 +12,13 @@
 - Separate UI sections for different SOP statuses (parallel_verification, budget_completed)
 
 ### 2. Accountant Unable to Approve with Budget Information
-**Problem**: Accountant UI was only showing for budget clarification, not for parallel verification.
+**Problem**: Accountant UI was only showing for budget query, not for parallel verification.
 
 **Solution**:
 - Added dedicated accountant UI for parallel verification status
 - Added budget input fields (allocated, spent, available) for parallel verification
 - Added validation for budget fields when accountant is approving
-- Separate UI sections for different accountant statuses (parallel_verification, sop_completed, budget_clarification)
+- Separate UI sections for different accountant statuses (parallel_verification, sop_completed, budget_query)
 
 ## Technical Changes
 
@@ -32,7 +32,7 @@
 #### Accountant UI:
 - **Parallel Verification**: Complete budget verification with budget fields
 - **SOP Completed**: Complete budget verification after SOP is done  
-- **Budget Clarification**: Standard budget clarification flow
+- **Budget Clarification**: Standard budget query flow
 
 #### Validation:
 - SOP reference required when SOP approves (can mark as "Not Available")
@@ -75,19 +75,19 @@
 ### SOP Verifier Can Act On:
 - `parallel_verification` → `sop_completed` (with reference number)
 - `budget_completed` → `institution_verified` (with reference number)
-- Can request clarification from either state
+- Can request query from either state
 
 ### Accountant Can Act On:
 - `parallel_verification` → `budget_completed` (with budget info)
 - `sop_completed` → `institution_verified` (with budget info)
-- Can request clarification from either state
+- Can request query from either state
 
 ## Validation Rules
 
 ### SOP Verifier:
 - Must provide reference number OR mark as "Not Available" when approving
 - Notes are optional but recommended
-- Can reject or request clarification without reference number
+- Can reject or request query without reference number
 
 ### Accountant:
 - Must provide valid budget allocated amount (> 0) when approving
@@ -113,7 +113,7 @@
 1. **Parallel Verification**:
    - Complete with reference number
    - Complete with "Not Available" reference
-   - Request clarification
+   - Request query
    - Reject request
 
 2. **After Budget Complete**:
@@ -124,7 +124,7 @@
 1. **Parallel Verification**:
    - Complete with valid budget information
    - Try to submit with invalid budget (should show error)
-   - Request clarification
+   - Request query
    - Reject request
 
 2. **After SOP Complete**:
@@ -135,7 +135,7 @@
 1. Both complete simultaneously → Institution Verified
 2. SOP completes first → Budget completes → Institution Verified  
 3. Budget completes first → SOP completes → Institution Verified
-4. Either requests clarification → Back to Manager Review
+4. Either requests query → Back to Manager Review
 
 ## Security & Audit
 

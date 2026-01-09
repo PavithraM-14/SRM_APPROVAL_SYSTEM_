@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import ClarificationIndicator from '../../../components/ClarificationIndicator';
+import QueryIndicator from '../../../components/QueryIndicator';
 
 interface Request {
   _id: string;
@@ -15,8 +15,8 @@ interface Request {
   status: string;
   createdAt: string;
   history?: any[];
-  pendingClarification?: boolean;
-  clarificationLevel?: string;
+  pendingQuery?: boolean;
+  queryLevel?: string;
   _visibility?: {
     category: 'pending' | 'approved' | 'in_progress' | 'completed';
     userAction?: 'approve' | 'clarify' | null;
@@ -110,12 +110,12 @@ export default function RequestsPage() {
     }
   };
 
-  const getClarificationStatus = (request: Request) => {
+  const getQueryStatus = (request: Request) => {
     if (!request.history) return null;
     
-    // Find latest Dean clarification
+    // Find latest Dean query
     const latestClarification = request.history
-      .filter((h: any) => h.action === 'clarify' && h.clarificationTarget && h.actor?.role === 'dean')
+      .filter((h: any) => h.action === 'clarify' && h.queryTarget && h.actor?.role === 'dean')
       .sort((a: any, b: any) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())[0];
     
     if (!latestClarification) return null;
@@ -128,14 +128,14 @@ export default function RequestsPage() {
     if (departmentResponse) {
       return {
         type: 'completed',
-        department: latestClarification.clarificationTarget,
+        department: latestClarification.queryTarget,
         respondedBy: departmentResponse.departmentResponse,
         responseDate: departmentResponse.timestamp
       };
     } else if (request.status === 'department_checks') {
       return {
         type: 'pending',
-        department: latestClarification.clarificationTarget,
+        department: latestClarification.queryTarget,
         requestDate: latestClarification.timestamp
       };
     }
@@ -359,17 +359,17 @@ export default function RequestsPage() {
                       )}
 
                       {(() => {
-                        const clarificationStatus = getClarificationStatus(request);
-                        if (clarificationStatus?.type === 'completed') {
+                        const queryStatus = getQueryStatus(request);
+                        if (queryStatus?.type === 'completed') {
                           return (
                             <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700 whitespace-nowrap">
-                              ✓ {clarificationStatus.respondedBy.toUpperCase()} Responded
+                              ✓ {queryStatus.respondedBy.toUpperCase()} Responded
                             </span>
                           );
-                        } else if (clarificationStatus?.type === 'pending') {
+                        } else if (queryStatus?.type === 'pending') {
                           return (
                             <span className="px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-700 whitespace-nowrap">
-                              ⏳ Awaiting {clarificationStatus.department.toUpperCase()}
+                              ⏳ Awaiting {queryStatus.department.toUpperCase()}
                             </span>
                           );
                         }
@@ -380,8 +380,8 @@ export default function RequestsPage() {
                         <span className={`px-2 sm:px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap ${getStatusBadgeClass(request.status)}`}>
                           {request.status.replace('_', ' ').toUpperCase()}
                         </span>
-                        {request.pendingClarification && request.clarificationLevel === currentUser?.role && (
-                          <ClarificationIndicator size="sm" showText={false} />
+                        {request.pendingQuery && request.queryLevel === currentUser?.role && (
+                          <QueryIndicator size="sm" showText={false} />
                         )}
                       </div>
                     </div>

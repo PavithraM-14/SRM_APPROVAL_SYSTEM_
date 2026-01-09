@@ -7,42 +7,42 @@ import FileUpload from './FileUpload';
 interface QueriesModalProps {
   isOpen: boolean;
   onClose: () => void;
-  clarificationRequest: {
+  queryRequest: {
     actor: { name: string; role: string };
-    clarificationRequest: string;
+    queryRequest: string;
     timestamp: string;
     attachments?: string[];
   };
-  onClarifyAndApprove: (response: string, attachments: string[]) => void;
+  onQueryAndApprove: (response: string, attachments: string[]) => void;
   onReject: (reason: string) => void;
   loading?: boolean;
   userRole?: string;
   isRequester?: boolean;
 }
 
-export default function ClarificationModal({
+export default function QueryModal({
   isOpen,
   onClose,
-  clarificationRequest,
-  onClarifyAndApprove,
+  queryRequest,
+  onQueryAndApprove,
   onReject,
   loading = false,
   userRole = '',
   isRequester = false
 }: QueriesModalProps) {
-  const [clarificationResponse, setClarificationResponse] = useState('');
+  const [queryResponse, setQueryResponse] = useState('');
   const [rejectReason, setRejectReason] = useState('');
   const [showRejectForm, setShowRejectForm] = useState(false);
   const [attachments, setAttachments] = useState<string[]>([]);
 
   if (!isOpen) return null;
 
-  const handleClarifyAndApprove = () => {
-    if (!clarificationResponse.trim()) {
+  const handleQueryAndApprove = () => {
+    if (!queryResponse.trim()) {
       alert('Please provide a response to the queries');
       return;
     }
-    onClarifyAndApprove(clarificationResponse, attachments);
+    onQueryAndApprove(queryResponse, attachments);
   };
 
   const handleReject = () => {
@@ -67,7 +67,7 @@ export default function ClarificationModal({
                 Queries Required
               </h3>
               <p className="text-sm text-gray-500">
-                Response needed from {clarificationRequest.actor.name}
+                Response needed from {queryRequest.actor.name}
               </p>
             </div>
           </div>
@@ -79,22 +79,22 @@ export default function ClarificationModal({
           </button>
         </div>
 
-        {/* Queries Request */}
+        {/* Query Request */}
         <div className="p-6 border-b border-gray-200">
           <div className="mb-4">
             <h4 className="text-sm font-medium text-gray-900 mb-2">
-              Question from {clarificationRequest.actor.name} ({clarificationRequest.actor.role}):
+              Question from {queryRequest.actor.name} ({queryRequest.actor.role}):
             </h4>
             <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-              <p className="text-gray-800">{clarificationRequest.clarificationRequest}</p>
+              <p className="text-gray-800">{queryRequest.queryRequest}</p>
             </div>
           </div>
 
-          {clarificationRequest.attachments && clarificationRequest.attachments.length > 0 && (
+          {queryRequest.attachments && queryRequest.attachments.length > 0 && (
             <div className="mb-4">
               <h5 className="text-sm font-medium text-gray-900 mb-2">Attachments:</h5>
               <div className="space-y-2">
-                {clarificationRequest.attachments.map((attachment, index) => (
+                {queryRequest.attachments.map((attachment, index) => (
                   <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded border border-gray-200">
                     <div className="flex items-center min-w-0 flex-1">
                       <svg className="flex-shrink-0 h-4 w-4 text-gray-400 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
@@ -117,7 +117,7 @@ export default function ClarificationModal({
           )}
 
           <p className="text-xs text-gray-500">
-            Requested on {new Date(clarificationRequest.timestamp).toLocaleString('en-GB')}
+            Requested on {new Date(queryRequest.timestamp).toLocaleString('en-GB')}
           </p>
         </div>
 
@@ -128,8 +128,8 @@ export default function ClarificationModal({
               Your Response to Queries:
             </h4>
             <textarea
-              value={clarificationResponse}
-              onChange={(e) => setClarificationResponse(e.target.value)}
+              value={queryResponse}
+              onChange={(e) => setQueryResponse(e.target.value)}
               placeholder="Provide your response to the queries here..."
               className="w-full h-32 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
               disabled={loading}
@@ -146,7 +146,7 @@ export default function ClarificationModal({
                   maxFiles={3}
                   disabled={loading}
                   existingFiles={attachments}
-                  isClarification={true}
+                  isQuery={true}
                 />
                 <p className="text-xs text-blue-600 mt-2">
                   Only PDF files can be attached during query responses
@@ -172,9 +172,9 @@ export default function ClarificationModal({
                   Cancel
                 </button>
                 <button
-                  onClick={handleClarifyAndApprove}
+                  onClick={handleQueryAndApprove}
                   className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium transition-colors disabled:opacity-50"
-                  disabled={loading || !clarificationResponse.trim()}
+                  disabled={loading || !queryResponse.trim()}
                 >
                   {loading ? 'Processing...' : (isRequester ? 'Submit Response' : 'Approve with Response')}
                 </button>

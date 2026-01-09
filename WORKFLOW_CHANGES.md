@@ -68,7 +68,7 @@ The changes maintain backward compatibility and all existing functionality. The 
 - ✅ Supports parallel verification by SOP and Accountant
 - ✅ Automatically progresses to Institution Manager after both complete
 - ✅ Routes directly to VP Admin after Institution Manager approval
-- ✅ Maintains all existing approval, rejection, and clarification workflows
+- ✅ Maintains all existing approval, rejection, and query workflows
 - ✅ Preserves all user permissions and visibility rules
 
 ## Status: ✅ IMPLEMENTED

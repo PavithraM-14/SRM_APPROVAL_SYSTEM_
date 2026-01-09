@@ -21,7 +21,7 @@ A comprehensive digital approval workflow system built with Next.js, TypeScript,
 ### Advanced Features
 - ✅ **Enhanced Approval Engine** - Parallel verification with smart routing
 - ✅ **Indian Number System** - Real-time formatting with lakhs/crores
-- ✅ **Department Clarification System** - Targeted clarifications with visibility control
+- ✅ **Department Clarification System** - Targeted queries with visibility control
 - ✅ **Sophisticated Role-Based Visibility** - Users see only relevant requests
 - ✅ **Timeline Tracking** - Visual progress indicators with enhanced status display
 - ✅ **Advanced Search & Filtering** - Role-based request filtering
@@ -120,7 +120,7 @@ After running `npm run seed`, use these credentials to test different roles:
 | Accountant | accountant@srmrmp.edu.in | password123 | Budget verification |
 | VP | vp@srmrmp.edu.in | password123 | Vice President approval |
 | Head of Institution | head_of_institution@srmrmp.edu.in | password123 | HOI approval |
-| Dean | dean@srmrmp.edu.in | password123 | Dean review and department clarifications |
+| Dean | dean@srmrmp.edu.in | password123 | Dean review and department queries |
 | MMA | mma@srmrmp.edu.in | password123 | MMA department verification |
 | HR | hr@srmrmp.edu.in | password123 | HR department verification |
 | Audit | audit@srmrmp.edu.in | password123 | Audit department verification |
@@ -143,7 +143,7 @@ Budget Not Available: → Dean Review → Department Checks → Chief Director �
 ### Key Workflow Features
 - **Parallel Processing**: SOP and Budget verification happen simultaneously
 - **Smart Routing**: Manager decides routing based on budget availability after verifications
-- **Department Targeting**: Dean can send clarifications to specific departments (MMA/HR/Audit/IT)
+- **Department Targeting**: Dean can send queries to specific departments (MMA/HR/Audit/IT)
 - **Role-Based Visibility**: Users only see requests relevant to their role and approval level
 
 ### Workflow States
@@ -153,7 +153,7 @@ Budget Not Available: → Dean Review → Department Checks → Chief Director �
 - **Budget Completed** - Budget verification finished, waiting for SOP
 - **VP Approval** - Vice President review (budget available path)
 - **HOI Approval** - Head of Institution approval
-- **Dean Review** - Dean assessment and department clarification management
+- **Dean Review** - Dean assessment and department query management
 - **Department Checks** - Targeted department verification (MMA/HR/Audit/IT)
 - **Chief Director Approval** - Senior management approval
 - **Chairman Approval** - Final board approval
@@ -310,7 +310,7 @@ The system uses 6 main collections:
 - ✅ **Parallel Verification System** - Simultaneous SOP and Budget verification
 - ✅ **Department Clarification Targeting** - Specific department routing
 - ✅ **Enhanced Role-Based Visibility** - Sophisticated request filtering
-- ✅ **Simplified Workflows** - Removed unnecessary clarification steps
+- ✅ **Simplified Workflows** - Removed unnecessary query steps
 - ✅ **Mobile Responsiveness** - Improved mobile experience
 - ✅ **Dashboard Navigation Fixes** - Proper stats card routing
 - ✅ **Email Domain Validation** - Restricted to @srmrmp.edu.in

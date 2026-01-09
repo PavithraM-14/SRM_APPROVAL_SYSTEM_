@@ -21,7 +21,7 @@ interface DeanQueriesModalProps {
   loading?: boolean;
 }
 
-export default function DeanClarificationModal({
+export default function DeanQueryModal({
   isOpen,
   onClose,
   rejectionInfo,

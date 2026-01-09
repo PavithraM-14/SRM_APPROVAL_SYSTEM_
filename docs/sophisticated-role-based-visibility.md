@@ -88,9 +88,9 @@ Implemented a comprehensive role-based visibility system where users only see re
 - **Approved**: Requests they approved that completed
 
 ### Department Users (MMA, HR, Audit, IT)
-- See only requests where Dean specifically requested their clarification
+- See only requests where Dean specifically requested their query
 - **Pending**: Clarification requests directed to them
-- **In Progress**: Clarifications they've provided
+- **In Progress**: Queries they've provided
 
 ## Security & Workflow Integrity
 
@@ -141,7 +141,7 @@ Implemented a comprehensive role-based visibility system where users only see re
 ### Flexible Categorization
 - Adapts to different workflow stages
 - Handles parallel verification scenarios
-- Supports clarification workflows
+- Supports query workflows
 
 ## Files Created/Modified
 
@@ -169,6 +169,6 @@ Implemented a comprehensive role-based visibility system where users only see re
 2. **Manager Approval**: Manager approves → SOP/Accountant see in pending
 3. **Verification**: SOP verifies → Shows in manager's "in progress"
 4. **Final Approval**: VP approves → Shows in everyone's involvement as completed
-5. **Clarification**: Dean requests clarification → Department sees in pending
+5. **Clarification**: Dean requests query → Department sees in pending
 
 This system ensures that every user has a clear, accurate view of their role in the approval process while maintaining security and workflow integrity.

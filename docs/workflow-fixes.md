@@ -66,16 +66,16 @@ Implemented a complete parallel verification system where Institution Manager se
 
 ### SOP Verifier:
 - Works independently during parallel verification
-- Can complete verification or request clarification
+- Can complete verification or request query
 - Clear status showing parallel work in progress
 
 ### Accountant:
 - Works independently during parallel verification  
-- Can complete verification or request clarification
+- Can complete verification or request query
 - Clear status showing parallel work in progress
 
 ### Other Roles:
-- Dean department clarification flow remains unchanged
+- Dean department query flow remains unchanged
 - All other workflow stages work as before
 
 ## Workflow Benefits
@@ -102,7 +102,7 @@ Implemented a complete parallel verification system where Institution Manager se
 - **Budget Clarification**: `PARALLEL_VERIFICATION` → `BUDGET_CLARIFICATION` → `MANAGER_REVIEW`
 
 ### After Clarification:
-- Manager resolves clarification and resends to `PARALLEL_VERIFICATION`
+- Manager resolves query and resends to `PARALLEL_VERIFICATION`
 - Process continues with parallel verification
 
 ## Security & Validation
@@ -110,7 +110,7 @@ Implemented a complete parallel verification system where Institution Manager se
 ### Enhanced Checks:
 - Only authorized roles can perform specific actions
 - Proper validation for budget routing decisions
-- Department clarification targeting remains secure
+- Department query targeting remains secure
 - Complete audit trail for all parallel verification steps
 
 ### Error Handling:
@@ -132,8 +132,8 @@ Implemented a complete parallel verification system where Institution Manager se
 - Proper routing decision tracking
 
 ### 3. **Clarification Handling**:
-- SOP requests clarification during parallel verification
-- Accountant requests clarification during parallel verification
+- SOP requests query during parallel verification
+- Accountant requests query during parallel verification
 - Manager resolves and resends to parallel verification
 
 ### 4. **End-to-End**:

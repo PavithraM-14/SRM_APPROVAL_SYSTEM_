@@ -15,12 +15,12 @@ const approvalHistorySchema = new mongoose.Schema({
   budgetSpent: { type: Number },
   budgetBalance: { type: Number },
   // 🔹 Clarification tracking
-  clarificationTarget: { type: String }, // For Dean -> Department clarifications
-  clarificationType: { type: String }, // For Institution Manager -> SOP/Accountant
-  clarificationRequest: { type: String }, // Question/note when rejecting for clarification
-  clarificationResponse: { type: String }, // Response from lower level user
-  clarificationAttachments: [{ type: String }], // Attachments for clarification response
-  requiresClarification: { type: Boolean, default: false }, // Flag to indicate this is a clarification request
+  queryTarget: { type: String }, // For Dean -> Department queries
+  queryType: { type: String }, // For Institution Manager -> SOP/Accountant
+  queryRequest: { type: String }, // Question/note when rejecting for query
+  queryResponse: { type: String }, // Response from lower level user
+  queryAttachments: [{ type: String }], // Attachments for query response
+  requiresClarification: { type: Boolean, default: false }, // Flag to indicate this is a query request
   timestamp: { type: Date, default: Date.now },
 });
 
@@ -51,8 +51,8 @@ const requestSchema = new mongoose.Schema(
       enum: Object.values(RequestStatus),
       default: RequestStatus.SUBMITTED,
     },
-    pendingClarification: { type: Boolean, default: false }, // Flag to indicate request is pending clarification
-    clarificationLevel: { type: String }, // The level that needs to provide clarification
+    pendingQuery: { type: Boolean, default: false }, // Flag to indicate request is pending query
+    queryLevel: { type: String }, // The level that needs to provide query
     history: [approvalHistorySchema],
   },
   {

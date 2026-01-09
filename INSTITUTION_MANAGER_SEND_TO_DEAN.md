@@ -28,10 +28,10 @@
 
 ### **Option 3: Raise Query**
 1. **Institution Manager** → Clicks "Raise Query"
-2. **Requester** → Receives query and provides clarification
+2. **Requester** → Receives query and provides query
 3. **Request** → Returns to Institution Manager for review
 - **Path**: Institution Manager → Requester → Institution Manager
-- **Use Case**: Need additional information or clarification
+- **Use Case**: Need additional information or query
 
 ### **Option 4: Reject**
 1. **Institution Manager** → Clicks "Reject"
@@ -66,7 +66,7 @@
 <select>
   <option value="send_to_dean">Send to Dean</option>
   <option value="send_to_vp">Send to VP</option>
-  <option value="reject_with_clarification">Raise Query</option>
+  <option value="reject_with_query">Raise Query</option>
   <option value="reject">Reject</option>
 </select>
 ```
@@ -115,7 +115,7 @@ case UserRole.DEAN:
 - Cost-based decision at Chief Director level
 
 ### **Query/Reject Paths:**
-- Standard clarification/rejection workflow
+- Standard query/rejection workflow
 - No special routing logic needed
 
 ## 🧪 **TEST SCENARIOS**

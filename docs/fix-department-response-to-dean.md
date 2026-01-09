@@ -1,7 +1,7 @@
 # Fix Department Response to Dean Clarification
 
 ## Issue Clarification
-When Dean sends requests for clarification to departments (HR, MMA, Audit, IT), after the department responds, it should be sent back to the Dean, not to the Chief Director.
+When Dean sends requests for query to departments (HR, MMA, Audit, IT), after the department responds, it should be sent back to the Dean, not to the Chief Director.
 
 ## Investigation Results
 The workflow logic was already correct in both the approval engine and API route. The issue was only in the UI text which was misleading users.
@@ -10,7 +10,7 @@ The workflow logic was already correct in both the approval engine and API route
 
 ### 1. Approval Engine Transitions
 ```typescript
-// Dean can send to departments for clarification
+// Dean can send to departments for query
 { from: RequestStatus.DEAN_REVIEW, to: RequestStatus.DEPARTMENT_CHECKS, requiredRole: UserRole.DEAN },
 
 // Department responses go back to dean
@@ -24,7 +24,7 @@ The workflow logic was already correct in both the approval engine and API route
 ### 2. API Route Logic (Already Correct)
 ```typescript
 case 'forward':
-  // Handle department responses to Dean clarifications
+  // Handle department responses to Dean queries
   if ([UserRole.MMA, UserRole.HR, UserRole.AUDIT, UserRole.IT].includes(user.role as UserRole) && 
       requestRecord.status === RequestStatus.DEPARTMENT_CHECKS) {
     nextStatus = RequestStatus.DEAN_REVIEW;  // ✅ Correctly goes back to Dean
@@ -51,7 +51,7 @@ case 'forward':
 ## Workflow Confirmation
 
 ### Dean Clarification Process:
-1. **Dean sends clarification**: `DEAN_REVIEW` → `DEPARTMENT_CHECKS`
+1. **Dean sends query**: `DEAN_REVIEW` → `DEPARTMENT_CHECKS`
    - Dean selects target department (HR, MMA, Audit, IT)
    - Request status becomes `department_checks`
 
@@ -62,7 +62,7 @@ case 'forward':
 
 3. **Dean reviews response**: `DEAN_REVIEW` → `CHIEF_DIRECTOR_APPROVAL`
    - Dean can now approve and send to Chief Director
-   - Or request additional clarification if needed
+   - Or request additional query if needed
 
 ## Benefits
 

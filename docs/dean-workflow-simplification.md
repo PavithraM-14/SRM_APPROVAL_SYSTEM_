@@ -66,7 +66,7 @@ This makes it clear that the Dean's approval will send the request directly to t
 2. **Faster Processing**: Eliminates unnecessary intermediate step
 3. **Clearer Intent**: UI clearly shows the request goes to Chief Director
 4. **Better UX**: Less confusion about why Dean needs to approve twice
-5. **Maintained Functionality**: All Dean capabilities (clarification, rejection) preserved
+5. **Maintained Functionality**: All Dean capabilities (query, rejection) preserved
 
 ## Backward Compatibility
 

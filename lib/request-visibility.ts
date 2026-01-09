@@ -22,7 +22,7 @@ export function analyzeRequestVisibility(
     if (request.requester._id?.toString() === userId || request.requester.toString() === userId) {
       return {
         canSee: true,
-        category: getRequesterCategory(request.status, request.pendingClarification, request.clarificationLevel),
+        category: getRequesterCategory(request.status, request.pendingQuery, request.queryLevel),
         reason: 'Own request'
       };
     }
@@ -35,21 +35,21 @@ export function analyzeRequestVisibility(
 
 function getRequesterCategory(
   status: RequestStatus, 
-  pendingClarification?: boolean, 
-  clarificationLevel?: string
+  pendingQuery?: boolean, 
+  queryLevel?: string
 ): 'pending' | 'approved' | 'in_progress' | 'completed' {
   switch (status) {
     case RequestStatus.APPROVED:
       return 'approved';
     case RequestStatus.REJECTED:
       // If request is rejected but pending response from requester, show as pending
-      if (pendingClarification && clarificationLevel === UserRole.REQUESTER) {
+      if (pendingQuery && queryLevel === UserRole.REQUESTER) {
         return 'pending';
       }
       return 'completed';
     case RequestStatus.SUBMITTED:
       // If request is back to submitted status due to queries, show as pending
-      if (pendingClarification && clarificationLevel === UserRole.REQUESTER) {
+      if (pendingQuery && queryLevel === UserRole.REQUESTER) {
         return 'pending';
       }
       return 'pending';
@@ -73,7 +73,7 @@ function analyzeApproverVisibility(
   const needsCurrentApproval = doesRequestNeedUserApproval(request, userRole, userId, history);
   
   // Check if request is pending response from this user
-  const needsClarification = request.pendingClarification && request.clarificationLevel === userRole;
+  const needsClarification = request.pendingQuery && request.queryLevel === userRole;
   
   // Check if request has reached or passed through user's workflow level
   const hasReachedUserLevel = hasRequestReachedUserLevel(request, userRole, history);
@@ -83,7 +83,7 @@ function analyzeApproverVisibility(
     request.status === RequestStatus.DEPARTMENT_CHECKS &&
     history.some((h: any) => 
       h.action === ActionType.CLARIFY && 
-      h.clarificationTarget &&
+      h.queryTarget &&
       (h.actor?._id?.toString() === userId || h.actor?.toString() === userId)
     );
   
@@ -246,12 +246,12 @@ function doesRequestNeedUserApproval(
     
     // Find the latest queries request from Dean
     const latestClarification = history
-      .filter((h: any) => h.action === ActionType.CLARIFY && h.clarificationTarget)
+      .filter((h: any) => h.action === ActionType.CLARIFY && h.queryTarget)
       .sort((a: any, b: any) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())[0];
     
     // Only show to the department that was specifically targeted
     if (latestClarification) {
-      const targetedRole = latestClarification.clarificationTarget; // e.g., 'hr', 'mma'
+      const targetedRole = latestClarification.queryTarget; // e.g., 'hr', 'mma'
       const currentUserRole = userRole.toLowerCase(); // Convert UserRole.HR to 'hr'
       return targetedRole === currentUserRole;
     }
@@ -343,7 +343,7 @@ function categorizeRequestForUser(
 
   // Special handling for queries workflow states
   // Requests pending response should show as "rejected" to the original rejector until response is provided
-  if (request.pendingClarification) {
+  if (request.pendingQuery) {
     // Find the latest rejection with queries
     const latestRejectionWithClarification = request.history
       ?.filter((h: any) => h.action === ActionType.REJECT_WITH_CLARIFICATION)
@@ -354,7 +354,7 @@ function categorizeRequestForUser(
       
       // If this user is the original rejector
       if (rejectorId === userId) {
-        // Check if requester has provided clarification yet
+        // Check if requester has provided query yet
         const requesterClarificationProvided = request.history?.some((h: any) => 
           h.action === ActionType.CLARIFY_AND_REAPPROVE && 
           h.actor?.role === 'requester' &&
@@ -362,17 +362,17 @@ function categorizeRequestForUser(
         );
 
         if (requesterClarificationProvided) {
-          // Requester has provided clarification - show as pending for original rejector
+          // Requester has provided query - show as pending for original rejector
           return {
             category: 'pending',
-            reason: 'Requester provided clarification - review needed',
+            reason: 'Requester provided query - review needed',
             userAction: 'clarify'
           };
         } else {
           // Clarification still pending from requester - show as rejected
           return {
             category: 'completed',
-            reason: 'You rejected this request - awaiting requester clarification',
+            reason: 'You rejected this request - awaiting requester query',
             userAction: 'reject'
           };
         }
@@ -380,18 +380,18 @@ function categorizeRequestForUser(
     }
   }
 
-  // Check if request needs clarification from this user
-  // IMPORTANT: Only REQUESTERS and DEAN (in Dean-mediated cases) can provide clarification responses
-  if (request.pendingClarification && request.clarificationLevel === userRole) {
-    // Special handling for Dean-mediated clarifications
+  // Check if request needs query from this user
+  // IMPORTANT: Only REQUESTERS and DEAN (in Dean-mediated cases) can provide query responses
+  if (request.pendingQuery && request.queryLevel === userRole) {
+    // Special handling for Dean-mediated queries
     if (userRole === UserRole.DEAN) {
-      // Check if this is a Dean-mediated clarification from above Dean level
+      // Check if this is a Dean-mediated query from above Dean level
       const isDeanMediated = request.history?.some((h: any) => 
         h.action === ActionType.REJECT_WITH_CLARIFICATION && h.isDeanMediated
       );
       
       if (isDeanMediated) {
-        // Check if requester has provided clarification
+        // Check if requester has provided query
         const requesterClarified = request.history?.some((h: any) => 
           h.action === ActionType.CLARIFY_AND_REAPPROVE && h.actor?.role === 'requester'
         );
@@ -399,7 +399,7 @@ function categorizeRequestForUser(
         if (requesterClarified) {
           return { 
             category: 'pending', 
-            reason: 'Review requester clarification and re-approve',
+            reason: 'Review requester query and re-approve',
             userAction: 'clarify'
           };
         } else {
@@ -411,15 +411,15 @@ function categorizeRequestForUser(
         }
       }
     } else if (userRole === UserRole.REQUESTER) {
-      // Only requesters can provide clarification responses
+      // Only requesters can provide query responses
       return { 
         category: 'pending', 
-        reason: 'Needs clarification from you',
+        reason: 'Needs query from you',
         userAction: 'clarify'
       };
     }
     
-    // For all other roles (VP, Manager, etc.), they should NOT be able to respond to their own clarification requests
+    // For all other roles (VP, Manager, etc.), they should NOT be able to respond to their own query requests
     // They should see it as rejected/completed until requester responds
   }
 
@@ -461,25 +461,25 @@ function categorizeRequestForUser(
       };
     }
     if (involvement.hasRejected) {
-      // Check if this was a rejection with clarification that now has a response
+      // Check if this was a rejection with query that now has a response
       const userRejectionWithClarification = request.history?.find((h: any) => 
         (h.actor?._id?.toString() === userId || h.actor?.toString() === userId) &&
         h.action === ActionType.REJECT_WITH_CLARIFICATION
       );
 
       if (userRejectionWithClarification) {
-        // Check if requester has provided clarification after this rejection
+        // Check if requester has provided query after this rejection
         const requesterClarificationProvided = request.history?.some((h: any) => 
           h.action === ActionType.CLARIFY_AND_REAPPROVE && 
           h.actor?.role === 'requester' &&
           new Date(h.timestamp) > new Date(userRejectionWithClarification.timestamp)
         );
 
-        if (requesterClarificationProvided && request.pendingClarification === false) {
-          // Requester provided clarification and it's back for review
+        if (requesterClarificationProvided && request.pendingQuery === false) {
+          // Requester provided query and it's back for review
           return {
             category: 'pending',
-            reason: 'Requester provided clarification - review needed',
+            reason: 'Requester provided query - review needed',
             userAction: 'clarify'
           };
         }
@@ -494,7 +494,7 @@ function categorizeRequestForUser(
     if (involvement.hasClarified) {
       return { 
         category: 'in_progress', 
-        reason: 'You requested clarification',
+        reason: 'You requested query',
         userAction: 'clarify'
       };
     }

@@ -69,7 +69,7 @@ The approval workflow has been completely redesigned to follow a more structured
 ### 13. Final States
 - **Status**: `approved` - Request approved
 - **Status**: `rejected` - Request rejected
-- **Status**: `clarification_required` - Additional information needed
+- **Status**: `query_required` - Additional information needed
 
 ## Key Changes Made
 

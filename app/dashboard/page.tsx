@@ -4,7 +4,7 @@ import { ClipboardDocumentListIcon, ClockIcon, CheckCircleIcon, ExclamationTrian
 import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import useSWR from 'swr';
-import ClarificationIndicator from '../../components/ClarificationIndicator';
+import QueryIndicator from '../../components/QueryIndicator';
 
 const fetcher = (url: string) =>
   fetch(url, { credentials: 'include' }).then((res) => res.json());
@@ -259,8 +259,8 @@ export default function DashboardPage() {
                     <span className={`px-2 sm:px-4 py-1 sm:py-1.5 rounded-full text-xs sm:text-sm font-semibold ${getStatusClass(request.status || 'unknown')} whitespace-nowrap`}>
                       {request.status ? request.status.replace('_', ' ').toUpperCase() : 'UNKNOWN'}
                     </span>
-                    {request.pendingClarification && request.clarificationLevel === currentUser?.role && (
-                      <ClarificationIndicator size="sm" showText={false} />
+                    {request.pendingQuery && request.queryLevel === currentUser?.role && (
+                      <QueryIndicator size="sm" showText={false} />
                     )}
                   </div>
                   <svg 

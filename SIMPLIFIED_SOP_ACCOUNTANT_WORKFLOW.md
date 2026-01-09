@@ -2,7 +2,7 @@
 
 ## Summary of Changes
 
-Simplified the SOP Verifier and Accountant interfaces to remove reject and clarification options. They now have a streamlined workflow focused only on their verification tasks.
+Simplified the SOP Verifier and Accountant interfaces to remove reject and query options. They now have a streamlined workflow focused only on their verification tasks.
 
 ## New Workflow Rules
 
@@ -11,19 +11,19 @@ Simplified the SOP Verifier and Accountant interfaces to remove reject and clari
 - ✅ **Can**: Add optional comments/notes
 - ✅ **Can**: Complete verification (approve only)
 - ❌ **Cannot**: Reject requests
-- ❌ **Cannot**: Request clarifications
+- ❌ **Cannot**: Request queries
 
 ### **Accountant**
 - ✅ **Can**: Select "Budget Available" or "Budget Not Available"
 - ✅ **Can**: Add optional comments/notes
 - ✅ **Can**: Complete verification (approve only)
 - ❌ **Cannot**: Reject requests
-- ❌ **Cannot**: Request clarifications
+- ❌ **Cannot**: Request queries
 
 ### **Institution Manager**
-- ✅ **Can**: Send requests for clarification to SOP and Accountant
+- ✅ **Can**: Send requests for query to SOP and Accountant
 - ✅ **Can**: Reject requests
-- ✅ **Can**: Handle all clarification workflows
+- ✅ **Can**: Handle all query workflows
 - ✅ **Can**: Verify and send to VP after SOP/Accountant completion
 
 ## Interface Changes
@@ -104,7 +104,7 @@ Simplified the SOP Verifier and Accountant interfaces to remove reject and clari
 - ✅ Can only submit "approve" action
 
 ### **Other Roles**
-- ✅ Notes required for reject and clarification actions
+- ✅ Notes required for reject and query actions
 - ✅ Notes optional for approve actions
 - ✅ All actions available (approve, reject, clarify)
 
@@ -114,14 +114,14 @@ Simplified the SOP Verifier and Accountant interfaces to remove reject and clari
 1. **Institution Manager** → Sends to `PARALLEL_VERIFICATION`
 2. **SOP Verifier** → Completes verification with reference/not available
 3. **Accountant** → Completes verification with budget status
-4. **Institution Manager** → Reviews both verifications, can request clarifications if needed
+4. **Institution Manager** → Reviews both verifications, can request queries if needed
 5. **Institution Manager** → Final approval → Sends to VP Admin
 
 ### **Clarification Flow** (Institution Manager Only)
-1. **Institution Manager** → Can request clarification from SOP/Accountant
-2. **SOP/Accountant** → Receives clarification request
-3. **SOP/Accountant** → Provides clarification and re-verifies
-4. **Institution Manager** → Reviews clarification and proceeds
+1. **Institution Manager** → Can request query from SOP/Accountant
+2. **SOP/Accountant** → Receives query request
+3. **SOP/Accountant** → Provides query and re-verifies
+4. **Institution Manager** → Reviews query and proceeds
 
 ## Benefits
 
@@ -152,6 +152,6 @@ Simplified the SOP Verifier and Accountant interfaces to remove reject and clari
 The simplified workflow is now active:
 - SOP Verifiers see streamlined SOP verification interface
 - Accountants see streamlined budget verification interface
-- Institution Managers retain full control over clarifications and rejections
+- Institution Managers retain full control over queries and rejections
 - All other roles maintain existing functionality
 - Complete audit trail and history preserved

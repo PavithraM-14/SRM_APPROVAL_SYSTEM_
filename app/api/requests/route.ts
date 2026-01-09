@@ -119,12 +119,12 @@ export async function GET(request: NextRequest) {
           visibleRequests = visibleRequests.filter(req => req._visibility?.category === 'approved');
         }
       } else if (statusFilter === 'rejected') {
-        // Show requests that are rejected OR were rejected with clarification
+        // Show requests that are rejected OR were rejected with query
         visibleRequests = visibleRequests.filter(req => {
           // Include requests with status REJECTED
           if (req.status === RequestStatus.REJECTED) return true;
           
-          // Also include requests that were rejected with clarification (even if status changed)
+          // Also include requests that were rejected with query (even if status changed)
           const wasRejectedWithClarification = req.history?.some((h: any) => 
             h.action === ActionType.REJECT_WITH_CLARIFICATION
           );

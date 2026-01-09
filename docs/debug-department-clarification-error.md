@@ -1,7 +1,7 @@
 # Debug Department Clarification Error
 
 ## Issue
-Department users are getting "Failed to process approval" error when trying to respond to Dean's clarification requests, even though the UI shows "Respond to Dean" option.
+Department users are getting "Failed to process approval" error when trying to respond to Dean's query requests, even though the UI shows "Respond to Dean" option.
 
 ## Error Context
 - **Status**: `department_checks`
@@ -11,11 +11,11 @@ Department users are getting "Failed to process approval" error when trying to r
 ## Potential Root Causes
 
 ### 1. Authorization Check Issue
-The API route has a special check for department clarifications:
+The API route has a special check for department queries:
 ```typescript
-if (latestClarification && latestClarification.clarificationTarget !== user.role) {
+if (latestClarification && latestClarification.queryTarget !== user.role) {
   return NextResponse.json(
-    { error: `This clarification was sent to ${latestClarification.clarificationTarget}, not ${user.role}` },
+    { error: `This query was sent to ${latestClarification.queryTarget}, not ${user.role}` },
     { status: 403 }
   );
 }
@@ -40,18 +40,18 @@ For `DEPARTMENT_CHECKS` status, this should return `[UserRole.MMA, UserRole.HR, 
 ## Debugging Added
 
 ### Enhanced Logging
-Added comprehensive debugging to the department clarification check:
+Added comprehensive debugging to the department query check:
 ```typescript
-console.log('[DEBUG] Department clarification check:', {
+console.log('[DEBUG] Department query check:', {
   userRole: user.role,
   latestClarification: latestClarification ? {
-    clarificationTarget: latestClarification.clarificationTarget,
+    queryTarget: latestClarification.queryTarget,
     actor: latestClarification.actor,
     timestamp: latestClarification.timestamp
   } : null,
   requestHistory: requestRecord.history.map((h: any) => ({
     action: h.action,
-    clarificationTarget: h.clarificationTarget,
+    queryTarget: h.queryTarget,
     timestamp: h.timestamp
   }))
 });
@@ -59,19 +59,19 @@ console.log('[DEBUG] Department clarification check:', {
 
 ### Debug Information Tracked
 1. **User Role**: What role the current user has
-2. **Latest Clarification**: Details of the most recent clarification request
+2. **Latest Clarification**: Details of the most recent query request
 3. **Clarification Target**: Which department was targeted
-4. **Request History**: All history entries with clarification targets
+4. **Request History**: All history entries with query targets
 5. **Authorization Failure**: Specific details when authorization fails
 
 ## Expected Debug Output
 
 ### Successful Case:
 ```
-[DEBUG] Department clarification check: {
+[DEBUG] Department query check: {
   userRole: 'hr',
   latestClarification: {
-    clarificationTarget: 'hr',
+    queryTarget: 'hr',
     actor: { role: 'dean', name: 'Dean Name' },
     timestamp: '2024-01-15T10:00:00.000Z'
   },
@@ -81,10 +81,10 @@ console.log('[DEBUG] Department clarification check:', {
 
 ### Failed Case:
 ```
-[DEBUG] Department clarification check: {
+[DEBUG] Department query check: {
   userRole: 'mma',
   latestClarification: {
-    clarificationTarget: 'hr',
+    queryTarget: 'hr',
     actor: { role: 'dean', name: 'Dean Name' },
     timestamp: '2024-01-15T10:00:00.000Z'
   }
@@ -97,20 +97,20 @@ console.log('[DEBUG] Department clarification check:', {
 
 ## Testing Steps
 
-1. **Reproduce Error**: Have department user try to respond to clarification
+1. **Reproduce Error**: Have department user try to respond to query
 2. **Check Console Logs**: Look for debug output in server logs
-3. **Verify Role Matching**: Ensure user role matches clarification target
-4. **Check History**: Verify clarification target is properly stored
+3. **Verify Role Matching**: Ensure user role matches query target
+4. **Check History**: Verify query target is properly stored
 
 ## Possible Solutions
 
 ### If Role Mismatch:
 - Check if user has correct role assigned
-- Verify Dean selected correct department when sending clarification
+- Verify Dean selected correct department when sending query
 - Ensure role values match exactly (case sensitivity)
 
 ### If History Issue:
-- Check if clarificationTarget is properly stored when Dean sends clarification
+- Check if queryTarget is properly stored when Dean sends query
 - Verify history entry format and structure
 
 ### If Authorization Issue:
@@ -119,4 +119,4 @@ console.log('[DEBUG] Department clarification check:', {
 
 ## Status: 🔍 DEBUGGING
 
-Added comprehensive debugging to identify the exact cause of the department clarification approval failure.
+Added comprehensive debugging to identify the exact cause of the department query approval failure.

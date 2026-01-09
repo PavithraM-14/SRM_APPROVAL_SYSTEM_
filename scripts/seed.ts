@@ -578,8 +578,8 @@ async function seed() {
         attachments: [],
         requester: requester._id,
         status: RequestStatus.DEAN_REVIEW,
-        pendingClarification: true,
-        clarificationLevel: UserRole.DEAN,
+        pendingQuery: true,
+        queryLevel: UserRole.DEAN,
         history: [
           {
             action: ActionType.CREATE,
@@ -650,11 +650,11 @@ async function seed() {
             timestamp: new Date(Date.now() - 11 * 24 * 60 * 60 * 1000),
             previousStatus: RequestStatus.CHAIRMAN_APPROVAL,
             newStatus: RequestStatus.DEAN_REVIEW,
-            clarificationRequest: 'Please provide additional justification for this high-cost equipment purchase. Include detailed cost-benefit analysis, alternative options considered, and expected ROI timeline.',
+            queryRequest: 'Please provide additional justification for this high-cost equipment purchase. Include detailed cost-benefit analysis, alternative options considered, and expected ROI timeline.',
             requiresClarification: true,
             originalRejector: chairman._id,
             isDeanMediated: true,
-            notes: 'Chairman rejected - Dean to handle clarification with requester'
+            notes: 'Chairman rejected - Dean to handle query with requester'
           }
         ]
       });
@@ -694,7 +694,7 @@ async function seed() {
       // Scenario 11: Manager rejected, requester needs to clarify (NEW WORKFLOW - Below Dean)
       const managerRejectedToRequester = await Request.create({
         title: 'Manager Rejected Request',
-        purpose: 'This request was rejected by manager and sent directly to requester for clarification.',
+        purpose: 'This request was rejected by manager and sent directly to requester for query.',
         college: colleges[0],
         department: departments[0],
         costEstimate: 100000,
@@ -703,8 +703,8 @@ async function seed() {
         attachments: [],
         requester: requester._id,
         status: RequestStatus.SUBMITTED,
-        pendingClarification: true,
-        clarificationLevel: UserRole.REQUESTER,
+        pendingQuery: true,
+        queryLevel: UserRole.REQUESTER,
         history: [
           {
             action: ActionType.CREATE,
@@ -719,18 +719,18 @@ async function seed() {
             timestamp: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
             previousStatus: RequestStatus.MANAGER_REVIEW,
             newStatus: RequestStatus.SUBMITTED,
-            clarificationRequest: 'Please provide more detailed budget breakdown and justification for this equipment purchase. Also clarify the expected ROI and usage frequency.',
+            queryRequest: 'Please provide more detailed budget breakdown and justification for this equipment purchase. Also clarify the expected ROI and usage frequency.',
             requiresClarification: true,
-            notes: 'Manager rejected - requesting clarification from requester'
+            notes: 'Manager rejected - requesting query from requester'
           }
         ]
       });
       requests.push(managerRejectedToRequester);
 
-      // Scenario 11b: Requester provided clarification, back to VP for review (NEW WORKFLOW)
+      // Scenario 11b: Requester provided query, back to VP for review (NEW WORKFLOW)
       const requesterClarifiedToVP = await Request.create({
         title: 'VP Rejected - Requester Clarified',
-        purpose: 'This request was rejected by VP, requester provided clarification, now back to VP for review.',
+        purpose: 'This request was rejected by VP, requester provided query, now back to VP for review.',
         college: colleges[1],
         department: departments[2],
         costEstimate: 180000,
@@ -739,8 +739,8 @@ async function seed() {
         attachments: [],
         requester: requester._id,
         status: RequestStatus.VP_APPROVAL,
-        pendingClarification: false, // Clarification completed, now pending VP review
-        clarificationLevel: null,
+        pendingQuery: false, // Clarification completed, now pending VP review
+        queryLevel: null,
         history: [
           {
             action: ActionType.CREATE,
@@ -762,9 +762,9 @@ async function seed() {
             timestamp: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000),
             previousStatus: RequestStatus.VP_APPROVAL,
             newStatus: RequestStatus.SUBMITTED,
-            clarificationRequest: 'The training program seems expensive. Please provide: 1) Detailed curriculum breakdown, 2) Number of participants, 3) Alternative training options considered, 4) Expected skill improvement metrics.',
+            queryRequest: 'The training program seems expensive. Please provide: 1) Detailed curriculum breakdown, 2) Number of participants, 3) Alternative training options considered, 4) Expected skill improvement metrics.',
             requiresClarification: true,
-            notes: 'VP rejected - requesting clarification from requester'
+            notes: 'VP rejected - requesting query from requester'
           },
           {
             action: ActionType.CLARIFY_AND_REAPPROVE,
@@ -772,8 +772,8 @@ async function seed() {
             timestamp: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
             previousStatus: RequestStatus.SUBMITTED,
             newStatus: RequestStatus.VP_APPROVAL,
-            clarificationResponse: 'Thank you for the questions. Here are the details: 1) Curriculum: Advanced project management (40%), Leadership skills (30%), Technical training (30%), 2) Participants: 15 senior staff members, 3) Alternatives: Online training (₹50k less but 60% less effective), In-house training (₹80k less but lacks certification), 4) Metrics: 25% improvement in project delivery time, 90% certification rate expected. This training is critical for our upcoming major projects.',
-            notes: 'Requester provided detailed clarification as requested'
+            queryResponse: 'Thank you for the questions. Here are the details: 1) Curriculum: Advanced project management (40%), Leadership skills (30%), Technical training (30%), 2) Participants: 15 senior staff members, 3) Alternatives: Online training (₹50k less but 60% less effective), In-house training (₹80k less but lacks certification), 4) Metrics: 25% improvement in project delivery time, 90% certification rate expected. This training is critical for our upcoming major projects.',
+            notes: 'Requester provided detailed query as requested'
           }
         ]
       });
@@ -782,7 +782,7 @@ async function seed() {
       // Scenario 12: HOI rejected, requester needs to clarify (NEW WORKFLOW - Below Dean)
       const hoiRejectedToRequester = await Request.create({
         title: 'HOI Rejected - Direct to Requester',
-        purpose: 'This request was rejected by HOI and sent directly to requester for clarification (HOI is below Dean level).',
+        purpose: 'This request was rejected by HOI and sent directly to requester for query (HOI is below Dean level).',
         college: colleges[2],
         department: departments[1],
         costEstimate: 300000,
@@ -791,8 +791,8 @@ async function seed() {
         attachments: [],
         requester: requester._id,
         status: RequestStatus.SUBMITTED,
-        pendingClarification: true,
-        clarificationLevel: UserRole.REQUESTER,
+        pendingQuery: true,
+        queryLevel: UserRole.REQUESTER,
         history: [
           {
             action: ActionType.CREATE,
@@ -821,18 +821,18 @@ async function seed() {
             timestamp: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
             previousStatus: RequestStatus.HOI_APPROVAL,
             newStatus: RequestStatus.SUBMITTED,
-            clarificationRequest: 'The infrastructure upgrade scope seems too broad. Please provide: 1) Detailed breakdown of systems to be upgraded, 2) Priority ranking of upgrades, 3) Phased implementation plan, 4) Cost justification for each phase.',
+            queryRequest: 'The infrastructure upgrade scope seems too broad. Please provide: 1) Detailed breakdown of systems to be upgraded, 2) Priority ranking of upgrades, 3) Phased implementation plan, 4) Cost justification for each phase.',
             requiresClarification: true,
-            notes: 'HOI rejected - sent directly to requester for clarification (HOI is below Dean level)'
+            notes: 'HOI rejected - sent directly to requester for query (HOI is below Dean level)'
           }
         ]
       });
       requests.push(hoiRejectedToRequester);
 
-      // Scenario 13: Chief Director rejected, Dean reviewing requester's clarification (Above Dean Level)
+      // Scenario 13: Chief Director rejected, Dean reviewing requester's query (Above Dean Level)
       const chiefDirectorRejectedDeanReviewing = await Request.create({
         title: 'Chief Director Rejected - Dean Reviewing',
-        purpose: 'This request was rejected by Chief Director, sent to Dean, then to requester, and requester has provided clarification. Now Dean is reviewing.',
+        purpose: 'This request was rejected by Chief Director, sent to Dean, then to requester, and requester has provided query. Now Dean is reviewing.',
         college: colleges[1],
         department: departments[3],
         costEstimate: 800000,
@@ -841,8 +841,8 @@ async function seed() {
         attachments: [],
         requester: requester._id,
         status: RequestStatus.DEAN_REVIEW,
-        pendingClarification: true,
-        clarificationLevel: UserRole.DEAN,
+        pendingQuery: true,
+        queryLevel: UserRole.DEAN,
         history: [
           {
             action: ActionType.CREATE,
@@ -885,11 +885,11 @@ async function seed() {
             timestamp: new Date(Date.now() - 12 * 24 * 60 * 60 * 1000),
             previousStatus: RequestStatus.CHIEF_DIRECTOR_APPROVAL,
             newStatus: RequestStatus.DEAN_REVIEW,
-            clarificationRequest: 'This high-value equipment purchase needs more justification. Please provide detailed cost-benefit analysis and alternative options.',
+            queryRequest: 'This high-value equipment purchase needs more justification. Please provide detailed cost-benefit analysis and alternative options.',
             requiresClarification: true,
             originalRejector: chiefDirector._id,
             isDeanMediated: true,
-            notes: 'Chief Director rejected - Dean to handle clarification (above Dean level)'
+            notes: 'Chief Director rejected - Dean to handle query (above Dean level)'
           },
           {
             action: ActionType.REJECT_WITH_CLARIFICATION,
@@ -897,7 +897,7 @@ async function seed() {
             timestamp: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000),
             previousStatus: RequestStatus.DEAN_REVIEW,
             newStatus: RequestStatus.SUBMITTED,
-            clarificationRequest: 'The Chief Director needs more justification for this equipment purchase. Please provide: 1) Detailed cost-benefit analysis, 2) Alternative equipment options considered, 3) Expected ROI timeline, 4) Usage projections.',
+            queryRequest: 'The Chief Director needs more justification for this equipment purchase. Please provide: 1) Detailed cost-benefit analysis, 2) Alternative equipment options considered, 3) Expected ROI timeline, 4) Usage projections.',
             requiresClarification: true,
             notes: 'Dean forwarding Chief Director concerns to requester'
           },
@@ -907,8 +907,8 @@ async function seed() {
             timestamp: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
             previousStatus: RequestStatus.SUBMITTED,
             newStatus: RequestStatus.DEAN_REVIEW,
-            clarificationResponse: 'Thank you for the opportunity to clarify. Cost-benefit analysis: Equipment cost ₹800k, expected savings ₹200k/year through efficiency gains. ROI: 4 years. Alternatives considered: Leasing (₹150k/year - more expensive long-term), Refurbished equipment (₹500k but 50% shorter lifespan). Usage: 8 hours/day, 250 days/year. This equipment is essential for our new research projects and will serve 50+ researchers.',
-            notes: 'Requester provided comprehensive clarification as requested'
+            queryResponse: 'Thank you for the opportunity to clarify. Cost-benefit analysis: Equipment cost ₹800k, expected savings ₹200k/year through efficiency gains. ROI: 4 years. Alternatives considered: Leasing (₹150k/year - more expensive long-term), Refurbished equipment (₹500k but 50% shorter lifespan). Usage: 8 hours/day, 250 days/year. This equipment is essential for our new research projects and will serve 50+ researchers.',
+            notes: 'Requester provided comprehensive query as requested'
           }
         ]
       });

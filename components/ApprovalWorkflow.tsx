@@ -35,10 +35,10 @@ const getStatusDisplayName = (status: string) => {
     'chairman_approval': 'Chairman Approval',
     'approved': 'Approved',
     'rejected': 'Rejected',
-    'clarification_required': 'Queries Required',
-    'sop_clarification': 'SOP Queries',
-    'budget_clarification': 'Budget Queries',
-    'department_clarification': 'Department Queries'
+    'query_required': 'Queries Required',
+    'sop_query': 'SOP Queries',
+    'budget_query': 'Budget Queries',
+    'department_query': 'Department Queries'
   };
   
   return statusMap[status.toLowerCase()] || status;
@@ -60,7 +60,7 @@ const ApprovalWorkflow: React.FC<ApprovalWorkflowProps> = ({ currentStatus }) =>
   ];
 
   // Check if current status is a queries status
-  const isClarificationStatus = ['sop_clarification', 'budget_clarification', 'clarification_required', 'department_checks'].includes(currentStatus);
+  const isQueryStatus = ['sop_query', 'budget_query', 'query_required', 'department_checks'].includes(currentStatus);
   
   // Check if current status is a parallel verification status
   const isParallelStatus = ['parallel_verification', 'sop_completed', 'budget_completed', 'institution_verified'].includes(currentStatus);
@@ -76,7 +76,7 @@ const ApprovalWorkflow: React.FC<ApprovalWorkflowProps> = ({ currentStatus }) =>
       </div>
       <div className="border-t border-gray-200 px-4 py-5 sm:p-6">
         {/* Show queries status if applicable */}
-        {isClarificationStatus && (
+        {isQueryStatus && (
           <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
             <div className="flex items-center">
               <div className="w-8 h-8 rounded-full bg-yellow-500 flex items-center justify-center mr-3">
@@ -89,9 +89,9 @@ const ApprovalWorkflow: React.FC<ApprovalWorkflowProps> = ({ currentStatus }) =>
                   {getStatusDisplayName(currentStatus)}
                 </h4>
                 <p className="text-sm text-yellow-700">
-                  {String(currentStatus) === 'sop_clarification' && 'Waiting for SOP verification queries from Institution Manager'}
-                  {String(currentStatus) === 'budget_clarification' && 'Waiting for budget queries from Institution Manager'}
-                  {String(currentStatus) === 'clarification_required' && 'Waiting for response from Requester'}
+                  {String(currentStatus) === 'sop_query' && 'Waiting for SOP verification queries from Institution Manager'}
+                  {String(currentStatus) === 'budget_query' && 'Waiting for budget queries from Institution Manager'}
+                  {String(currentStatus) === 'query_required' && 'Waiting for response from Requester'}
                   {String(currentStatus) === 'department_checks' && 'Waiting for department response'}
                 </p>
               </div>

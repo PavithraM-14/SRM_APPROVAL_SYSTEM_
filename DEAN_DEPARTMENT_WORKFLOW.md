@@ -55,14 +55,14 @@ Implemented a new workflow where Dean can send requests to HR/IT/AUDIT/MMA depar
     <option value="approve">Approve to Chief Director</option>
     <option value="clarify">Send to Department for Verification</option>
     <option value="reject">Reject</option>
-    <option value="reject_with_clarification">Raise Queries</option>
+    <option value="reject_with_query">Raise Queries</option>
   </>
 ) : (
   // dean_verification status - after department verification
   <>
     <option value="approve">Approve to Chief Director</option>
     <option value="reject">Reject</option>
-    <option value="reject_with_clarification">Raise Queries</option>
+    <option value="reject_with_query">Raise Queries</option>
   </>
 )}
 ```
@@ -119,7 +119,7 @@ case 'clarify':
 
 #### **Department Response Handling:**
 ```typescript
-// Handle department responses to Dean clarifications
+// Handle department responses to Dean queries
 if ([UserRole.MMA, UserRole.HR, UserRole.AUDIT, UserRole.IT].includes(user.role as UserRole) && 
     requestRecord.status === RequestStatus.DEPARTMENT_CHECKS) {
   nextStatus = RequestStatus.DEAN_VERIFICATION; // Changed from DEAN_REVIEW
@@ -141,7 +141,7 @@ Dean can now see and act on both `DEAN_REVIEW` and `DEAN_VERIFICATION` statuses.
 1. **Opens approval modal** → sees "Send to Department for Verification" as an option
 2. **Selects department** → chooses HR, IT, AUDIT, or MMA from dropdown
 3. **Adds instructions** → optional notes for the department
-4. **Submits** → request goes to `DEPARTMENT_CHECKS` with `clarificationTarget` set
+4. **Submits** → request goes to `DEPARTMENT_CHECKS` with `queryTarget` set
 
 ### **Department Workflow (department_checks status):**
 1. **Receives request** → only the targeted department can see it
@@ -171,7 +171,7 @@ Dean can now see and act on both `DEAN_REVIEW` and `DEAN_VERIFICATION` statuses.
 ### **Dean Send to Department:**
 - **Endpoint**: `POST /api/requests/[id]/approve`
 - **Body**: `{ action: 'clarify', notes, attachments, target: 'hr|it|audit|mma' }`
-- **Result**: Status changes to `department_checks` with `clarificationTarget` field
+- **Result**: Status changes to `department_checks` with `queryTarget` field
 
 ### **Department Response:**
 - **Endpoint**: `POST /api/requests/[id]/approve`
@@ -190,7 +190,7 @@ DEAN_REVIEW
     ├── approve → CHIEF_DIRECTOR_APPROVAL (direct)
     ├── clarify → DEPARTMENT_CHECKS (with target)
     ├── reject → REJECTED
-    └── reject_with_clarification → SUBMITTED (queries)
+    └── reject_with_query → SUBMITTED (queries)
 
 DEPARTMENT_CHECKS
     └── forward → DEAN_VERIFICATION
@@ -198,7 +198,7 @@ DEPARTMENT_CHECKS
 DEAN_VERIFICATION
     ├── approve → CHIEF_DIRECTOR_APPROVAL
     ├── reject → REJECTED
-    └── reject_with_clarification → SUBMITTED (queries)
+    └── reject_with_query → SUBMITTED (queries)
 ```
 
 ## Status: ✅ IMPLEMENTED & FIXED

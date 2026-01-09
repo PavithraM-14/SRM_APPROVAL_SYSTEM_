@@ -20,7 +20,7 @@ This document summarizes the complete implementation of the approval workflow sy
   - Role-based authorization
   - Data validation and storage
   - Audit trail maintenance
-  - Department clarification access control
+  - Department query access control
 
 ### 3. **Approval Modal** (`components/ApprovalModal.tsx`)
 - **Purpose**: User interface for all workflow actions
@@ -70,8 +70,8 @@ DEAN_REVIEW → DEPARTMENT_CHECKS → DEAN_REVIEW
   - Send to parallel verification → `PARALLEL_VERIFICATION`
   - Route by budget availability → `VP_APPROVAL` or `DEAN_REVIEW`
 - **Backward Actions**:
-  - Resolve SOP clarifications → `MANAGER_REVIEW`
-  - Resolve budget clarifications → `MANAGER_REVIEW`
+  - Resolve SOP queries → `MANAGER_REVIEW`
+  - Resolve budget queries → `MANAGER_REVIEW`
 - **UI Features**:
   - Parallel verification explanation
   - Budget routing decision interface
@@ -82,7 +82,7 @@ DEAN_REVIEW → DEPARTMENT_CHECKS → DEAN_REVIEW
   - Complete verification → `SOP_COMPLETED`
   - Complete after budget done → `INSTITUTION_VERIFIED`
 - **Backward Actions**:
-  - Request clarification → `SOP_CLARIFICATION`
+  - Request query → `SOP_CLARIFICATION`
 - **UI Features**:
   - Reference number input (required)
   - "Not Available" option
@@ -93,7 +93,7 @@ DEAN_REVIEW → DEPARTMENT_CHECKS → DEAN_REVIEW
   - Complete verification → `BUDGET_COMPLETED`
   - Complete after SOP done → `INSTITUTION_VERIFIED`
 - **Backward Actions**:
-  - Request clarification → `BUDGET_CLARIFICATION`
+  - Request query → `BUDGET_CLARIFICATION`
 - **UI Features**:
   - Budget input fields (allocated, spent, available)
   - Real-time calculation
@@ -114,15 +114,15 @@ DEAN_REVIEW → DEPARTMENT_CHECKS → DEAN_REVIEW
   - Forward to verification → `DEAN_VERIFICATION`
   - Approve to Chief Director → `CHIEF_DIRECTOR_APPROVAL`
 - **Backward Actions**:
-  - Request department clarification → `DEPARTMENT_CHECKS`
+  - Request department query → `DEPARTMENT_CHECKS`
   - Reject → `REJECTED`
 - **UI Features**:
-  - Department selection for clarifications
+  - Department selection for queries
   - Forward/clarify action options
 
 ### **Department Users (MMA/HR/Audit/IT)**
 - **Forward Actions**:
-  - Respond to clarification → `DEAN_REVIEW`
+  - Respond to query → `DEAN_REVIEW`
 - **Backward Actions**:
   - None (can only respond)
 - **UI Features**:
@@ -160,8 +160,8 @@ DEAN_REVIEW → DEPARTMENT_CHECKS → DEAN_REVIEW
   budgetAllocated?: number,
   budgetSpent?: number,
   budgetBalance?: number,
-  clarificationTarget?: string,
-  clarificationType?: string
+  queryTarget?: string,
+  queryType?: string
 }
 ```
 
@@ -170,7 +170,7 @@ DEAN_REVIEW → DEPARTMENT_CHECKS → DEAN_REVIEW
 ### **Role-Based Access Control**
 - API endpoint validation for each action
 - UI component filtering by role
-- Department clarification access restrictions
+- Department query access restrictions
 - Comprehensive error messages for unauthorized access
 
 ### **Data Validation**

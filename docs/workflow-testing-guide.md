@@ -65,21 +65,21 @@ This guide provides comprehensive testing scenarios for the entire approval work
 
 #### Test 4a: SOP Clarification
 1. **Institution Manager** → `PARALLEL_VERIFICATION`
-2. **SOP Verifier** requests clarification → Status: `SOP_CLARIFICATION`
-3. **Institution Manager** resolves clarification → Status: `MANAGER_REVIEW`
+2. **SOP Verifier** requests query → Status: `SOP_CLARIFICATION`
+3. **Institution Manager** resolves query → Status: `MANAGER_REVIEW`
 4. **Institution Manager** resends → Status: `PARALLEL_VERIFICATION`
 5. Continue normal flow
 
 #### Test 4b: Budget Clarification
 1. **Institution Manager** → `PARALLEL_VERIFICATION`
-2. **Accountant** requests clarification → Status: `BUDGET_CLARIFICATION`
-3. **Institution Manager** resolves clarification → Status: `MANAGER_REVIEW`
+2. **Accountant** requests query → Status: `BUDGET_CLARIFICATION`
+3. **Institution Manager** resolves query → Status: `MANAGER_REVIEW`
 4. **Institution Manager** resends → Status: `PARALLEL_VERIFICATION`
 5. Continue normal flow
 
 #### Test 4c: Dean Department Clarification
 1. Reach `DEAN_REVIEW` status
-2. **Dean** requests clarification from MMA → Status: `DEPARTMENT_CHECKS`
+2. **Dean** requests query from MMA → Status: `DEPARTMENT_CHECKS`
 3. **MMA** responds → Status: `DEAN_REVIEW`
 4. **Dean** continues normal flow
 
@@ -103,7 +103,7 @@ This guide provides comprehensive testing scenarios for the entire approval work
 3. **Dean** tries to act on `PARALLEL_VERIFICATION` → Should get 403 error
 
 #### Test 6b: Department Clarification Access
-1. **Dean** sends clarification to MMA
+1. **Dean** sends query to MMA
 2. **HR** tries to respond → Should get error "sent to MMA, not HR"
 3. **MMA** responds → Should work correctly
 
@@ -170,7 +170,7 @@ This guide provides comprehensive testing scenarios for the entire approval work
 
 ### 4. **Permission Issues**
 - Users able to act on wrong statuses
-- Department clarification access not restricted
+- Department query access not restricted
 - Role validation not working
 
 ## Debugging Tips

@@ -77,7 +77,7 @@ The Dean to Department workflow is correctly implemented. Here's how to test it:
 - [ ] Can see department's verification notes in history
 
 ### **Request History:**
-- [ ] Dean's clarification action with target department
+- [ ] Dean's query action with target department
 - [ ] Department's forward action with verification notes
 - [ ] Dean's final approval action
 
@@ -85,7 +85,7 @@ The Dean to Department workflow is correctly implemented. Here's how to test it:
 
 ### **If IT User Can't See Request:**
 1. Check if request status is `department_checks`
-2. Check if `clarificationTarget` in history is set to 'it'
+2. Check if `queryTarget` in history is set to 'it'
 3. Check if IT user has correct role ('it')
 
 ### **If IT User Sees "Approve" Instead of "Forward":**

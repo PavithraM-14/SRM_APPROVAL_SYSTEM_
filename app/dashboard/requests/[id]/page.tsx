@@ -3,18 +3,18 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import ApprovalModal from '../../../../components/ApprovalModal';
-import ClarificationModal from '../../../../components/ClarificationModal';
-import ClarificationIndicator from '../../../../components/ClarificationIndicator';
-import DeanClarificationModal from '../../../../components/DeanClarificationModal';
+import QueryModal from '../../../../components/QueryModal';
+import QueryIndicator from '../../../../components/QueryIndicator';
+import DeanQueryModal from '../../../../components/DeanQueryModal';
 import ApprovalHistory from '../../../../components/ApprovalHistory';
 import ApprovalWorkflow from '../../../../components/ApprovalWorkflow';
 import { RequestStatus, ActionType, UserRole } from '../../../../lib/types';
 import { approvalEngine } from '../../../../lib/approval-engine';
-import { clarificationEngine } from '../../../../lib/clarification-engine';
+import { queryEngine } from '../../../../lib/query-engine';
 import { ExclamationTriangleIcon } from '@heroicons/react/24/outline';
 
 // Simple Direct Clarification Modal Component
-interface DirectClarificationModalProps {
+interface DirectQueryModalProps {
   isOpen: boolean;
   onClose: () => void;
   request: {
@@ -22,32 +22,32 @@ interface DirectClarificationModalProps {
     title: string;
     requester: { name: string };
   };
-  onSubmit: (clarificationRequest: string, attachments: string[]) => void;
+  onSubmit: (queryRequest: string, attachments: string[]) => void;
   loading?: boolean;
 }
 
-function DirectClarificationModal({
+function DirectQueryModal({
   isOpen,
   onClose,
   request,
   onSubmit,
   loading = false
-}: DirectClarificationModalProps) {
-  const [clarificationRequest, setClarificationRequest] = useState('');
+}: DirectQueryModalProps) {
+  const [queryRequest, setQueryRequest] = useState('');
 
   if (!isOpen) return null;
 
   const handleSubmit = () => {
-    if (!clarificationRequest.trim()) {
+    if (!queryRequest.trim()) {
       alert('Please provide a query request');
       return;
     }
-    onSubmit(clarificationRequest, []);
-    setClarificationRequest('');
+    onSubmit(queryRequest, []);
+    setQueryRequest('');
   };
 
   const handleClose = () => {
-    setClarificationRequest('');
+    setQueryRequest('');
     onClose();
   };
 
@@ -90,8 +90,8 @@ function DirectClarificationModal({
               Query Request *
             </label>
             <textarea
-              value={clarificationRequest}
-              onChange={(e) => setClarificationRequest(e.target.value)}
+              value={queryRequest}
+              onChange={(e) => setQueryRequest(e.target.value)}
               placeholder="What additional information do you need from the requester?"
               className="w-full h-32 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 resize-none"
               disabled={loading}
@@ -110,7 +110,7 @@ function DirectClarificationModal({
             <button
               onClick={handleSubmit}
               className="px-6 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 font-medium transition-colors disabled:opacity-50"
-              disabled={loading || !clarificationRequest.trim()}
+              disabled={loading || !queryRequest.trim()}
             >
               {loading ? 'Sending...' : 'Send Queries to Requester'}
             </button>
@@ -140,9 +140,9 @@ interface ApprovalHistoryItem {
   previousStatus?: RequestStatus;
   newStatus?: RequestStatus;
   timestamp: Date;
-  clarificationRequest?: string;
-  clarificationResponse?: string;
-  clarificationAttachments?: string[];
+  queryRequest?: string;
+  queryResponse?: string;
+  queryAttachments?: string[];
   requiresClarification?: boolean;
   isDeanMediated?: boolean;
   originalRejector?: string;
@@ -163,8 +163,8 @@ interface Request {
   createdAt: string;
   updatedAt: string;
   history: ApprovalHistoryItem[];
-  pendingClarification?: boolean;
-  clarificationLevel?: string;
+  pendingQuery?: boolean;
+  queryLevel?: string;
 }
 
 export default function RequestDetailPage({ params }: { params: { id: string } }) {
@@ -173,9 +173,9 @@ export default function RequestDetailPage({ params }: { params: { id: string } }
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isApprovalModalOpen, setIsApprovalModalOpen] = useState(false);
-  const [isClarificationModalOpen, setIsClarificationModalOpen] = useState(false);
-  const [isDeanClarificationModalOpen, setIsDeanClarificationModalOpen] = useState(false);
-  const [isDirectClarificationModalOpen, setIsDirectClarificationModalOpen] = useState(false);
+  const [isQueryModalOpen, setIsQueryModalOpen] = useState(false);
+  const [isDeanQueryModalOpen, setIsDeanQueryModalOpen] = useState(false);
+  const [isDirectQueryModalOpen, setIsDirectQueryModalOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [showApprovalHistory, setShowApprovalHistory] = useState(false);
   const [processingApproval, setProcessingApproval] = useState(false);
@@ -223,12 +223,12 @@ export default function RequestDetailPage({ params }: { params: { id: string } }
 
       // Auto-open appropriate queries modal if request needs response from current user
       // IMPORTANT: Only REQUESTERS and DEAN (in Dean-mediated cases) can provide responses to queries
-      if (currentUser && data.pendingClarification && data.clarificationLevel === currentUser.role) {
-        if (currentUser.role === 'dean' && clarificationEngine.isDeanMediatedClarification(data)) {
-          setIsDeanClarificationModalOpen(true);
+      if (currentUser && data.pendingQuery && data.queryLevel === currentUser.role) {
+        if (currentUser.role === 'dean' && queryEngine.isDeanMediatedClarification(data)) {
+          setIsDeanQueryModalOpen(true);
         } else if (currentUser.role === 'requester') {
           // Only auto-open for requesters, not for the original rejectors
-          setIsClarificationModalOpen(true);
+          setIsQueryModalOpen(true);
         }
         // For other roles (VP, Manager, etc.), don't auto-open any modal
         // They should see the request in their rejected list until requester responds
@@ -360,22 +360,22 @@ export default function RequestDetailPage({ params }: { params: { id: string } }
     }
   };
 
-  const handleRejectWithClarification = async (clarificationRequest: string, attachments: string[]) => {
+  const handleRejectWithClarification = async (queryRequest: string, attachments: string[]) => {
     try {
       setProcessingApproval(true);
       const response = await fetch(`/api/requests/${params.id}/approve`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          action: 'reject_with_clarification',
-          notes: clarificationRequest,
+          action: 'reject_with_query',
+          notes: queryRequest,
           attachments
         }),
       });
       
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to request clarification');
+        throw new Error(errorData.error || 'Failed to request query');
       }
 
       await fetchRequest();
@@ -389,14 +389,14 @@ export default function RequestDetailPage({ params }: { params: { id: string } }
     }
   };
 
-  const handleClarifyAndApprove = async (response: string, attachments: string[]) => {
+  const handleQueryAndApprove = async (response: string, attachments: string[]) => {
     try {
       setProcessingApproval(true);
       const apiResponse = await fetch(`/api/requests/${params.id}/approve`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          action: 'clarify_and_reapprove',
+          action: 'query_and_reapprove',
           notes: response,
           attachments
         }),
@@ -404,11 +404,11 @@ export default function RequestDetailPage({ params }: { params: { id: string } }
       
       if (!apiResponse.ok) {
         const errorData = await apiResponse.json();
-        throw new Error(errorData.error || 'Failed to provide clarification');
+        throw new Error(errorData.error || 'Failed to provide query');
       }
 
       await fetchRequest();
-      setIsClarificationModalOpen(false);
+      setIsQueryModalOpen(false);
 
     } catch (err) {
       console.error('Response error:', err);
@@ -436,7 +436,7 @@ export default function RequestDetailPage({ params }: { params: { id: string } }
       }
 
       await fetchRequest();
-      setIsClarificationModalOpen(false);
+      setIsQueryModalOpen(false);
 
     } catch (err) {
       console.error('Clarification rejection error:', err);
@@ -464,7 +464,7 @@ export default function RequestDetailPage({ params }: { params: { id: string } }
       }
 
       await fetchRequest();
-      setIsDeanClarificationModalOpen(false);
+      setIsDeanQueryModalOpen(false);
 
     } catch (err) {
       console.error('Dean send to requester error:', err);
@@ -481,7 +481,7 @@ export default function RequestDetailPage({ params }: { params: { id: string } }
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          action: 'clarify_and_reapprove',
+          action: 'query_and_reapprove',
           notes
         }),
       });
@@ -492,7 +492,7 @@ export default function RequestDetailPage({ params }: { params: { id: string } }
       }
 
       await fetchRequest();
-      setIsDeanClarificationModalOpen(false);
+      setIsDeanQueryModalOpen(false);
 
     } catch (err) {
       console.error('Dean re-approval error:', err);
@@ -633,8 +633,8 @@ export default function RequestDetailPage({ params }: { params: { id: string } }
                       <span className="inline-flex px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                         {request.status.replace('_', ' ').toUpperCase()}
                       </span>
-                      {request.pendingClarification && request.clarificationLevel === currentUser?.role && (
-                        <ClarificationIndicator size="sm" showText={false} />
+                      {request.pendingQuery && request.queryLevel === currentUser?.role && (
+                        <QueryIndicator size="sm" showText={false} />
                       )}
                     </div>
                   </dd>
@@ -700,18 +700,18 @@ export default function RequestDetailPage({ params }: { params: { id: string } }
 
           
 
-          {/* Clarification Response Attachments (latest) */}
+          {/* Query Response Attachments (latest) */}
           {(() => {
             const latestRequesterClarification = request.history
-              ?.filter((h: any) => h.action === 'CLARIFY_AND_REAPPROVE' && h.actor?.role === 'requester' && (h.clarificationAttachments?.length > 0))
+              ?.filter((h: any) => h.action === 'CLARIFY_AND_REAPPROVE' && h.actor?.role === 'requester' && (h.queryAttachments?.length > 0))
               ?.sort((a: any, b: any) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())[0];
 
             if (!latestRequesterClarification) return null;
 
-            const files: string[] = latestRequesterClarification.clarificationAttachments || [];
+            const files: string[] = latestRequesterClarification.queryAttachments || [];
             return (
               <div className="mt-4 sm:mt-6">
-                <h4 className="text-xs sm:text-sm font-medium text-gray-500 mb-2">Clarification Response Attachments</h4>
+                <h4 className="text-xs sm:text-sm font-medium text-gray-500 mb-2">Query Response Attachments</h4>
                 <div className="border rounded-lg divide-y divide-gray-200">
                   {files.map((a, i) => {
                     const fileName = a.split('/').pop();
@@ -758,17 +758,17 @@ export default function RequestDetailPage({ params }: { params: { id: string } }
           {(() => {
             // Check if request needs response from this user
             // IMPORTANT: Only REQUESTERS and DEAN (in Dean-mediated cases) can provide responses to queries
-            const needsClarification = request.pendingClarification && request.clarificationLevel === currentUser?.role;
+            const needsClarification = request.pendingQuery && request.queryLevel === currentUser?.role;
             
-            // If requester needs to provide clarification, show the button
+            // If requester needs to provide query, show the button
             if (currentUser?.role === 'requester' && needsClarification) {
               return (
                 <div className="mt-4 sm:mt-6 flex justify-center sm:justify-start">
                   <button
-                    onClick={() => setIsClarificationModalOpen(true)}
+                    onClick={() => setIsQueryModalOpen(true)}
                     className="w-full sm:w-auto min-w-[200px] px-4 sm:px-6 py-3 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors text-sm sm:text-base font-medium active:scale-95 shadow-sm flex items-center justify-center gap-2"
                   >
-                    <ClarificationIndicator size="sm" showText={false} className="text-white" />
+                    <QueryIndicator size="sm" showText={false} className="text-white" />
                     Respond to Clarification
                   </button>
                 </div>
@@ -779,20 +779,20 @@ export default function RequestDetailPage({ params }: { params: { id: string } }
             if (currentUser?.role === 'requester') return null;
             
             if (needsClarification) {
-              // Special handling for Dean clarification (Dean-mediated from above Dean level)
-              if (currentUser?.role === 'dean' && clarificationEngine.isDeanMediatedClarification(request)) {
+              // Special handling for Dean query (Dean-mediated from above Dean level)
+              if (currentUser?.role === 'dean' && queryEngine.isDeanMediatedClarification(request)) {
                 return (
                   <div className="mt-4 sm:mt-6 flex flex-col gap-3">
                     <div className="p-3 bg-red-50 border border-red-200 rounded flex items-center gap-2">
-                      <ClarificationIndicator size="sm" showText={false} />
+                      <QueryIndicator size="sm" showText={false} />
                       <span className="text-xs sm:text-sm text-red-800">Requester responded. Review and re-approve below.</span>
                     </div>
                     <div className="flex justify-center sm:justify-start">
                       <button
-                        onClick={() => setIsDeanClarificationModalOpen(true)}
+                        onClick={() => setIsDeanQueryModalOpen(true)}
                         className="w-full sm:w-auto min-w-[200px] px-4 sm:px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm sm:text-base font-medium active:scale-95 shadow-sm flex items-center justify-center gap-2"
                       >
-                        <ClarificationIndicator size="sm" showText={false} className="text-white" />
+                        <QueryIndicator size="sm" showText={false} className="text-white" />
                         Handle Rejection
                       </button>
                     </div>
@@ -805,15 +805,15 @@ export default function RequestDetailPage({ params }: { params: { id: string } }
                 return (
                   <div className="mt-4 sm:mt-6 flex flex-col gap-3">
                     <div className="p-3 bg-yellow-50 border border-yellow-200 rounded flex items-center gap-2">
-                      <ClarificationIndicator size="sm" showText={false} />
+                      <QueryIndicator size="sm" showText={false} />
                       <span className="text-xs sm:text-sm text-yellow-800">Please respond to the queries below.</span>
                     </div>
                     <div className="flex justify-center sm:justify-start">
                       <button
-                        onClick={() => setIsClarificationModalOpen(true)}
+                        onClick={() => setIsQueryModalOpen(true)}
                         className="w-full sm:w-auto min-w-[200px] px-4 sm:px-6 py-3 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors text-sm sm:text-base font-medium active:scale-95 shadow-sm flex items-center justify-center gap-2"
                       >
-                        <ClarificationIndicator size="sm" showText={false} className="text-white" />
+                        <QueryIndicator size="sm" showText={false} className="text-white" />
                         Respond to Clarification
                       </button>
                     </div>
@@ -826,7 +826,7 @@ export default function RequestDetailPage({ params }: { params: { id: string } }
               const banner = (
                 <div className="mt-4 sm:mt-6">
                   <div className="p-3 bg-yellow-50 border border-yellow-200 rounded flex items-center gap-2">
-                    <ClarificationIndicator size="sm" showText={false} />
+                    <QueryIndicator size="sm" showText={false} />
                     <span className="text-xs sm:text-sm text-yellow-800">Awaiting requester response. You can still review and act if needed.</span>
                   </div>
                 </div>
@@ -846,7 +846,7 @@ export default function RequestDetailPage({ params }: { params: { id: string } }
                       Process Request
                     </button>
                     <button
-                      onClick={() => setIsDirectClarificationModalOpen(true)}
+                      onClick={() => setIsDirectQueryModalOpen(true)}
                       className="w-full sm:w-auto min-w-[200px] px-4 sm:px-6 py-3 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors text-sm sm:text-base font-medium active:scale-95 shadow-sm flex items-center justify-center gap-2"
                     >
                       <ExclamationTriangleIcon className="w-5 h-5" />
@@ -872,7 +872,7 @@ export default function RequestDetailPage({ params }: { params: { id: string } }
                 
                 {/* Dedicated Raise Query Button */}
                 <button
-                  onClick={() => setIsDirectClarificationModalOpen(true)}
+                  onClick={() => setIsDirectQueryModalOpen(true)}
                   className="w-full sm:w-auto min-w-[200px] px-4 sm:px-6 py-3 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors text-sm sm:text-base font-medium active:scale-95 shadow-sm flex items-center justify-center gap-2"
                 >
                   <ExclamationTriangleIcon className="w-5 h-5" />
@@ -958,25 +958,25 @@ export default function RequestDetailPage({ params }: { params: { id: string } }
 
       {/* Clarification Modal */}
       {(() => {
-        // Get the latest clarification request
-        const latestClarificationRequest = clarificationEngine.getLatestClarificationRequest(request);
+        // Get the latest query request
+        const latestQueryRequest = queryEngine.getLatestQueryRequest(request);
         
-        if (!latestClarificationRequest) return null;
+        if (!latestQueryRequest) return null;
 
         return (
-          <ClarificationModal
-            isOpen={isClarificationModalOpen}
-            onClose={() => setIsClarificationModalOpen(false)}
-            clarificationRequest={{
+          <QueryModal
+            isOpen={isQueryModalOpen}
+            onClose={() => setIsQueryModalOpen(false)}
+            queryRequest={{
               actor: {
-                name: latestClarificationRequest.actor?.name || 'Unknown',
-                role: latestClarificationRequest.actor?.role || 'Unknown'
+                name: latestQueryRequest.actor?.name || 'Unknown',
+                role: latestQueryRequest.actor?.role || 'Unknown'
               },
-              clarificationRequest: latestClarificationRequest.clarificationRequest || '',
-              timestamp: latestClarificationRequest.timestamp || new Date().toISOString(),
-              attachments: latestClarificationRequest.attachments || []
+              queryRequest: latestQueryRequest.queryRequest || '',
+              timestamp: latestQueryRequest.timestamp || new Date().toISOString(),
+              attachments: latestQueryRequest.attachments || []
             }}
-            onClarifyAndApprove={handleClarifyAndApprove}
+            onQueryAndApprove={handleQueryAndApprove}
             onReject={handleClarificationReject}
             loading={processingApproval}
             userRole={currentUser?.role || ''}
@@ -988,16 +988,16 @@ export default function RequestDetailPage({ params }: { params: { id: string } }
       {/* Dean Clarification Modal */}
       {(() => {
         // Only show for Dean handling above-Dean rejections
-        if (currentUser?.role !== 'dean' || !clarificationEngine.isDeanMediatedClarification(request)) {
+        if (currentUser?.role !== 'dean' || !queryEngine.isDeanMediatedClarification(request)) {
           return null;
         }
 
-        const originalRejector = clarificationEngine.getOriginalRejector(request);
+        const originalRejector = queryEngine.getOriginalRejector(request);
         const latestRejection = request.history
           ?.filter((h: any) => h.action === 'REJECT_WITH_CLARIFICATION')
           ?.sort((a: any, b: any) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())[0];
 
-        // Check if requester has provided clarification
+        // Check if requester has provided query
         const requesterClarification = request.history
           ?.filter((h: any) => h.action === 'CLARIFY_AND_REAPPROVE' && h.actor?.role === 'requester')
           ?.sort((a: any, b: any) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())[0];
@@ -1005,20 +1005,20 @@ export default function RequestDetailPage({ params }: { params: { id: string } }
         if (!originalRejector || !latestRejection) return null;
 
         return (
-          <DeanClarificationModal
-            isOpen={isDeanClarificationModalOpen}
-            onClose={() => setIsDeanClarificationModalOpen(false)}
+          <DeanQueryModal
+            isOpen={isDeanQueryModalOpen}
+            onClose={() => setIsDeanQueryModalOpen(false)}
             rejectionInfo={{
               rejector: {
                 name: originalRejector.name || 'Unknown',
                 role: originalRejector.role || 'Unknown'
               },
-              rejectionReason: latestRejection.clarificationRequest || 'No reason provided',
+              rejectionReason: latestRejection.queryRequest || 'No reason provided',
               timestamp: latestRejection.timestamp ? new Date(latestRejection.timestamp).toISOString() : new Date().toISOString()
             }}
             requesterClarification={requesterClarification ? {
-              response: requesterClarification.clarificationResponse || '',
-              attachments: requesterClarification.clarificationAttachments || [],
+              response: requesterClarification.queryResponse || '',
+              attachments: requesterClarification.queryAttachments || [],
               timestamp: requesterClarification.timestamp ? new Date(requesterClarification.timestamp).toISOString() : new Date().toISOString()
             } : undefined}
             onSendToRequester={handleDeanSendToRequester}
@@ -1029,9 +1029,9 @@ export default function RequestDetailPage({ params }: { params: { id: string } }
       })()}
 
       {/* Direct Clarification Modal */}
-      <DirectClarificationModal
-        isOpen={isDirectClarificationModalOpen}
-        onClose={() => setIsDirectClarificationModalOpen(false)}
+      <DirectQueryModal
+        isOpen={isDirectQueryModalOpen}
+        onClose={() => setIsDirectQueryModalOpen(false)}
         request={{
           _id: request._id,
           title: request.title,

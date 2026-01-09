@@ -19,7 +19,7 @@ Previously, all users could see all requests regardless of their role or workflo
 - **Can See**: 
   - Requests at `submitted` status (new requests)
   - Requests at `manager_review` status (awaiting their action)
-  - Requests at `sop_clarification` and `budget_clarification` (returned for review)
+  - Requests at `sop_query` and `budget_query` (returned for review)
   - Requests at `institution_verified` (both verifications complete, awaiting routing)
 - **Pending Approvals**: Requests at `manager_review` status only
 
@@ -28,7 +28,7 @@ Previously, all users could see all requests regardless of their role or workflo
   - Requests at `sop_verification` status
   - Requests at `parallel_verification` status (parallel SOP/budget verification)
   - Requests at `budget_completed` status (budget done, awaiting SOP completion)
-  - Requests they've previously worked on (`sop_completed`, `sop_clarification`)
+  - Requests they've previously worked on (`sop_completed`, `sop_query`)
 - **Pending Approvals**: Active SOP verification requests only
 
 #### **Accountant (ACCOUNTANT)**
@@ -36,7 +36,7 @@ Previously, all users could see all requests regardless of their role or workflo
   - Requests at `budget_check` status (legacy workflow)
   - Requests at `parallel_verification` status (parallel SOP/budget verification)
   - Requests at `sop_completed` status (SOP done, awaiting budget completion)
-  - Requests they've previously worked on (`budget_completed`, `budget_clarification`)
+  - Requests they've previously worked on (`budget_completed`, `budget_query`)
 - **Pending Approvals**: Active budget verification requests only
 
 #### **Vice President (VP)**
@@ -55,17 +55,17 @@ Previously, all users could see all requests regardless of their role or workflo
 - **Can See**:
   - Requests at `dean_review` status (forwarded from HOI or budget-unavailable path)
   - Requests at `dean_verification` status (legacy)
-  - Requests at `department_checks` status (sent for clarification)
+  - Requests at `department_checks` status (sent for query)
   - Requests they've approved that moved to `chief_director_approval`
 - **Pending Approvals**: Requests at `dean_review` and `dean_verification` status
 
 #### **Department Users (MMA, HR, AUDIT, IT)**
 - **Can See**: 
-  - **Only requests where they were specifically asked for clarification**
-  - Requests at `department_checks` status where `clarificationTarget` matches their role
+  - **Only requests where they were specifically asked for query**
+  - Requests at `department_checks` status where `queryTarget` matches their role
   - Requests they've previously responded to
 - **Pending Approvals**: Requests at `department_checks` status targeted to them only
-- **Special Filtering**: Additional post-processing to verify clarification target
+- **Special Filtering**: Additional post-processing to verify query target
 
 #### **Chief Director (CHIEF_DIRECTOR)**
 - **Can See**:
@@ -95,7 +95,7 @@ Previously, all users could see all requests regardless of their role or workflo
 #### **Approvals API (`/api/approvals`)**
 - **Pending Only**: Shows only requests awaiting user's approval
 - **Role Verification**: Double-checks with approval engine
-- **Department Targeting**: Filters by clarification target for department users
+- **Department Targeting**: Filters by query target for department users
 
 ### 3. Frontend Implementation
 
@@ -124,8 +124,8 @@ Previously, all users could see all requests regardless of their role or workflo
 
 #### **Department Security**
 - **Clarification Targeting**: Department users only see requests specifically sent to them
-- **History Verification**: Checks clarification history for access rights
-- **Response Tracking**: Tracks which department responded to which clarification
+- **History Verification**: Checks query history for access rights
+- **Response Tracking**: Tracks which department responded to which query
 
 #### **Audit Trail**
 - **Access Logging**: All request access attempts logged
@@ -140,9 +140,9 @@ Previously, all users could see all requests regardless of their role or workflo
 - Proper handoff between approval stages
 
 #### **Clarification Handling**
-- Department users only see targeted clarifications
+- Department users only see targeted queries
 - Clarification responses properly routed back
-- Clear visibility of clarification status
+- Clear visibility of query status
 
 #### **Status Transitions**
 - Role-based status filtering ensures proper workflow
@@ -163,7 +163,7 @@ Previously, all users could see all requests regardless of their role or workflo
 
 ### **Shared Logic**
 - `getRoleBasedFilter()` - Core filtering logic used across APIs
-- Department-specific filtering for clarification targeting
+- Department-specific filtering for query targeting
 - Approval engine integration for role verification
 
 ## Benefits
@@ -171,7 +171,7 @@ Previously, all users could see all requests regardless of their role or workflo
 ### **Security**
 - ✅ Users only see requests they're authorized to view
 - ✅ No unauthorized access to workflow stages
-- ✅ Department users only see targeted clarifications
+- ✅ Department users only see targeted queries
 - ✅ Complete audit trail of access and actions
 
 ### **Workflow Integrity**
@@ -198,7 +198,7 @@ Previously, all users could see all requests regardless of their role or workflo
 1. **Requester**: Should only see own requests
 2. **Manager**: Should only see requests at manager level
 3. **SOP/Accountant**: Should only see verification requests
-4. **Department**: Should only see targeted clarifications
+4. **Department**: Should only see targeted queries
 5. **Executives**: Should only see requests at their approval level
 
 ### **Workflow Progression**

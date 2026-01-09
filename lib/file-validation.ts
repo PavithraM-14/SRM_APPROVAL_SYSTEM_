@@ -34,10 +34,10 @@ export interface FileValidationResult {
   error?: string;
 }
 
-export function validateFile(file: File, isClarification: boolean = false): FileValidationResult {
+export function validateFile(file: File, isQuery: boolean = false): FileValidationResult {
   // Use appropriate validation rules based on context
-  const allowedMimeTypes = isClarification ? CLARIFICATION_ALLOWED_MIME_TYPES : ALLOWED_MIME_TYPES;
-  const allowedExtensions = isClarification ? CLARIFICATION_ALLOWED_EXTENSIONS : ALLOWED_EXTENSIONS;
+  const allowedMimeTypes = isQuery ? CLARIFICATION_ALLOWED_MIME_TYPES : ALLOWED_MIME_TYPES;
+  const allowedExtensions = isQuery ? CLARIFICATION_ALLOWED_EXTENSIONS : ALLOWED_EXTENSIONS;
   
   // Check file size
   if (file.size > MAX_FILE_SIZE) {
@@ -49,8 +49,8 @@ export function validateFile(file: File, isClarification: boolean = false): File
 
   // Check MIME type
   if (!allowedMimeTypes.includes(file.type)) {
-    const fileTypeMessage = isClarification 
-      ? `Only PDF files are allowed for clarification uploads. "${file.name}" is ${file.type}`
+    const fileTypeMessage = isQuery 
+      ? `Only PDF files are allowed for query uploads. "${file.name}" is ${file.type}`
       : `File type "${file.type}" is not allowed for "${file.name}"`;
     return {
       isValid: false,
@@ -61,8 +61,8 @@ export function validateFile(file: File, isClarification: boolean = false): File
   // Check file extension
   const extension = file.name.split('.').pop()?.toLowerCase();
   if (!extension || !allowedExtensions.includes(extension)) {
-    const extensionMessage = isClarification
-      ? `Only PDF files are allowed for clarification uploads. "${file.name}" has extension "${extension}"`
+    const extensionMessage = isQuery
+      ? `Only PDF files are allowed for query uploads. "${file.name}" has extension "${extension}"`
       : `File extension "${extension}" is not allowed for "${file.name}"`;
     return {
       isValid: false,
@@ -81,7 +81,7 @@ export function validateFile(file: File, isClarification: boolean = false): File
   return { isValid: true };
 }
 
-export function validateFiles(files: File[], isClarification: boolean = false): FileValidationResult {
+export function validateFiles(files: File[], isQuery: boolean = false): FileValidationResult {
   // Check number of files
   if (files.length > MAX_FILES_PER_UPLOAD) {
     return {
@@ -92,7 +92,7 @@ export function validateFiles(files: File[], isClarification: boolean = false): 
 
   // Validate each file
   for (const file of files) {
-    const result = validateFile(file, isClarification);
+    const result = validateFile(file, isQuery);
     if (!result.isValid) {
       return result;
     }

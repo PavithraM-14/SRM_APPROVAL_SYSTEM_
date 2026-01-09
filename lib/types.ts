@@ -35,8 +35,8 @@ export enum RequestStatus {
   CHAIRMAN_APPROVAL = 'chairman_approval',
   APPROVED = 'approved',
   REJECTED = 'rejected',
-  CLARIFICATION_REQUIRED = 'clarification_required',
-  DEPARTMENT_CLARIFICATION = 'department_clarification', // For Dean's clarifications to MMA, HR, Audit, IT
+  CLARIFICATION_REQUIRED = 'query_required',
+  DEPARTMENT_CLARIFICATION = 'department_query', // For Dean's queries to MMA, HR, Audit, IT
 }
 
 export enum ActionType {
@@ -45,8 +45,8 @@ export enum ActionType {
   REJECT = 'reject',
   CLARIFY = 'clarify',
   FORWARD = 'forward',
-  REJECT_WITH_CLARIFICATION = 'reject_with_clarification', // Reject and send back for clarification
-  CLARIFY_AND_REAPPROVE = 'clarify_and_reapprove', // Provide clarification and re-approve
+  REJECT_WITH_CLARIFICATION = 'reject_with_query', // Reject and send back for query
+  CLARIFY_AND_REAPPROVE = 'query_and_reapprove', // Provide query and re-approve
 }
 
 export const CreateRequestSchema = z.object({
@@ -97,11 +97,11 @@ export interface ApprovalHistory {
   attachments?: string[];
   previousStatus?: RequestStatus;
   newStatus?: RequestStatus;
-  target?: 'sop' | 'budget'; // For clarification: which step to clarify
-  clarificationRequest?: string; // Question/note when rejecting for clarification
-  clarificationResponse?: string; // Response from lower level user
-  clarificationAttachments?: string[]; // Attachments for clarification response
-  requiresClarification?: boolean; // Flag to indicate this is a clarification request
+  target?: 'sop' | 'budget'; // For query: which step to clarify
+  queryRequest?: string; // Question/note when rejecting for query
+  queryResponse?: string; // Response from lower level user
+  queryAttachments?: string[]; // Attachments for query response
+  requiresClarification?: boolean; // Flag to indicate this is a query request
   timestamp: Date;
 }
 

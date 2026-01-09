@@ -2,17 +2,17 @@
 
 import { ExclamationTriangleIcon } from '@heroicons/react/24/outline';
 
-interface ClarificationIndicatorProps {
+interface QueryIndicatorProps {
   className?: string;
   size?: 'sm' | 'md' | 'lg';
   showText?: boolean;
 }
 
-export default function ClarificationIndicator({ 
+export default function QueryIndicator({ 
   className = '', 
   size = 'md',
   showText = false 
-}: ClarificationIndicatorProps) {
+}: QueryIndicatorProps) {
   const sizeClasses = {
     sm: 'w-4 h-4',
     md: 'w-5 h-5', 

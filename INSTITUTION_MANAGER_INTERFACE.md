@@ -97,7 +97,7 @@ const handleForward = async (notes: string, attachments: string[]) => {
 #### **Submit Button Logic:**
 - Institution Manager: Enabled when action is selected
 - Notes are optional for forward action
-- Standard validation for reject/clarification actions
+- Standard validation for reject/query actions
 
 #### **Action Handling:**
 ```typescript
@@ -141,7 +141,7 @@ if (userRole === 'institution_manager' && request.status === 'manager_review' &&
 
 ### **Existing Actions:**
 - **Reject**: `{ action: 'reject', notes }`
-- **Clarification**: `{ action: 'reject_with_clarification', notes, attachments }`
+- **Clarification**: `{ action: 'reject_with_query', notes, attachments }`
 
 ## Status: ✅ IMPLEMENTED
 

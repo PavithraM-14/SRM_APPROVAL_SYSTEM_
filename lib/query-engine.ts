@@ -3,7 +3,7 @@ import { RequestStatus, UserRole } from './types';
 /**
  * Queries Engine - Handles backward flow when requests are rejected for queries
  */
-export const clarificationEngine = {
+export const queryEngine = {
   
   /**
    * Get the queries target based on rejection level
@@ -11,7 +11,7 @@ export const clarificationEngine = {
    * - Above Dean level (HOI, Chief Director, Chairman) → Dean handles queries with requester
    * - Dean and below → Direct to requester
    */
-  getClarificationTarget(currentStatus: RequestStatus, currentRole: UserRole): { status: RequestStatus; role: UserRole; isDeanMediated: boolean } | null {
+  getQueryTarget(currentStatus: RequestStatus, currentRole: UserRole): { status: RequestStatus; role: UserRole; isDeanMediated: boolean } | null {
     
     // Roles above Dean level - only Chairman and Chief Director
     const aboveDeanRoles = [UserRole.CHIEF_DIRECTOR, UserRole.CHAIRMAN];
@@ -37,7 +37,7 @@ export const clarificationEngine = {
    * Get the previous level in the workflow for queries (legacy method for backward compatibility)
    */
   getPreviousLevel(currentStatus: RequestStatus, currentRole: UserRole): { status: RequestStatus; role: UserRole } | null {
-    const target = this.getClarificationTarget(currentStatus, currentRole);
+    const target = this.getQueryTarget(currentStatus, currentRole);
     return target ? { status: target.status, role: target.role } : null;
   },
 
@@ -45,28 +45,28 @@ export const clarificationEngine = {
    * Check if a request is pending response for a specific user
    */
   isPendingClarificationForUser(request: any, userRole: UserRole, userId: string): boolean {
-    if (!request.pendingClarification) {
+    if (!request.pendingQuery) {
       return false;
     }
 
     // Check if this user is at the level that needs to provide response
-    return request.clarificationLevel === userRole;
+    return request.queryLevel === userRole;
   },
 
   /**
    * Get the latest queries request for a request
    */
-  getLatestClarificationRequest(request: any): any | null {
+  getLatestQueryRequest(request: any): any | null {
     if (!request.history || request.history.length === 0) {
       return null;
     }
 
     // Find the most recent queries request
-    const clarificationEntries = request.history
-      .filter((h: any) => h.requiresClarification && h.clarificationRequest)
+    const queryEntries = request.history
+      .filter((h: any) => h.requiresClarification && h.queryRequest)
       .sort((a: any, b: any) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 
-    return clarificationEntries.length > 0 ? clarificationEntries[0] : null;
+    return queryEntries.length > 0 ? queryEntries[0] : null;
   },
 
   /**
@@ -97,7 +97,7 @@ export const clarificationEngine = {
     if (!request.history || request.history.length === 0) return false;
 
     const latestRejection = request.history
-      .filter((h: any) => h.action === 'REJECT_WITH_CLARIFICATION' || (h.requiresClarification && h.clarificationRequest))
+      .filter((h: any) => h.action === 'REJECT_WITH_CLARIFICATION' || (h.requiresClarification && h.queryRequest))
       .sort((a: any, b: any) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())[0];
 
     if (!latestRejection) return false;
@@ -117,7 +117,7 @@ export const clarificationEngine = {
     if (!request.history || request.history.length === 0) return null;
 
     const latestRejection = request.history
-      .filter((h: any) => h.action === 'REJECT_WITH_CLARIFICATION' || (h.requiresClarification && h.clarificationRequest))
+      .filter((h: any) => h.action === 'REJECT_WITH_CLARIFICATION' || (h.requiresClarification && h.queryRequest))
       .sort((a: any, b: any) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())[0];
 
     if (!latestRejection || !latestRejection.previousStatus) return null;
@@ -160,7 +160,7 @@ export const clarificationEngine = {
     if (!request.history || request.history.length === 0) return null;
 
     const latestRejection = request.history
-      .filter((h: any) => h.action === 'REJECT_WITH_CLARIFICATION' || (h.requiresClarification && h.clarificationRequest))
+      .filter((h: any) => h.action === 'REJECT_WITH_CLARIFICATION' || (h.requiresClarification && h.queryRequest))
       .sort((a: any, b: any) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())[0];
 
     if (!latestRejection || !latestRejection.previousStatus) return null;

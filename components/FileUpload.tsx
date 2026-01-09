@@ -8,7 +8,7 @@ interface FileUploadProps {
   maxFiles?: number;
   disabled?: boolean;
   existingFiles?: string[];
-  isClarification?: boolean; // New prop to indicate clarification context
+  isQuery?: boolean; // New prop to indicate query context
 }
 
 export default function FileUpload({ 
@@ -16,7 +16,7 @@ export default function FileUpload({
   maxFiles = 5, 
   disabled = false,
   existingFiles = [],
-  isClarification = false
+  isQuery = false
 }: FileUploadProps) {
   const [uploading, setUploading] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState<string[]>(existingFiles);
@@ -40,9 +40,9 @@ export default function FileUpload({
         formData.append('files', file);
       });
       
-      // Add clarification context
-      if (isClarification) {
-        formData.append('isClarification', 'true');
+      // Add query context
+      if (isQuery) {
+        formData.append('isQuery', 'true');
       }
 
       const response = await fetch('/api/upload', {
@@ -142,7 +142,7 @@ export default function FileUpload({
           className="hidden"
           onChange={handleFileSelect}
           disabled={disabled || uploading}
-          accept={isClarification ? ".pdf" : ".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.gif,.txt"}
+          accept={isQuery ? ".pdf" : ".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.gif,.txt"}
         />
         
         <CloudArrowUpIcon className="mx-auto h-12 w-12 text-gray-400 mb-4" />
@@ -160,7 +160,7 @@ export default function FileUpload({
               <span className="font-medium text-blue-600">Click to upload</span> or drag and drop
             </p>
             <p className="text-xs text-gray-500 mt-1">
-              {isClarification 
+              {isQuery 
                 ? "PDF files only, up to 10MB each (Max " + maxFiles + " files)"
                 : "PDF, DOC, XLS, Images up to 10MB each (Max " + maxFiles + " files)"
               }
@@ -214,7 +214,7 @@ export default function FileUpload({
       {/* File Type Info */}
       <div className="text-xs text-gray-500">
         <p className="font-medium mb-1">Supported file types:</p>
-        {isClarification ? (
+        {isQuery ? (
           <>
             <p>Documents: PDF only</p>
             <p>Maximum file size: 10MB per file</p>

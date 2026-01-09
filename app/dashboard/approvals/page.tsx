@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import ClarificationIndicator from '../../../components/ClarificationIndicator';
+import QueryIndicator from '../../../components/QueryIndicator';
 
 interface Request {
   _id: string;
@@ -20,8 +20,8 @@ interface Request {
     email: string;
   };
   history?: any[];
-  pendingClarification?: boolean;
-  clarificationLevel?: string;
+  pendingQuery?: boolean;
+  queryLevel?: string;
 }
 
 export default function ApprovalsPage() {
@@ -329,8 +329,8 @@ export default function ApprovalsPage() {
                         <span className={`px-2 sm:px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap ${getStatusBadgeClass(request.status)}`}>
                           {getStatusDisplayName(request.status)}
                         </span>
-                        {request.pendingClarification && request.clarificationLevel === currentUser?.role && (
-                          <ClarificationIndicator size="sm" showText={false} />
+                        {request.pendingQuery && request.queryLevel === currentUser?.role && (
+                          <QueryIndicator size="sm" showText={false} />
                         )}
                         {/* Explicit action button to process the request */}
                         <button
