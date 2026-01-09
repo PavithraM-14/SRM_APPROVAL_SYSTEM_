@@ -245,7 +245,7 @@ export default function SignupPage() {
             </div>
           )}
 
-          <form className="space-y-6" onSubmit={handleSignup}>
+          <form className="space-y-6" onSubmit={handleSignup} autoComplete="off">
             <div>
               <label className="block text-sm font-medium text-gray-700">Full Name *</label>
               <input
@@ -253,7 +253,8 @@ export default function SignupPage() {
                 required
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="Enter your Name"
+                placeholder="Enter your full name"
+                autoComplete="off"
                 className={inputClass}
               />
             </div>
@@ -265,7 +266,8 @@ export default function SignupPage() {
                 required
                 value={empId}
                 onChange={(e) => setEmpId(e.target.value)}
-                placeholder="Enter your ID"
+                placeholder="Enter your employee ID"
+                autoComplete="off"
                 className={inputClass}
               />
             </div>
@@ -278,6 +280,7 @@ export default function SignupPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="name@srmrmp.edu.in"
+                autoComplete="off"
                 className={inputClass}
               />
             </div>
@@ -291,18 +294,31 @@ export default function SignupPage() {
                 onChange={(e) => setContactNo(e.target.value)}
                 onBlur={validateContactNo}
                 placeholder="Enter 10-digit contact number"
+                autoComplete="off"
                 className={inputClass}
               />
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700">Password *</label>
-              <PasswordInput value={password} onChange={setPassword} required />
+              <PasswordInput 
+                value={password} 
+                onChange={setPassword} 
+                required 
+                placeholder="Enter your password"
+                autoComplete="new-password"
+              />
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700">Confirm Password *</label>
-              <PasswordInput value={confirmPassword} onChange={setConfirmPassword} required />
+              <PasswordInput 
+                value={confirmPassword} 
+                onChange={setConfirmPassword} 
+                required 
+                placeholder="Confirm your password"
+                autoComplete="new-password"
+              />
             </div>
 
             <div>
@@ -327,15 +343,18 @@ export default function SignupPage() {
 
             {!rolesWithoutCollege.includes(selectedRole) && (
               <div>
-                <label className="block text-sm font-medium text-gray-700">College *</label>
-                <input
-                  type="text"
+                <label className="block text-sm font-medium text-gray-700">Institution*</label>
+                <select
                   required
                   value={college}
                   onChange={(e) => setCollege(e.target.value)}
-                  placeholder="Enter College Name"
                   className={inputClass}
-                />
+                >
+                  <option value="">Select Institution</option>
+                  <option value="SRM">SRM</option>
+                  <option value="EEC">EEC</option>
+                  <option value="DENTAL">DENTAL</option>
+                </select>
               </div>
             )}
 
@@ -347,7 +366,8 @@ export default function SignupPage() {
                   required
                   value={department}
                   onChange={(e) => setDepartment(e.target.value)}
-                  placeholder="Enter Department"
+                  placeholder="Enter department name"
+                  autoComplete="off"
                   className={inputClass}
                 />
               </div>

@@ -47,7 +47,7 @@ export async function POST(
     });
 
     // Validate action - add new actions for budget routing and clarification workflow
-    if (!['approve', 'reject', 'clarify', 'forward', 'send_to_dean', 'send_to_vp', 'reject_with_clarification', 'clarify_and_reapprove', 'dean_send_to_requester'].includes(action)) {
+    if (!['approve', 'reject', 'clarify', 'forward', 'send_to_dean', 'send_to_vp', 'send_to_chairman', 'reject_with_clarification', 'clarify_and_reapprove', 'dean_send_to_requester'].includes(action)) {
       console.log('[DEBUG] Invalid action:', action);
       return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
     }
@@ -144,6 +144,14 @@ export async function POST(
     // Prepare mutable update object early to allow status-specific flags before final assembly
     let updateData: any = {};
 
+    console.log('[DEBUG] Processing approval request:', {
+      requestId: params.id,
+      action,
+      userRole: user.role,
+      currentStatus: requestRecord.status,
+      previousStatus
+    });
+
     // Handle different actions
     switch (action) {
 
@@ -220,6 +228,19 @@ export async function POST(
           // Mark this request as coming from direct send to dean path
           if (!updateData.$set) updateData.$set = {};
           updateData.$set.sentDirectlyToDean = true;
+          console.log('[DEBUG] Send to Dean action:', {
+            userRole: user.role,
+            currentStatus: requestRecord.status,
+            nextStatus,
+            sentDirectlyToDean: true
+          });
+        } else {
+          console.log('[DEBUG] Send to Dean failed - conditions not met:', {
+            userRole: user.role,
+            expectedRole: UserRole.INSTITUTION_MANAGER,
+            currentStatus: requestRecord.status,
+            expectedStatus: RequestStatus.INSTITUTION_VERIFIED
+          });
         }
         break;
 
@@ -228,6 +249,25 @@ export async function POST(
           nextStatus = RequestStatus.VP_APPROVAL;
           actionType = ActionType.APPROVE;
           // This follows normal flow through VP → HOI → Dean → Chief Director
+        }
+        break;
+
+      case 'send_to_chairman':
+        if (user.role === UserRole.DEAN && (requestRecord.status === RequestStatus.DEAN_REVIEW || requestRecord.status === RequestStatus.DEAN_VERIFICATION)) {
+          nextStatus = RequestStatus.CHAIRMAN_APPROVAL;
+          actionType = ActionType.APPROVE;
+          console.log('[DEBUG] Send to Chairman action:', {
+            userRole: user.role,
+            currentStatus: requestRecord.status,
+            nextStatus
+          });
+        } else {
+          console.log('[DEBUG] Send to Chairman failed - conditions not met:', {
+            userRole: user.role,
+            expectedRole: UserRole.DEAN,
+            currentStatus: requestRecord.status,
+            expectedStatuses: [RequestStatus.DEAN_REVIEW, RequestStatus.DEAN_VERIFICATION]
+          });
         }
         break;
 
@@ -370,6 +410,14 @@ export async function POST(
       requestRecord.sopReference = sopReference;
       await requestRecord.save();
     }
+
+    console.log('[DEBUG] After switch statement:', {
+      action,
+      previousStatus,
+      nextStatus,
+      actionType,
+      statusChanged: nextStatus !== previousStatus
+    });
 
     // BUILD HISTORY ENTRY
     const historyEntry: any = {

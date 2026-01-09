@@ -502,6 +502,122 @@ export default function RequestDetailPage({ params }: { params: { id: string } }
     }
   };
 
+  // Institution Manager specific handlers
+  const handleSendToDean = async (notes: string, attachments: string[]) => {
+    try {
+      setProcessingApproval(true);
+      console.log('[DEBUG] handleSendToDean called:', {
+        requestId: params.id,
+        requestStatus: request.status,
+        userRole: currentUser?.role,
+        notes,
+        attachments
+      });
+      
+      const response = await fetch(`/api/requests/${params.id}/approve`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'send_to_dean',
+          notes,
+          attachments
+        }),
+      });
+      
+      console.log('[DEBUG] API response status:', response.status);
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('[DEBUG] API error:', errorData);
+        throw new Error(errorData.error || 'Failed to send to Dean');
+      }
+
+      const responseData = await response.json();
+      console.log('[DEBUG] API success response:', responseData);
+
+      await fetchRequest();
+      setIsApprovalModalOpen(false);
+
+    } catch (err) {
+      console.error('Send to Dean error:', err);
+      throw err;
+    } finally {
+      setProcessingApproval(false);
+    }
+  };
+
+  const handleSendToVP = async (notes: string, attachments: string[]) => {
+    try {
+      setProcessingApproval(true);
+      const response = await fetch(`/api/requests/${params.id}/approve`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'send_to_vp',
+          notes,
+          attachments
+        }),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to send to VP');
+      }
+
+      await fetchRequest();
+      setIsApprovalModalOpen(false);
+
+    } catch (err) {
+      console.error('Send to VP error:', err);
+      throw err;
+    } finally {
+      setProcessingApproval(false);
+    }
+  };
+
+  const handleSendToChairman = async (notes: string, attachments: string[]) => {
+    try {
+      setProcessingApproval(true);
+      console.log('[DEBUG] handleSendToChairman called:', {
+        requestId: params.id,
+        requestStatus: request.status,
+        userRole: currentUser?.role,
+        notes,
+        attachments
+      });
+      
+      const response = await fetch(`/api/requests/${params.id}/approve`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'send_to_chairman',
+          notes,
+          attachments
+        }),
+      });
+      
+      console.log('[DEBUG] API response status:', response.status);
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('[DEBUG] API error:', errorData);
+        throw new Error(errorData.error || 'Failed to send to Chairman');
+      }
+
+      const responseData = await response.json();
+      console.log('[DEBUG] API success response:', responseData);
+
+      await fetchRequest();
+      setIsApprovalModalOpen(false);
+
+    } catch (err) {
+      console.error('Send to Chairman error:', err);
+      throw err;
+    } finally {
+      setProcessingApproval(false);
+    }
+  };
+
   const hideWorkflowAndHistory =
     currentUser?.role === 'sop_verifier' || currentUser?.role === 'accountant';
 
@@ -953,6 +1069,9 @@ export default function RequestDetailPage({ params }: { params: { id: string } }
         onRejectWithClarification={handleRejectWithClarification}
         onForward={handleForward}
         onClarify={handleClarify}
+        onSendToDean={handleSendToDean}
+        onSendToVP={handleSendToVP}
+        onSendToChairman={handleSendToChairman}
         loading={processingApproval}
       />
 

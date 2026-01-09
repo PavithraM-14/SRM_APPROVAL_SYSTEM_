@@ -30,23 +30,30 @@ export default function HomePage() {
 </header>
 
       {/* Hero Section */}
-      <div className="relative bg-white overflow-hidden">
-        <div className="max-w-7xl mx-auto">
-          <div className="relative z-10 pb-8 bg-white sm:pb-16 md:pb-20 lg:pb-28 xl:pb-32">
-            <main className="mt-16 mx-auto max-w-3xl px-4 sm:mt-20">
-              <div className="text-center">
+      <div className="relative bg-white overflow-hidden min-h-screen">
+        <div className="max-w-7xl mx-auto h-full">
+          <div className="relative z-10 pb-8 bg-white sm:pb-16 md:pb-20 lg:pb-28 xl:pb-32 h-full pt-2">
+            <main className="mt-4 mx-auto max-w-4xl px-4 sm:mt-6 h-full">
+              <div className="flex flex-col items-center justify-center h-full min-h-[70vh] text-center">
 
-                <h1 className="text-5xl tracking-tight font-extrabold text-gray-900 sm:text-6xl">
+                {/* SRM Logo at top */}
+                <div className="mb-8">
+                  <Image
+                    src={srmLogo}
+                    alt="SRM Logo"
+                    className="h-60 sm:h-80 w-auto max-w-full"
+                    priority
+                  />
+                </div>
+
+                {/* Text below logo */}
+                <h1 className="text-4xl sm:text-5xl tracking-tight font-extrabold text-gray-900 lg:text-6xl mb-8 lg:mb-16">
                   <span className="block">Digital Institutional</span>
                   <span className="block text-blue-700">Approval System</span>
                 </h1>
 
-                <p className="mt-6 text-lg text-gray-600 max-w-2xl mx-auto">
-                  Streamline your institutional approval process with our comprehensive digital workflow system.
-                  From request submission to final approval, manage every step efficiently.
-                </p>
-
-                <div className="mt-10 flex justify-center">
+                {/* Login Button below text */}
+                <div className="flex justify-center">
                   <Link
                     href="/login"
                     className="bg-blue-700 hover:bg-blue-800 text-white text-lg px-10 py-3 rounded-lg shadow-md transition"

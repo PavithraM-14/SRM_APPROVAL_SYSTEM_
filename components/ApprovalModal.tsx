@@ -20,6 +20,9 @@ interface ApprovalModalProps {
   onRejectWithClarification: (clarificationRequest: string, attachments: string[]) => void;
   onForward?: (notes: string, attachments: string[]) => void;
   onClarify?: (notes: string, attachments: string[], target?: string) => void;
+  onSendToDean?: (notes: string, attachments: string[]) => void;
+  onSendToVP?: (notes: string, attachments: string[]) => void;
+  onSendToChairman?: (notes: string, attachments: string[]) => void;
   loading?: boolean;
 }
 
@@ -33,11 +36,17 @@ export default function ApprovalModal({
   onRejectWithClarification,
   onForward,
   onClarify,
+  onSendToDean,
+  onSendToVP,
+  onSendToChairman,
   loading = false
 }: ApprovalModalProps) {
-  const [action, setAction] = useState<'approve' | 'reject' | 'reject_with_clarification' | 'forward' | 'clarify'>(() => {
+  const [action, setAction] = useState<'approve' | 'reject' | 'reject_with_clarification' | 'forward' | 'clarify' | 'send_to_dean' | 'send_to_vp' | 'send_to_chairman'>(() => {
     if (userRole === 'institution_manager' && request.status === 'manager_review') {
       return 'forward';
+    }
+    if (userRole === 'institution_manager' && request.status === 'institution_verified') {
+      return 'send_to_dean';
     }
     if (['hr', 'it', 'audit', 'mma'].includes(userRole) && request.status === 'department_checks') {
       return 'forward';
@@ -101,8 +110,8 @@ export default function ApprovalModal({
 
     // For Institution Manager in institution_verified status, handle send_to_dean action
     if (userRole === 'institution_manager' && request.status === 'institution_verified' && action === 'send_to_dean') {
-      if (onApprove) {
-        onApprove(notes, attachments, undefined, undefined);
+      if (onSendToDean) {
+        onSendToDean(notes, attachments);
       } else {
         alert('Send to Dean action not configured');
       }
@@ -111,10 +120,20 @@ export default function ApprovalModal({
 
     // For Institution Manager in institution_verified status, handle send_to_vp action
     if (userRole === 'institution_manager' && request.status === 'institution_verified' && action === 'send_to_vp') {
-      if (onApprove) {
-        onApprove(notes, attachments, undefined, undefined);
+      if (onSendToVP) {
+        onSendToVP(notes, attachments);
       } else {
         alert('Send to VP action not configured');
+      }
+      return;
+    }
+
+    // For Dean in dean_review or dean_verification status, handle send_to_chairman action
+    if (userRole === 'dean' && (request.status === 'dean_review' || request.status === 'dean_verification') && action === 'send_to_chairman') {
+      if (onSendToChairman) {
+        onSendToChairman(notes, attachments);
+      } else {
+        alert('Send to Chairman action not configured');
       }
       return;
     }
@@ -542,6 +561,7 @@ export default function ApprovalModal({
                   {request.status === 'dean_review' ? (
                     <>
                       <option value="approve">Approve to Chief Director</option>
+                      <option value="send_to_chairman">Send to Chairman</option>
                       <option value="clarify">Send to Department for Verification</option>
                       <option value="reject">Reject</option>
                       <option value="reject_with_clarification">Raise Queries</option>
@@ -550,6 +570,7 @@ export default function ApprovalModal({
                     // dean_verification status - after department verification
                     <>
                       <option value="approve">Approve to Chief Director</option>
+                      <option value="send_to_chairman">Send to Chairman</option>
                       <option value="reject">Reject</option>
                       <option value="reject_with_clarification">Raise Queries</option>
                     </>
@@ -569,6 +590,18 @@ export default function ApprovalModal({
                           ? 'Department verification complete. Approve and send to Chief Director.'
                           : 'Approve and send directly to Chief Director.'
                         }
+                      </p>
+                    </div>
+                  )}
+
+                  {action === 'send_to_chairman' && (
+                    <div className="p-3 bg-purple-50 border border-purple-200 rounded-lg">
+                      <div className="flex items-center">
+                        <CheckCircleIcon className="w-5 h-5 text-purple-600 mr-2" />
+                        <span className="font-medium text-purple-700">Send to Chairman</span>
+                      </div>
+                      <p className="text-sm text-purple-600 mt-1">
+                        Send this request directly to Chairman for final approval, bypassing Chief Director.
                       </p>
                     </div>
                   )}
