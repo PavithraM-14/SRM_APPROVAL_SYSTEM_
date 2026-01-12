@@ -16,6 +16,11 @@ const colleges = ['Engineering', 'Medicine', 'Business'];
 const departments = ['Computer Science', 'Mechanical', 'Electrical', 'Civil'];
 const expenseCategories = ['Equipment', 'Software', 'Travel', 'Training', 'Infrastructure'];
 
+// Helper function to generate unique 6-digit request IDs
+function generateRequestId(): string {
+  return Math.floor(100000 + Math.random() * 900000).toString();
+}
+
 async function seed() {
   try {
     // Check if MONGODB_URI is loaded
@@ -117,6 +122,8 @@ async function seed() {
       
       // Scenario 1: Fully approved request (Chairman approved)
       const approvedRequest = await Request.create({
+        requestId: generateRequestId(),
+        requestId: generateRequestId(),
         title: 'New Laboratory Equipment Purchase',
         purpose: 'Purchase of advanced laboratory equipment for Computer Science department to enhance research capabilities and student learning experience.',
         college: colleges[0],
@@ -124,7 +131,7 @@ async function seed() {
         costEstimate: 250000,
         expenseCategory: 'Equipment',
         sopReference: sopRecords[0].code,
-        attachments: [],
+        attachments: ['sample-document.pdf'],
         requester: requester._id,
         status: RequestStatus.APPROVED,
         history: [
@@ -204,6 +211,7 @@ async function seed() {
 
       // Scenario 2: Request rejected by VP (after manager and verifiers approved)
       const rejectedByVP = await Request.create({
+        requestId: generateRequestId(),
         title: 'Software License Renewal',
         purpose: 'Annual renewal of software licenses for development tools used in Computer Science curriculum.',
         college: colleges[0],
@@ -211,7 +219,7 @@ async function seed() {
         costEstimate: 150000,
         expenseCategory: 'Software',
         sopReference: sopRecords[1].code,
-        attachments: [],
+        attachments: ['sample-document.pdf'],
         requester: requester._id,
         status: RequestStatus.REJECTED,
         history: [
@@ -263,6 +271,7 @@ async function seed() {
 
       // Scenario 3: Request rejected by Dean (after VP and HOI approved)
       const rejectedByDean = await Request.create({
+        requestId: generateRequestId(),
         title: 'Conference Travel Request',
         purpose: 'Travel expenses for attending international conference on Machine Learning and AI.',
         college: colleges[0],
@@ -270,7 +279,7 @@ async function seed() {
         costEstimate: 180000,
         expenseCategory: 'Travel',
         sopReference: sopRecords[2].code,
-        attachments: [],
+        attachments: ['sample-document.pdf'],
         requester: requester._id,
         status: RequestStatus.REJECTED,
         history: [
@@ -336,6 +345,7 @@ async function seed() {
 
       // Scenario 4: Currently pending at manager level
       const pendingAtManager = await Request.create({
+        requestId: generateRequestId(),
         title: 'Infrastructure Upgrade Project',
         purpose: 'Upgrade of network infrastructure in Engineering building to support increased bandwidth requirements.',
         college: colleges[0],
@@ -343,7 +353,7 @@ async function seed() {
         costEstimate: 500000,
         expenseCategory: 'Infrastructure',
         sopReference: sopRecords[3].code,
-        attachments: [],
+        attachments: ['sample-document.pdf'],
         requester: requester._id,
         status: RequestStatus.MANAGER_REVIEW,
         history: [
@@ -360,6 +370,7 @@ async function seed() {
 
       // Scenario 5: Currently in parallel verification
       const inParallelVerification = await Request.create({
+        requestId: generateRequestId(),
         title: 'Training Program for Faculty',
         purpose: 'Professional development training program for faculty members on latest teaching methodologies.',
         college: colleges[1],
@@ -367,7 +378,7 @@ async function seed() {
         costEstimate: 120000,
         expenseCategory: 'Training',
         sopReference: sopRecords[4].code,
-        attachments: [],
+        attachments: ['sample-document.pdf'],
         requester: requester._id,
         status: RequestStatus.PARALLEL_VERIFICATION,
         history: [
@@ -391,6 +402,7 @@ async function seed() {
 
       // Scenario 6: Manager approved, now at VP level
       const atVPLevel = await Request.create({
+        requestId: generateRequestId(),
         title: 'Research Equipment Purchase',
         purpose: 'Purchase of specialized research equipment for advanced materials testing laboratory.',
         college: colleges[1],
@@ -398,7 +410,7 @@ async function seed() {
         costEstimate: 350000,
         expenseCategory: 'Equipment',
         sopReference: sopRecords[0].code,
-        attachments: [],
+        attachments: ['sample-document.pdf'],
         requester: requester._id,
         status: RequestStatus.VP_APPROVAL,
         history: [
@@ -443,6 +455,7 @@ async function seed() {
 
       // Scenario 7: At Dean level
       const atDeanLevel = await Request.create({
+        requestId: generateRequestId(),
         title: 'Library Book Collection Expansion',
         purpose: 'Purchase of new books and digital resources for the central library to support curriculum updates.',
         college: colleges[2],
@@ -450,7 +463,7 @@ async function seed() {
         costEstimate: 80000,
         expenseCategory: 'Equipment',
         sopReference: sopRecords[1].code,
-        attachments: [],
+        attachments: ['sample-document.pdf'],
         requester: requester._id,
         status: RequestStatus.DEAN_REVIEW,
         history: [
@@ -495,6 +508,7 @@ async function seed() {
 
       // Scenario 8: Another fully approved request
       const anotherApproved = await Request.create({
+        requestId: generateRequestId(),
         title: 'Student Lab Setup',
         purpose: 'Setup of new student laboratory with modern equipment for hands-on learning experience.',
         college: colleges[1],
@@ -502,7 +516,7 @@ async function seed() {
         costEstimate: 200000,
         expenseCategory: 'Equipment',
         sopReference: sopRecords[2].code,
-        attachments: [],
+        attachments: ['sample-document.pdf'],
         requester: requester._id,
         status: RequestStatus.APPROVED,
         history: [
@@ -568,6 +582,7 @@ async function seed() {
 
       // Scenario 9: Chairman rejected, Dean needs to handle (NEW WORKFLOW)
       const chairmanRejectedToDean = await Request.create({
+        requestId: generateRequestId(),
         title: 'Expensive Equipment Purchase',
         purpose: 'Purchase of high-end research equipment for advanced studies.',
         college: colleges[1],
@@ -575,7 +590,7 @@ async function seed() {
         costEstimate: 1500000,
         expenseCategory: 'Equipment',
         sopReference: sopRecords[3].code,
-        attachments: [],
+        attachments: ['sample-document.pdf'],
         requester: requester._id,
         status: RequestStatus.DEAN_REVIEW,
         pendingQuery: true,
@@ -662,6 +677,7 @@ async function seed() {
 
       // Scenario 10: Request rejected at manager level
       const rejectedByManager = await Request.create({
+        requestId: generateRequestId(),
         title: 'Unnecessary Equipment Purchase',
         purpose: 'Purchase of equipment that duplicates existing functionality in the department.',
         college: colleges[0],
@@ -669,7 +685,7 @@ async function seed() {
         costEstimate: 75000,
         expenseCategory: 'Equipment',
         sopReference: sopRecords[4].code,
-        attachments: [],
+        attachments: ['sample-document.pdf'],
         requester: requester._id,
         status: RequestStatus.REJECTED,
         history: [
@@ -693,6 +709,7 @@ async function seed() {
 
       // Scenario 11: Manager rejected, requester needs to clarify (NEW WORKFLOW - Below Dean)
       const managerRejectedToRequester = await Request.create({
+        requestId: generateRequestId(),
         title: 'Manager Rejected Request',
         purpose: 'This request was rejected by manager and sent directly to requester for query.',
         college: colleges[0],
@@ -700,7 +717,7 @@ async function seed() {
         costEstimate: 100000,
         expenseCategory: 'Equipment',
         sopReference: sopRecords[0].code,
-        attachments: [],
+        attachments: ['sample-document.pdf'],
         requester: requester._id,
         status: RequestStatus.SUBMITTED,
         pendingQuery: true,
@@ -729,6 +746,7 @@ async function seed() {
 
       // Scenario 11b: Requester provided query, back to VP for review (NEW WORKFLOW)
       const requesterClarifiedToVP = await Request.create({
+        requestId: generateRequestId(),
         title: 'VP Rejected - Requester Clarified',
         purpose: 'This request was rejected by VP, requester provided query, now back to VP for review.',
         college: colleges[1],
@@ -736,7 +754,7 @@ async function seed() {
         costEstimate: 180000,
         expenseCategory: 'Training',
         sopReference: sopRecords[1].code,
-        attachments: [],
+        attachments: ['sample-document.pdf'],
         requester: requester._id,
         status: RequestStatus.VP_APPROVAL,
         pendingQuery: false, // Clarification completed, now pending VP review
@@ -781,6 +799,7 @@ async function seed() {
 
       // Scenario 12: HOI rejected, requester needs to clarify (NEW WORKFLOW - Below Dean)
       const hoiRejectedToRequester = await Request.create({
+        requestId: generateRequestId(),
         title: 'HOI Rejected - Direct to Requester',
         purpose: 'This request was rejected by HOI and sent directly to requester for query (HOI is below Dean level).',
         college: colleges[2],
@@ -788,7 +807,7 @@ async function seed() {
         costEstimate: 300000,
         expenseCategory: 'Infrastructure',
         sopReference: sopRecords[2].code,
-        attachments: [],
+        attachments: ['sample-document.pdf'],
         requester: requester._id,
         status: RequestStatus.SUBMITTED,
         pendingQuery: true,
@@ -831,6 +850,7 @@ async function seed() {
 
       // Scenario 13: Chief Director rejected, Dean reviewing requester's query (Above Dean Level)
       const chiefDirectorRejectedDeanReviewing = await Request.create({
+        requestId: generateRequestId(),
         title: 'Chief Director Rejected - Dean Reviewing',
         purpose: 'This request was rejected by Chief Director, sent to Dean, then to requester, and requester has provided query. Now Dean is reviewing.',
         college: colleges[1],
@@ -838,7 +858,7 @@ async function seed() {
         costEstimate: 800000,
         expenseCategory: 'Equipment',
         sopReference: sopRecords[3].code,
-        attachments: [],
+        attachments: ['sample-document.pdf'],
         requester: requester._id,
         status: RequestStatus.DEAN_REVIEW,
         pendingQuery: true,
@@ -916,6 +936,7 @@ async function seed() {
 
       // Scenario 14: Currently at Chairman level
       const atChairmanLevel = await Request.create({
+        requestId: generateRequestId(),
         title: 'Major Infrastructure Overhaul',
         purpose: 'Complete overhaul of campus infrastructure including electrical, plumbing, and network systems.',
         college: colleges[2],
@@ -923,7 +944,7 @@ async function seed() {
         costEstimate: 2000000,
         expenseCategory: 'Infrastructure',
         sopReference: sopRecords[4].code,
-        attachments: [],
+        attachments: ['sample-document.pdf'],
         requester: requester._id,
         status: RequestStatus.CHAIRMAN_APPROVAL,
         history: [
@@ -998,6 +1019,7 @@ async function seed() {
       
       // Leave Request 1: Pending at VP level
       const leaveRequestPendingVP = await Request.create({
+        requestId: generateRequestId(),
         title: 'Annual Leave Request - 10 Days',
         purpose: 'Annual vacation leave for family trip to Kerala from March 15-25, 2024.',
         college: colleges[0],
@@ -1005,7 +1027,7 @@ async function seed() {
         costEstimate: 0, // Leave requests typically have no cost
         expenseCategory: 'Leave',
         sopReference: 'SOP-LEAVE-001',
-        attachments: [],
+        attachments: ['sample-document.pdf'],
         requester: requester._id,
         status: RequestStatus.VP_APPROVAL, // Directly at VP level
         history: [
@@ -1022,6 +1044,7 @@ async function seed() {
 
       // Leave Request 2: Approved by VP, now at HOI
       const leaveRequestAtHOI = await Request.create({
+        requestId: generateRequestId(),
         title: 'Medical Leave Request - 5 Days',
         purpose: 'Medical leave for surgery and recovery period from February 20-25, 2024.',
         college: colleges[1],
@@ -1029,7 +1052,7 @@ async function seed() {
         costEstimate: 0,
         expenseCategory: 'Leave',
         sopReference: 'SOP-LEAVE-002',
-        attachments: [],
+        attachments: ['sample-document.pdf'],
         requester: requester._id,
         status: RequestStatus.HOI_APPROVAL,
         history: [
@@ -1053,6 +1076,7 @@ async function seed() {
 
       // Leave Request 3: Fully approved
       const leaveRequestApproved = await Request.create({
+        requestId: generateRequestId(),
         title: 'Emergency Leave Request - 2 Days',
         purpose: 'Emergency leave due to family emergency - immediate departure required.',
         college: colleges[2],
@@ -1060,7 +1084,7 @@ async function seed() {
         costEstimate: 0,
         expenseCategory: 'Leave',
         sopReference: 'SOP-LEAVE-003',
-        attachments: [],
+        attachments: ['sample-document.pdf'],
         requester: requester._id,
         status: RequestStatus.APPROVED,
         history: [
@@ -1098,6 +1122,7 @@ async function seed() {
 
       // Leave Request 4: Mixed case title test
       const leaveRequestMixedCase = await Request.create({
+        requestId: generateRequestId(),
         title: 'Maternity LEAVE Application - 90 Days',
         purpose: 'Maternity leave application for 90 days starting from April 1, 2024.',
         college: colleges[0],
@@ -1105,7 +1130,7 @@ async function seed() {
         costEstimate: 0,
         expenseCategory: 'Leave',
         sopReference: 'SOP-LEAVE-004',
-        attachments: [],
+        attachments: ['sample-document.pdf'],
         requester: requester._id,
         status: RequestStatus.VP_APPROVAL,
         history: [
@@ -1124,6 +1149,7 @@ async function seed() {
       
       // Low Cost Request 1: ₹30,000 - Should stop at Chief Director
       const lowCostRequest1 = await Request.create({
+        requestId: generateRequestId(),
         title: 'Office Supplies Purchase',
         purpose: 'Purchase of basic office supplies including stationery, printer cartridges, and desk accessories.',
         college: colleges[0],
@@ -1131,7 +1157,7 @@ async function seed() {
         costEstimate: 30000, // ≤ ₹50,000 - Should stop at Chief Director
         expenseCategory: 'Equipment',
         sopReference: sopRecords[0].code,
-        attachments: [],
+        attachments: ['sample-document.pdf'],
         requester: requester._id,
         status: RequestStatus.CHIEF_DIRECTOR_APPROVAL,
         history: [
@@ -1176,6 +1202,7 @@ async function seed() {
 
       // Low Cost Request 2: ₹45,000 - Should stop at Chief Director
       const lowCostRequest2 = await Request.create({
+        requestId: generateRequestId(),
         title: 'Minor Equipment Repair',
         purpose: 'Repair and maintenance of existing laboratory equipment including calibration and parts replacement.',
         college: colleges[1],
@@ -1183,7 +1210,7 @@ async function seed() {
         costEstimate: 45000, // ≤ ₹50,000 - Should stop at Chief Director
         expenseCategory: 'Equipment',
         sopReference: sopRecords[1].code,
-        attachments: [],
+        attachments: ['sample-document.pdf'],
         requester: requester._id,
         status: RequestStatus.APPROVED, // Already approved by Chief Director (cost ≤ ₹50,000)
         history: [
@@ -1235,6 +1262,7 @@ async function seed() {
 
       // Boundary Test: ₹50,000 exactly - Should stop at Chief Director
       const boundaryCostRequest = await Request.create({
+        requestId: generateRequestId(),
         title: 'Software License - Boundary Test',
         purpose: 'Purchase of software license for department use - exactly at ₹50,000 boundary.',
         college: colleges[2],
@@ -1242,7 +1270,7 @@ async function seed() {
         costEstimate: 50000, // = ₹50,000 - Should stop at Chief Director
         expenseCategory: 'Software',
         sopReference: sopRecords[2].code,
-        attachments: [],
+        attachments: ['sample-document.pdf'],
         requester: requester._id,
         status: RequestStatus.APPROVED, // Already approved by Chief Director (cost ≤ ₹50,000)
         history: [
@@ -1296,6 +1324,7 @@ async function seed() {
       
       // Budget Not Available 1: High cost (₹75,000) - Should go Dean → Chairman
       const budgetNotAvailableHighCost = await Request.create({
+        requestId: generateRequestId(),
         title: 'High Cost Equipment - Budget Not Available',
         purpose: 'Purchase of specialized equipment when budget is not available - should go to Chairman due to high cost.',
         college: colleges[0],
@@ -1303,7 +1332,7 @@ async function seed() {
         costEstimate: 75000, // > ₹50,000 - Should go Dean → Chairman
         expenseCategory: 'Equipment',
         sopReference: sopRecords[0].code,
-        attachments: [],
+        attachments: ['sample-document.pdf'],
         requester: requester._id,
         status: RequestStatus.CHAIRMAN_APPROVAL,
         budgetNotAvailable: true, // Flag indicating budget not available path
@@ -1335,6 +1364,7 @@ async function seed() {
 
       // Budget Not Available 2: Low cost (₹35,000) - Should go Dean → Chairman
       const budgetNotAvailableLowCost = await Request.create({
+        requestId: generateRequestId(),
         title: 'Low Cost Supplies - Budget Not Available',
         purpose: 'Purchase of office supplies when budget is not available - should go to Chairman regardless of cost.',
         college: colleges[1],
@@ -1342,7 +1372,7 @@ async function seed() {
         costEstimate: 35000, // ≤ ₹50,000 - But still goes Dean → Chairman (budget not available)
         expenseCategory: 'Equipment',
         sopReference: sopRecords[1].code,
-        attachments: [],
+        attachments: ['sample-document.pdf'],
         requester: requester._id,
         status: RequestStatus.APPROVED, // Already approved by Chairman
         budgetNotAvailable: true, // Flag indicating budget not available path
@@ -1381,6 +1411,7 @@ async function seed() {
 
       // Budget Not Available 3: No cost (₹0) - Should go Dean → Chairman
       const budgetNotAvailableNoCost = await Request.create({
+        requestId: generateRequestId(),
         title: 'No Cost Request - Budget Not Available',
         purpose: 'Administrative request with no cost when budget is not available - should go to Chairman regardless of cost.',
         college: colleges[2],
@@ -1388,7 +1419,7 @@ async function seed() {
         costEstimate: 0, // No cost - But still goes Dean → Chairman (budget not available)
         expenseCategory: 'Administrative',
         sopReference: sopRecords[2].code,
-        attachments: [],
+        attachments: ['sample-document.pdf'],
         requester: requester._id,
         status: RequestStatus.CHAIRMAN_APPROVAL, // Pending at Chairman
         budgetNotAvailable: true, // Flag indicating budget not available path

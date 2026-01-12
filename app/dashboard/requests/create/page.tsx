@@ -232,7 +232,7 @@ export default function CreateRequestPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Institution</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Institution* </label>
             <div className="relative">
               <select {...register('college')} className="mt-1 block w-full border border-gray-300 rounded-lg px-4 py-3 bg-white shadow-sm text-gray-900 text-base font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 hover:border-gray-400 transition-colors duration-200 appearance-none cursor-pointer">
                 <option value="" className="text-gray-600 font-medium text-base">Select Institution</option>
@@ -250,7 +250,7 @@ export default function CreateRequestPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Department</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Department* </label>
             <div className="relative">
               <select 
                 {...register('department')} 

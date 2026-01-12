@@ -701,30 +701,58 @@ export default function RequestDetailPage({ params }: { params: { id: string } }
         <div className="px-4 sm:px-6 py-4 sm:py-5">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
-            <div className="w-full">
-              <h4 className="text-xs sm:text-sm font-medium text-gray-500 mb-3">Request Information</h4>
-              <div className="space-y-3">
-                <div className="grid grid-cols-3 gap-2 items-start">
-                  <dt className="text-xs sm:text-sm font-medium text-gray-700">ID</dt>
-                  <dd className="text-xs sm:text-sm text-gray-900 break-all font-mono col-span-2">
-                    {request.requestId || request._id.slice(-6)}
-                  </dd>
+            <div className="w-full space-y-6">
+              {/* Request Information */}
+              <div>
+                <h4 className="text-xs sm:text-sm font-medium text-gray-500 mb-3">Request Information</h4>
+                <div className="space-y-3">
+                  <div className="grid grid-cols-3 gap-2 items-start">
+                    <dt className="text-xs sm:text-sm font-medium text-gray-700">ID</dt>
+                    <dd className="text-xs sm:text-sm text-gray-900 break-all font-mono col-span-2">
+                      {request.requestId || request._id.slice(-6)}
+                    </dd>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2 items-start">
+                    <dt className="text-xs sm:text-sm font-medium text-gray-700">Requester</dt>
+                    <dd className="text-xs sm:text-sm text-gray-900 break-words col-span-2">{request.requester.name}</dd>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2 items-start">
+                    <dt className="text-xs sm:text-sm font-medium text-gray-700">Email</dt>
+                    <dd className="text-xs sm:text-sm text-gray-900 break-all col-span-2">{request.requester.email}</dd>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2 items-start">
+                    <dt className="text-xs sm:text-sm font-medium text-gray-700">Institution</dt>
+                    <dd className="text-xs sm:text-sm text-gray-900 break-words col-span-2">{request.college}</dd>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2 items-start">
+                    <dt className="text-xs sm:text-sm font-medium text-gray-700">Department</dt>
+                    <dd className="text-xs sm:text-sm text-gray-900 break-words col-span-2">{request.department}</dd>
+                  </div>
                 </div>
-                <div className="grid grid-cols-3 gap-2 items-start">
-                  <dt className="text-xs sm:text-sm font-medium text-gray-700">Requester</dt>
-                  <dd className="text-xs sm:text-sm text-gray-900 break-words col-span-2">{request.requester.name}</dd>
-                </div>
-                <div className="grid grid-cols-3 gap-2 items-start">
-                  <dt className="text-xs sm:text-sm font-medium text-gray-700">Email</dt>
-                  <dd className="text-xs sm:text-sm text-gray-900 break-all col-span-2">{request.requester.email}</dd>
-                </div>
-                <div className="grid grid-cols-3 gap-2 items-start">
-                  <dt className="text-xs sm:text-sm font-medium text-gray-700">Institution</dt>
-                  <dd className="text-xs sm:text-sm text-gray-900 break-words col-span-2">{request.college}</dd>
-                </div>
-                <div className="grid grid-cols-3 gap-2 items-start">
-                  <dt className="text-xs sm:text-sm font-medium text-gray-700">Department</dt>
-                  <dd className="text-xs sm:text-sm text-gray-900 break-words col-span-2">{request.department}</dd>
+              </div>
+
+              {/* Status Information - moved to left side */}
+              <div>
+                <h4 className="text-xs sm:text-sm font-medium text-gray-500 mb-3">Status Information</h4>
+                <div className="space-y-3">
+                  <div className="grid grid-cols-3 gap-2 items-start">
+                    <dt className="text-xs sm:text-sm font-medium text-gray-700">Status</dt>
+                    <dd className="text-xs sm:text-sm col-span-2">
+                      <div className="flex items-center gap-2">
+                        <span className="inline-flex px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                          {request.status.replace('_', ' ').toUpperCase()}
+                        </span>
+                        {request.pendingQuery && request.queryLevel === currentUser?.role && (
+                          <QueryIndicator size="sm" showText={false} />
+                        )}
+                      </div>
+                    </dd>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-2 items-start">
+                    <dt className="text-xs sm:text-sm font-medium text-gray-700">Created</dt>
+                    <dd className="text-xs sm:text-sm text-gray-900 col-span-2">{new Date(request.createdAt).toLocaleDateString('en-GB')}</dd>
+                  </div>
                 </div>
               </div>
             </div>
@@ -757,31 +785,6 @@ export default function RequestDetailPage({ params }: { params: { id: string } }
                 </div>
               </div>
             )}
-
-            {/* Status and other information */}
-            <div className="w-full">
-              <h4 className="text-xs sm:text-sm font-medium text-gray-500 mb-3">Status Information</h4>
-              <div className="space-y-3">
-                <div className="grid grid-cols-3 gap-2 items-start">
-                  <dt className="text-xs sm:text-sm font-medium text-gray-700">Status</dt>
-                  <dd className="text-xs sm:text-sm col-span-2">
-                    <div className="flex items-center gap-2">
-                      <span className="inline-flex px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                        {request.status.replace('_', ' ').toUpperCase()}
-                      </span>
-                      {request.pendingQuery && request.queryLevel === currentUser?.role && (
-                        <QueryIndicator size="sm" showText={false} />
-                      )}
-                    </div>
-                  </dd>
-                </div>
-
-                <div className="grid grid-cols-3 gap-2 items-start">
-                  <dt className="text-xs sm:text-sm font-medium text-gray-700">Created</dt>
-                  <dd className="text-xs sm:text-sm text-gray-900 col-span-2">{new Date(request.createdAt).toLocaleDateString('en-GB')}</dd>
-                </div>
-              </div>
-            </div>
 
           </div>
 
