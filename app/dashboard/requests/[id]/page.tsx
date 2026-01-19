@@ -166,6 +166,10 @@ interface Request {
   history: ApprovalHistoryItem[];
   pendingQuery?: boolean;
   queryLevel?: string;
+  budgetAllocated?: number;
+  budgetSpent?: number;
+  budgetBalance?: number;
+  budgetAvailable?: boolean;
 }
 
 export default function RequestDetailPage({ params }: { params: { id: string } }) {
@@ -302,7 +306,7 @@ export default function RequestDetailPage({ params }: { params: { id: string } }
     }
   };
 
-  const handleApprove = async (notes: string, attachments: string[], sopReference?: string, budgetAvailable?: boolean) => {
+  const handleApprove = async (notes: string, attachments: string[], sopReference?: string, budgetAvailable?: boolean, budgetData?: { allocated: number; spent: number; balance: number }) => {
     try {
       setProcessingApproval(true);
       const response = await fetch(`/api/requests/${params.id}/approve`, {
@@ -313,7 +317,8 @@ export default function RequestDetailPage({ params }: { params: { id: string } }
           notes,
           attachments,
           sopReference,
-          budgetAvailable
+          budgetAvailable,
+          budgetData
         }),
       });
       
@@ -1084,7 +1089,11 @@ export default function RequestDetailPage({ params }: { params: { id: string } }
           purpose: request.purpose,
           costEstimate: request.costEstimate,
           requester: { name: request.requester.name },
-          status: request.status
+          status: request.status,
+          budgetAllocated: request.budgetAllocated,
+          budgetSpent: request.budgetSpent,
+          budgetBalance: request.budgetBalance,
+          budgetAvailable: request.budgetAvailable
         }}
         userRole={currentUser?.role || ''}
         onApprove={handleApprove}

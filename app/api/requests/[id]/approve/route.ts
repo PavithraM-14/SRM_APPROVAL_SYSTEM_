@@ -31,6 +31,7 @@ export async function POST(
       action: requestAction,
       notes,
       budgetAvailable,
+      budgetData,
       forwardedMessage,
       attachments,
       target,
@@ -445,6 +446,12 @@ export async function POST(
     // Store budget availability for accountant
     if (user.role === UserRole.ACCOUNTANT && budgetAvailable !== undefined) {
       historyEntry.budgetAvailable = budgetAvailable;
+      // Store detailed budget information if provided
+      if (budgetData) {
+        historyEntry.budgetAllocated = budgetData.allocated;
+        historyEntry.budgetSpent = budgetData.spent;
+        historyEntry.budgetBalance = budgetData.balance;
+      }
     }
 
     // Store query target for Dean to department flow
@@ -549,6 +556,12 @@ export async function POST(
     if (user.role === UserRole.ACCOUNTANT && action === 'approve' && typeof budgetAvailable === 'boolean') {
       if (!updateData.$set) updateData.$set = {};
       updateData.$set.budgetAvailable = budgetAvailable;
+      // Store detailed budget information if provided
+      if (budgetData) {
+        updateData.$set.budgetAllocated = budgetData.allocated;
+        updateData.$set.budgetSpent = budgetData.spent;
+        updateData.$set.budgetBalance = budgetData.balance;
+      }
     }
 
     // Add attachments (except forward)

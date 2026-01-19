@@ -13,9 +13,13 @@ interface ApprovalModalProps {
     costEstimate: number;
     requester: { name: string };
     status?: string;
+    budgetAllocated?: number;
+    budgetSpent?: number;
+    budgetBalance?: number;
+    budgetAvailable?: boolean;
   };
   userRole: string;
-  onApprove: (notes: string, attachments: string[], sopReference?: string, budgetAvailable?: boolean) => void;
+  onApprove: (notes: string, attachments: string[], sopReference?: string, budgetAvailable?: boolean, budgetData?: { allocated: number; spent: number; balance: number }) => void;
   onReject: (notes: string) => void;
   onRejectWithClarification: (queryRequest: string, attachments: string[]) => void;
   onForward?: (notes: string, attachments: string[]) => void;
@@ -65,10 +69,33 @@ export default function ApprovalModal({
   
   // Accountant specific fields
   const [budgetAvailable, setBudgetAvailable] = useState<boolean | null>(null);
+  const [budgetAllocated, setBudgetAllocated] = useState<number>(0);
+  const [budgetSpent, setBudgetSpent] = useState<number>(0);
+  const [budgetBalance, setBudgetBalance] = useState<number>(0);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   if (!isOpen) return null;
+
+  // Auto-calculate budget balance when allocated or spent changes
+  const calculateBudgetBalance = (allocated: number, spent: number) => {
+    const balance = allocated - spent;
+    setBudgetBalance(balance);
+    // Auto-determine budget availability based on cost estimate and balance
+    if (request.costEstimate > 0) {
+      setBudgetAvailable(balance >= request.costEstimate);
+    }
+  };
+
+  const handleBudgetAllocatedChange = (value: number) => {
+    setBudgetAllocated(value);
+    calculateBudgetBalance(value, budgetSpent);
+  };
+
+  const handleBudgetSpentChange = (value: number) => {
+    setBudgetSpent(value);
+    calculateBudgetBalance(budgetAllocated, value);
+  };
 
   const handleSubmit = () => {
     // Validation for SOP Verifier
@@ -93,8 +120,24 @@ export default function ApprovalModal({
         alert('Please select whether budget is available or not');
         return;
       }
+      // Only require budget fields if there's a cost estimate
+      if (request.costEstimate > 0) {
+        if (budgetAllocated <= 0) {
+          alert('Please enter a valid budget allocated amount');
+          return;
+        }
+        if (budgetSpent < 0) {
+          alert('Budget spent cannot be negative');
+          return;
+        }
+      }
       // For Accountant, always approve - no other actions allowed
-      onApprove(notes, attachments, undefined, budgetAvailable);
+      const budgetData = {
+        allocated: budgetAllocated,
+        spent: budgetSpent,
+        balance: budgetBalance
+      };
+      onApprove(notes, attachments, undefined, budgetAvailable, budgetData);
       return;
     }
 
@@ -209,6 +252,9 @@ export default function ApprovalModal({
     setSopReference('');
     setSopReferenceAvailable(null);
     setBudgetAvailable(null);
+    setBudgetAllocated(0);
+    setBudgetSpent(0);
+    setBudgetBalance(0);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -321,6 +367,79 @@ export default function ApprovalModal({
             </div>
           </div>
 
+          {/* Budget Information for Institution Manager */}
+          {userRole === 'institution_manager' && request.budgetAllocated && request.budgetAllocated > 0 && (
+            <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
+              <h4 className="text-lg font-medium text-blue-900 mb-4">Budget Verification Details</h4>
+              <p className="text-sm text-blue-700 mb-3">Budget information verified by Accountant:</p>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="bg-white rounded-lg p-3 border border-blue-200">
+                  <span className="text-xs font-medium text-gray-600">Budget Allocated</span>
+                  <p className="text-lg font-semibold text-blue-600">₹{request.budgetAllocated.toLocaleString()}</p>
+                </div>
+                
+                {request.budgetSpent !== undefined && (
+                  <div className="bg-white rounded-lg p-3 border border-blue-200">
+                    <span className="text-xs font-medium text-gray-600">Budget Spent</span>
+                    <p className="text-lg font-semibold text-orange-600">₹{request.budgetSpent.toLocaleString()}</p>
+                  </div>
+                )}
+                
+                {request.budgetBalance !== undefined && (
+                  <div className="bg-white rounded-lg p-3 border border-blue-200">
+                    <span className="text-xs font-medium text-gray-600">Budget Available</span>
+                    <p className={`text-lg font-semibold ${
+                      request.budgetBalance >= 0 ? 'text-green-600' : 'text-red-600'
+                    }`}>
+                      ₹{request.budgetBalance.toLocaleString()}
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* Budget Status Summary */}
+              {request.costEstimate > 0 && request.budgetBalance !== undefined && (
+                <div className="mt-4 p-3 bg-white rounded-lg border border-blue-200">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-gray-700">Budget Analysis:</span>
+                    <span className={`inline-flex px-3 py-1 rounded-full text-sm font-medium ${
+                      request.budgetBalance >= request.costEstimate 
+                        ? 'bg-green-100 text-green-800' 
+                        : 'bg-red-100 text-red-800'
+                    }`}>
+                      {request.budgetBalance >= request.costEstimate ? '✓ Sufficient Budget' : '⚠ Insufficient Budget'}
+                    </span>
+                  </div>
+                  <div className="mt-2 text-sm text-gray-600">
+                    Request: ₹{request.costEstimate.toLocaleString()} | Available: ₹{request.budgetBalance.toLocaleString()}
+                  </div>
+                </div>
+              )}
+
+              {/* Accountant Decision */}
+              {request.budgetAvailable !== undefined && (
+                <div className="mt-4 p-3 bg-white rounded-lg border border-blue-200">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-gray-700">Accountant Decision:</span>
+                    <span className={`inline-flex px-3 py-1 rounded-full text-sm font-medium ${
+                      request.budgetAvailable 
+                        ? 'bg-green-100 text-green-800' 
+                        : 'bg-red-100 text-red-800'
+                    }`}>
+                      {request.budgetAvailable ? 'Budget Approved' : 'Budget Not Available'}
+                    </span>
+                  </div>
+                  {!request.budgetAvailable && (
+                    <div className="mt-2 text-sm text-red-600">
+                      ⚠ This request will require special approval through Dean pathway
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
           {/* SOP Verifier Specific Section */}
           {isSopVerifier && (
             <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
@@ -391,11 +510,99 @@ export default function ApprovalModal({
               <h4 className="text-lg font-medium text-green-900 mb-4">Budget Verification</h4>
               
               <div className="space-y-4">
-                {request.costEstimate > 0 && (
+                {/* Budget Fields */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Budget Status for ₹{request.costEstimate.toLocaleString()}
+                      Budget Allocated *
                     </label>
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">₹</span>
+                      <input
+                        type="number"
+                        value={budgetAllocated || ''}
+                        onChange={(e) => handleBudgetAllocatedChange(Number(e.target.value) || 0)}
+                        placeholder="0"
+                        className="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                        disabled={loading}
+                        min="0"
+                        step="1"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Budget Spent *
+                    </label>
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">₹</span>
+                      <input
+                        type="number"
+                        value={budgetSpent || ''}
+                        onChange={(e) => handleBudgetSpentChange(Number(e.target.value) || 0)}
+                        placeholder="0"
+                        className="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                        disabled={loading}
+                        min="0"
+                        step="1"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Budget Available (Auto-calculated)
+                    </label>
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">₹</span>
+                      <input
+                        type="number"
+                        value={budgetBalance}
+                        readOnly
+                        className={`w-full pl-8 pr-3 py-2 border rounded-lg bg-gray-50 ${
+                          budgetBalance >= 0 ? 'border-green-300 text-green-700' : 'border-red-300 text-red-700'
+                        }`}
+                      />
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Allocated - Spent = Available
+                    </p>
+                  </div>
+                </div>
+
+                {/* Budget Status Display */}
+                {request.costEstimate > 0 && (budgetAllocated > 0 || budgetSpent > 0) && (
+                  <div className="mt-4">
+                    <div className="bg-white rounded-lg p-4 border border-gray-200">
+                      <h5 className="text-sm font-medium text-gray-700 mb-3">Budget Analysis</h5>
+                      <div className="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                          <span className="text-gray-600">Request Amount:</span>
+                          <span className="ml-2 font-medium">₹{request.costEstimate.toLocaleString()}</span>
+                        </div>
+                        <div>
+                          <span className="text-gray-600">Available Budget:</span>
+                          <span className={`ml-2 font-medium ${budgetBalance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                            ₹{budgetBalance.toLocaleString()}
+                          </span>
+                        </div>
+                        <div className="col-span-2">
+                          <span className="text-gray-600">Status:</span>
+                          <span className={`ml-2 font-medium ${budgetBalance >= request.costEstimate ? 'text-green-600' : 'text-red-600'}`}>
+                            {budgetBalance >= request.costEstimate ? '✓ Sufficient Budget' : '⚠ Insufficient Budget'}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Manual Budget Status Override (if needed) */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Final Budget Status
+                  </label>
                   <div className="flex gap-4">
                     <label className="flex items-center">
                       <input
@@ -420,9 +627,12 @@ export default function ApprovalModal({
                       <span className="text-sm">Budget Not Available</span>
                     </label>
                   </div>
+                  <p className="text-xs text-gray-500 mt-1">
+                    This is auto-determined based on your budget entries above, but you can override if needed.
+                  </p>
                 </div>
-                )}
 
+                {/* Status Messages */}
                 {request.costEstimate > 0 && budgetAvailable === true && (
                   <div className="p-3 bg-green-100 border border-green-300 rounded-lg">
                     <p className="text-sm text-green-800">
@@ -445,7 +655,7 @@ export default function ApprovalModal({
                   <div className="p-3 bg-blue-100 border border-blue-300 rounded-lg">
                     <p className="text-sm text-blue-800">
                       <strong>ℹ No Cost Estimate:</strong> This request has no associated cost. 
-                      Budget verification is not required.
+                      Budget verification is not required, but you can still record budget information for tracking.
                     </p>
                   </div>
                 )}
