@@ -105,7 +105,7 @@ export default function DashboardPage() {
       icon: ClipboardDocumentListIcon,
       color: 'text-blue-600',
       bgColor: 'bg-blue-100',
-      description: currentUser?.role === 'requester' ? 'View all my requests' : 'View all requests forwarded to you (pending + approved by you)',
+      description: currentUser?.role === 'requester' ? 'View all my requests' : 'View all requests forwarded to you',
     },
     {
       name: 'Pending',
@@ -121,7 +121,7 @@ export default function DashboardPage() {
       icon: CheckCircleIcon,
       color: 'text-green-600',
       bgColor: 'bg-green-100',
-      description: currentUser?.role === 'requester' ? 'View my fully approved requests (Chairman approved)' : 'View requests you have approved',
+      description: currentUser?.role === 'requester' ? 'View my fully approved requests' : 'View requests you have approved',
     },
     {
       name: 'Rejected',

@@ -139,7 +139,7 @@ export default function QueryModal({
             {isRequester && (
               <div className="mt-4">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Attach Supporting Documents (Optional):
+                  Attach Supporting Documents:
                 </label>
                 <FileUpload
                   onFilesUploaded={setAttachments}

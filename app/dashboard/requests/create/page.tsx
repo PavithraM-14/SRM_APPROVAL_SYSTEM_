@@ -304,7 +304,7 @@ export default function CreateRequestPage() {
           </div>
 
           <div className="sm:col-span-2">
-            <label className="text-sm font-medium">SOP Reference (Optional)</label>
+            <label className="text-sm font-medium">SOP Reference</label>
             <input {...register('sopReference')} className="mt-1 w-full border p-2 rounded" />
           </div>
         </div>
@@ -313,7 +313,7 @@ export default function CreateRequestPage() {
         <div>
           <div className="flex justify-between items-center">
             <label className="text-sm font-medium">
-              Document Attachments (PDF Only) *
+              Document Attachments *
             </label>
             <input
               type="file"
