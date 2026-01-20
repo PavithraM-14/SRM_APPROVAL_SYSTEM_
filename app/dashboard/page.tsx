@@ -253,7 +253,11 @@ export default function DashboardPage() {
                 <div className="flex items-center justify-between sm:justify-end space-x-2 sm:space-x-3 flex-shrink-0">
                   <div className="flex items-center space-x-2">
                     <span className={`px-2 sm:px-4 py-1 sm:py-1.5 rounded-full text-xs sm:text-sm font-semibold ${getStatusClass(request.status || 'unknown')} whitespace-nowrap`}>
-                      {request.status ? request.status.replace('_', ' ').toUpperCase() : 'UNKNOWN'}
+                      {request.status 
+                        ? (request.status === 'parallel_verification' 
+                            ? 'VERIFICATION' 
+                            : request.status.replace('_', ' ').toUpperCase())
+                        : 'UNKNOWN'}
                     </span>
                     {request.pendingQuery && request.queryLevel === currentUser?.role && (
                       <QueryIndicator size="sm" showText={false} />

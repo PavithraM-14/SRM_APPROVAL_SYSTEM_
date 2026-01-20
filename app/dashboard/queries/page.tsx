@@ -382,7 +382,9 @@ export default function QueriesPage() {
                     
                     <div className="flex flex-col items-end gap-2 ml-4">
                       <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusBadgeClass(request.status)}`}>
-                        {request.status.replace('_', ' ').toUpperCase()}
+                        {request.status === 'parallel_verification' 
+                          ? 'VERIFICATION' 
+                          : request.status.replace('_', ' ').toUpperCase()}
                       </span>
                       <div className="flex items-center gap-2">
                         <span className="text-xs text-blue-600 font-medium">Click to respond →</span>

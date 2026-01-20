@@ -379,7 +379,9 @@ export default function RequestsPage() {
                       
                       <div className="flex items-center gap-2">
                         <span className={`px-2 sm:px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap ${getStatusBadgeClass(request.status)}`}>
-                          {request.status.replace('_', ' ').toUpperCase()}
+                          {request.status === 'parallel_verification' 
+                            ? 'VERIFICATION' 
+                            : request.status.replace('_', ' ').toUpperCase()}
                         </span>
                         {request.pendingQuery && request.queryLevel === currentUser?.role && (
                           <QueryIndicator size="sm" showText={false} />

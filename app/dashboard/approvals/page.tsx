@@ -140,7 +140,7 @@ export default function ApprovalsPage() {
   };
 
   const getStatusDisplayName = (status: string) => {
-    return status.replace(/_/g, ' ').toUpperCase();
+    return status === 'parallel_verification' ? 'VERIFICATION' : status.replace(/_/g, ' ').toUpperCase();
   };
 
   const getPageTitle = () => {

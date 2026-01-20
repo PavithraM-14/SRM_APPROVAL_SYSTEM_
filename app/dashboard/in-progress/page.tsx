@@ -146,7 +146,7 @@ export default function InProgressPage() {
       'rejected': 'Rejected'
     };
     
-    return statusMap[status.toLowerCase()] || status.replace(/_/g, ' ').toUpperCase();
+    return statusMap[status.toLowerCase()] || (status === 'parallel_verification' ? 'VERIFICATION' : status.replace(/_/g, ' ').toUpperCase());
   };
 
   const getCurrentStageDescription = (status: string) => {
