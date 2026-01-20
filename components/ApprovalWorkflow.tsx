@@ -20,7 +20,7 @@ const getStatusBadgeClass = (status: string, isCurrent: boolean, isCompleted: bo
 const getStatusDisplayName = (status: string) => {
   const statusMap: Record<string, string> = {
     'manager_review': 'Manager Review',
-    'parallel_verification': 'Parallel Verification',
+    'parallel_verification': 'Verification',
     'sop_verification': 'SOP Verification',
     'budget_check': 'Budget Check',
     'sop_completed': 'SOP Completed',
@@ -48,7 +48,7 @@ const ApprovalWorkflow: React.FC<ApprovalWorkflowProps> = ({ currentStatus }) =>
   // Define the main approval workflow steps
   const workflowSteps = [
     { id: 'manager_review', name: 'Manager Review' },
-    { id: 'parallel_verification', name: 'Parallel Verification' },
+    { id: 'parallel_verification', name: 'Verification' },
     { id: 'institution_verified', name: 'Manager Approval' },
     { id: 'vp_approval', name: 'VP Approval' },
     { id: 'hoi_approval', name: 'HOI Approval' },
@@ -62,7 +62,7 @@ const ApprovalWorkflow: React.FC<ApprovalWorkflowProps> = ({ currentStatus }) =>
   // Check if current status is a query status
   const isQueryStatus = ['sop_query', 'budget_query', 'query_required', 'department_checks'].includes(currentStatus);
   
-  // Check if current status is a parallel verification status
+  // Check if current status is a verification status
   const isParallelStatus = ['parallel_verification', 'sop_completed', 'budget_completed', 'institution_verified'].includes(currentStatus);
   
   // Find the index of the current status in main workflow

@@ -945,10 +945,10 @@ export default function ApprovalModal({
                     <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
                       <div className="flex items-center">
                         <CheckCircleIcon className="w-5 h-5 text-green-600 mr-2" />
-                        <span className="font-medium text-green-700">Send for Parallel Verification</span>
+                        <span className="font-medium text-green-700">Send for Verification</span>
                       </div>
                       <p className="text-sm text-green-600 mt-1">
-                        This will send the request to both SOP Verifier and Accountant simultaneously for parallel processing.
+                        This will send the request to both SOP Verifier and Accountant simultaneously for processing.
                       </p>
                     </div>
                   )}

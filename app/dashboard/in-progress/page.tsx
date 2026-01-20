@@ -126,7 +126,7 @@ export default function InProgressPage() {
   const getStatusDisplayName = (status: string) => {
     const statusMap: Record<string, string> = {
       'manager_review': 'Manager Review',
-      'parallel_verification': 'Parallel Verification (SOP & Budget)',
+      'parallel_verification': 'Verification (SOP & Budget)',
       'sop_verification': 'SOP Verification',
       'budget_check': 'Budget Check',
       'sop_completed': 'SOP Completed (Waiting for Budget)',
@@ -152,7 +152,7 @@ export default function InProgressPage() {
   const getCurrentStageDescription = (status: string) => {
     const stageMap: Record<string, string> = {
       'manager_review': 'Awaiting manager review and routing decision',
-      'parallel_verification': 'Being verified by SOP and Budget teams simultaneously',
+      'parallel_verification': 'Being verified by SOP and Budget teams',
       'sop_verification': 'Awaiting SOP reference number verification',
       'budget_check': 'Awaiting budget availability verification',
       'sop_completed': 'SOP verification complete, awaiting budget verification',
