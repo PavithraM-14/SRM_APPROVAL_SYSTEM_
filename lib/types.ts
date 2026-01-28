@@ -102,6 +102,10 @@ export interface ApprovalHistory {
   queryResponse?: string; // Response from lower level user
   queryAttachments?: string[]; // Attachments for query response
   requiresClarification?: boolean; // Flag to indicate this is a query request
+  originalRejector?: User | string;
+  isDeanMediated?: boolean;
+  isDeanReapproval?: boolean;
+  departmentResponse?: string;
   timestamp: Date;
 }
 

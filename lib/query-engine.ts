@@ -13,8 +13,13 @@ export const queryEngine = {
    */
   getQueryTarget(currentStatus: RequestStatus, currentRole: UserRole): { status: RequestStatus; role: UserRole; isDeanMediated: boolean } | null {
     
-    // Roles above Dean level - only Chairman and Chief Director
-    const aboveDeanRoles = [UserRole.CHIEF_DIRECTOR, UserRole.CHAIRMAN];
+    // Roles above Dean level - VP, HOI, Chief Director, Chairman
+    const aboveDeanRoles = [
+      UserRole.VP,
+      UserRole.HEAD_OF_INSTITUTION,
+      UserRole.CHIEF_DIRECTOR,
+      UserRole.CHAIRMAN,
+    ];
     
     // If rejection is from above Dean level, Dean mediates
     if (aboveDeanRoles.includes(currentRole)) {
@@ -96,18 +101,40 @@ export const queryEngine = {
   isDeanMediatedClarification(request: any): boolean {
     if (!request.history || request.history.length === 0) return false;
 
-    const latestRejection = request.history
+    const queryEntries = request.history
       .filter((h: any) => h.action === 'REJECT_WITH_CLARIFICATION' || (h.requiresClarification && h.queryRequest))
-      .sort((a: any, b: any) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())[0];
+      .sort((a: any, b: any) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 
-    if (!latestRejection) return false;
+    if (queryEntries.length === 0) return false;
 
-    // Identify above Dean level by the stage that issued the rejection
     const aboveDeanStatuses = [
+      RequestStatus.VP_APPROVAL,
+      RequestStatus.HOI_APPROVAL,
       RequestStatus.CHIEF_DIRECTOR_APPROVAL,
       RequestStatus.CHAIRMAN_APPROVAL,
     ];
-    return !!latestRejection.previousStatus && aboveDeanStatuses.includes(latestRejection.previousStatus);
+
+    for (const entry of queryEntries) {
+      if (entry.isDeanMediated) {
+        return true;
+      }
+
+      if (entry.previousStatus && aboveDeanStatuses.includes(entry.previousStatus)) {
+        return true;
+      }
+
+      const deanForwardingRequester =
+        entry.previousStatus === RequestStatus.DEAN_REVIEW && entry.newStatus === RequestStatus.SUBMITTED;
+
+      if (deanForwardingRequester) {
+        // Skip dean-forward steps so we can inspect the originating rejection entry
+        continue;
+      }
+
+      break;
+    }
+
+    return false;
   },
 
   /**

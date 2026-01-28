@@ -988,6 +988,40 @@ export default function RequestDetailPage({ params }: { params: { id: string } }
             // IMPORTANT: Only REQUESTERS and DEAN (in Dean-mediated cases) can provide responses to queries
             const needsClarification = request.pendingQuery && request.queryLevel === currentUser?.role;
             
+            // SPECIAL CASE: Dean handling mediated rejection (regardless of pendingQuery status)
+            // The Dean should always see the "Handle Rejection" button when it's a Dean-mediated case
+            if (currentUser?.role === 'dean' && queryEngine.isDeanMediatedClarification(request)) {
+              // Check if requester has responded
+              const requesterHasResponded = request.history?.some(
+                (h: any) => h.action === 'CLARIFY_AND_REAPPROVE' && h.actor?.role === 'requester'
+              );
+              
+              return (
+                <div className="mt-4 sm:mt-6 flex flex-col gap-3">
+                  <div className="p-3 bg-red-50 border border-red-200 rounded flex items-center gap-2">
+                    <QueryIndicator size="sm" showText={false} />
+                    <span className="text-xs sm:text-sm text-red-800">
+                      {requesterHasResponded 
+                        ? 'Requester responded. Review and decide below.' 
+                        : 'Awaiting requester response. You can still take action.'}
+                    </span>
+                  </div>
+                  <div className="flex justify-center sm:justify-start">
+                    <button
+                      onClick={() => {
+                        console.log('[DEBUG] Handle Rejection clicked');
+                        setIsDeanQueryModalOpen(true);
+                      }}
+                      className="w-full sm:w-auto min-w-[200px] px-4 sm:px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm sm:text-base font-medium active:scale-95 shadow-sm flex items-center justify-center gap-2"
+                    >
+                      <QueryIndicator size="sm" showText={false} className="text-white" />
+                      Handle Rejection
+                    </button>
+                  </div>
+                </div>
+              );
+            }
+            
             // If requester needs to provide query, show the button
             if (currentUser?.role === 'requester' && needsClarification) {
               return (
@@ -1007,28 +1041,7 @@ export default function RequestDetailPage({ params }: { params: { id: string } }
             if (currentUser?.role === 'requester') return null;
             
             if (needsClarification) {
-              // Special handling for Dean query (Dean-mediated from above Dean level)
-              if (currentUser?.role === 'dean' && queryEngine.isDeanMediatedClarification(request)) {
-                return (
-                  <div className="mt-4 sm:mt-6 flex flex-col gap-3">
-                    <div className="p-3 bg-red-50 border border-red-200 rounded flex items-center gap-2">
-                      <QueryIndicator size="sm" showText={false} />
-                      <span className="text-xs sm:text-sm text-red-800">Requester responded. Review and re-approve below.</span>
-                    </div>
-                    <div className="flex justify-center sm:justify-start">
-                      <button
-                        onClick={() => setIsDeanQueryModalOpen(true)}
-                        className="w-full sm:w-auto min-w-[200px] px-4 sm:px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm sm:text-base font-medium active:scale-95 shadow-sm flex items-center justify-center gap-2"
-                      >
-                        <QueryIndicator size="sm" showText={false} className="text-white" />
-                        Handle Rejection
-                      </button>
-                    </div>
-                  </div>
-                );
-              }
-
-              // Requester: allow responding directly
+              // Requester: allow responding directly (already handled above)
               if (currentUser?.role === 'requester') {
                 return (
                   <div className="mt-4 sm:mt-6 flex flex-col gap-3">
@@ -1223,12 +1236,21 @@ export default function RequestDetailPage({ params }: { params: { id: string } }
       {(() => {
         // Only show for Dean handling above-Dean rejections
         if (currentUser?.role !== 'dean' || !queryEngine.isDeanMediatedClarification(request)) {
+          console.log('[DEBUG] DeanQueryModal not rendering:', {
+            isDean: currentUser?.role === 'dean',
+            isDeanMediated: queryEngine.isDeanMediatedClarification(request)
+          });
           return null;
         }
 
         const originalRejector = queryEngine.getOriginalRejector(request);
+        
+        // Look for rejection with clarification or any query-related entry
         const latestRejection = request.history
-          ?.filter((h: any) => h.action === 'REJECT_WITH_CLARIFICATION')
+          ?.filter((h: any) => 
+            h.action === 'REJECT_WITH_CLARIFICATION' || 
+            (h.requiresClarification && h.queryRequest)
+          )
           ?.sort((a: any, b: any) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())[0];
 
         // Check if requester has provided query
@@ -1236,18 +1258,43 @@ export default function RequestDetailPage({ params }: { params: { id: string } }
           ?.filter((h: any) => h.action === 'CLARIFY_AND_REAPPROVE' && h.actor?.role === 'requester')
           ?.sort((a: any, b: any) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())[0];
 
-        if (!originalRejector || !latestRejection) return null;
+        console.log('[DEBUG] DeanQueryModal data:', {
+          originalRejector,
+          latestRejection: latestRejection ? {
+            action: latestRejection.action,
+            queryRequest: latestRejection.queryRequest,
+            timestamp: latestRejection.timestamp
+          } : null,
+          requesterClarification: requesterClarification ? 'exists' : 'none',
+          isDeanQueryModalOpen
+        });
+
+        if (!originalRejector) {
+          console.log('[DEBUG] No originalRejector found');
+          return null;
+        }
+        
+        if (!latestRejection) {
+          console.log('[DEBUG] No latestRejection found, history:', request.history?.map((h: any) => ({
+            action: h.action,
+            requiresClarification: h.requiresClarification
+          })));
+          return null;
+        }
 
         return (
           <DeanQueryModal
             isOpen={isDeanQueryModalOpen}
-            onClose={() => setIsDeanQueryModalOpen(false)}
+            onClose={() => {
+              console.log('[DEBUG] Closing DeanQueryModal');
+              setIsDeanQueryModalOpen(false);
+            }}
             rejectionInfo={{
               rejector: {
                 name: originalRejector.name || 'Unknown',
                 role: originalRejector.role || 'Unknown'
               },
-              rejectionReason: latestRejection.queryRequest || 'No reason provided',
+              rejectionReason: latestRejection.queryRequest || latestRejection.notes || 'No reason provided',
               timestamp: latestRejection.timestamp ? new Date(latestRejection.timestamp).toISOString() : new Date().toISOString()
             }}
             requesterClarification={requesterClarification ? {

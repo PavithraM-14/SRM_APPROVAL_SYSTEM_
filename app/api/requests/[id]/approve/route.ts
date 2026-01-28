@@ -66,6 +66,8 @@ export async function POST(
       historyLength: requestRecord.history?.length || 0
     });
 
+    const isDeanMediatedFlow = queryEngine.isDeanMediatedClarification(requestRecord);
+
     // Institutional isolation check
     const institutionalRoles = [
       UserRole.REQUESTER,
@@ -94,11 +96,13 @@ export async function POST(
     );
 
     // Clarification responder bypass: allow the role currently responsible for responding
-    const isQueryResponder = (
-      action === 'query_and_reapprove' &&
+    const isPendingQueryForUser = (
       requestRecord.pendingQuery === true &&
       requestRecord.queryLevel === (user.role as UserRole)
     );
+
+    const isQueryResponder = action === 'query_and_reapprove' && isPendingQueryForUser;
+    const isQueryRejector = action === 'reject' && isPendingQueryForUser;
 
     const isDeanSendToRequester = (
       action === 'dean_send_to_requester' && user.role === UserRole.DEAN
@@ -118,7 +122,8 @@ export async function POST(
     if (
       !requiredApprovers.includes(user.role as UserRole) &&
       !isQueryResponder &&
-      !isDeanSendToRequester
+      !isDeanSendToRequester &&
+      !isQueryRejector
     ) {
       console.log('[DEBUG] Authorization failed - role not permitted for this action');
       return NextResponse.json(
@@ -507,6 +512,10 @@ export async function POST(
           historyEntry.isDeanMediated = true;
         }
       }
+
+      if (action === 'dean_send_to_requester' && isDeanMediatedFlow) {
+        historyEntry.isDeanMediated = true;
+      }
     }
 
     if (action === 'query_and_reapprove') {
@@ -573,6 +582,12 @@ export async function POST(
         updateData.$set.pendingQuery = false;
         updateData.$set.queryLevel = null;
       }
+    }
+
+    if (action === 'reject' && isPendingQueryForUser) {
+      if (!updateData.$set) updateData.$set = {};
+      updateData.$set.pendingQuery = false;
+      updateData.$set.queryLevel = null;
     }
 
     // Save accountant budget availability to Request document

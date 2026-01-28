@@ -387,7 +387,16 @@ export default function QueriesPage() {
                           : request.status.replace('_', ' ').toUpperCase()}
                       </span>
                       <div className="flex items-center gap-2">
-                        <span className="text-xs text-blue-600 font-medium">Click to respond →</span>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleRequestClick(request);
+                          }}
+                          className="text-xs text-blue-600 font-medium hover:text-blue-700 underline"
+                          aria-label="Open clarification modal"
+                        >
+                          Click to respond →
+                        </button>
                         <button
                           onClick={(e) => { e.stopPropagation(); router.push(`/dashboard/requests/${request._id}`); }}
                           className="px-2 py-1 rounded text-xs font-medium bg-blue-600 text-white hover:bg-blue-700 whitespace-nowrap"

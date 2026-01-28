@@ -21,6 +21,10 @@ const approvalHistorySchema = new mongoose.Schema({
   queryResponse: { type: String }, // Response from lower level user
   queryAttachments: [{ type: String }], // Attachments for query response
   requiresClarification: { type: Boolean, default: false }, // Flag to indicate this is a query request
+  originalRejector: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+  isDeanMediated: { type: Boolean, default: false },
+  isDeanReapproval: { type: Boolean, default: false },
+  departmentResponse: { type: String },
   timestamp: { type: Date, default: Date.now },
 });
 
