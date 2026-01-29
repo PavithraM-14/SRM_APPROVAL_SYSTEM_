@@ -45,9 +45,9 @@ export default function HomePage() {
 
       {/* Content on top of background */}
       <div className="relative z-10 flex flex-col min-h-screen">
-        <main className="flex-1">
-          <div className="mx-auto max-w-4xl px-4 h-full">
-            <div className="flex flex-col items-center justify-center min-h-[calc(100vh-140px)] text-center">
+        <main className="flex-1 flex items-center justify-center">
+          <div className="mx-auto max-w-4xl px-4 w-full">
+            <div className="flex flex-col items-center justify-center text-center py-8">
 
               {/* SRM Logo at top */}
               <div className="mb-8">
@@ -69,7 +69,7 @@ export default function HomePage() {
               <div className="flex justify-center">
                 <Link
                   href="/login"
-                  className="bg-blue-700 hover:bg-blue-800 text-white text-lg px-10 py-3 rounded-lg shadow-md transition duration-300 transform hover:scale-105"
+                  className="bg-blue-700 hover:bg-blue-800 text-white text-xl px-10 py-3 rounded-lg shadow-md transition duration-300 transform hover:scale-105"
                 >
                   Login
                 </Link>

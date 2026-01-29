@@ -66,9 +66,9 @@ export default function ApprovalsPage() {
         console.log('[DEBUG] Current user in approvals page:', userData);
         setCurrentUser(userData);
         
-        // Redirect requesters to their requests page
+        // Redirect requesters to their pending requests page
         if (userData.role === 'requester') {
-          router.push('/dashboard/requests');
+          router.push('/dashboard/requests?status=pending');
           return;
         }
       }
