@@ -991,6 +991,21 @@ export default function RequestDetailPage({ params }: { params: { id: string } }
             // SPECIAL CASE: Dean handling mediated rejection (regardless of pendingQuery status)
             // The Dean should always see the "Handle Rejection" button when it's a Dean-mediated case
             if (currentUser?.role === 'dean' && queryEngine.isDeanMediatedClarification(request)) {
+              const waitingOnRequester = request.pendingQuery && request.queryLevel === UserRole.REQUESTER;
+
+              if (waitingOnRequester) {
+                return (
+                  <div className="mt-4 sm:mt-6">
+                    <div className="p-3 bg-yellow-50 border border-yellow-200 rounded flex items-center gap-2">
+                      <QueryIndicator size="sm" showText={false} />
+                      <span className="text-xs sm:text-sm text-yellow-800">
+                        Clarification sent to requester. Awaiting their response.
+                      </span>
+                    </div>
+                  </div>
+                );
+              }
+
               // Check if requester has responded
               const requesterHasResponded = request.history?.some(
                 (h: any) => h.action === 'CLARIFY_AND_REAPPROVE' && h.actor?.role === 'requester'
