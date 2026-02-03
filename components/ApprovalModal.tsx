@@ -62,39 +62,27 @@ export default function ApprovalModal({
   const [urlInput, setUrlInput] = useState('');
   const [showUrlInput, setShowUrlInput] = useState(false);
   const [target, setTarget] = useState(''); // For Dean department selection
-  
+
   // SOP specific fields
   const [sopReference, setSopReference] = useState('');
   const [sopReferenceAvailable, setSopReferenceAvailable] = useState<boolean | null>(null);
-  
+
   // Accountant specific fields
-  const [budgetAvailable, setBudgetAvailable] = useState<boolean | null>(null);
-  const [budgetAllocated, setBudgetAllocated] = useState<number>(0);
-  const [budgetSpent, setBudgetSpent] = useState<number>(0);
-  const [budgetBalance, setBudgetBalance] = useState<number>(0);
-  
+  const [budgetAvailable, setBudgetAvailable] = useState<boolean | null>(request.budgetAvailable ?? null);
+  const [budgetAllocated, setBudgetAllocated] = useState<number>(request.budgetAllocated || 0);
+  const [budgetSpent, setBudgetSpent] = useState<number>(request.budgetSpent || 0);
+  const [budgetBalance, setBudgetBalance] = useState<number>(request.budgetBalance || 0);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   if (!isOpen) return null;
 
-  // Auto-calculate budget balance when allocated or spent changes
-  const calculateBudgetBalance = (allocated: number, spent: number) => {
-    const balance = allocated - spent;
-    setBudgetBalance(balance);
-    // Auto-determine budget availability based on cost estimate and balance
-    if (request.costEstimate > 0) {
-      setBudgetAvailable(balance >= request.costEstimate);
-    }
-  };
-
   const handleBudgetAllocatedChange = (value: number) => {
     setBudgetAllocated(value);
-    calculateBudgetBalance(value, budgetSpent);
   };
 
   const handleBudgetSpentChange = (value: number) => {
     setBudgetSpent(value);
-    calculateBudgetBalance(budgetAllocated, value);
   };
 
   const handleSubmit = () => {
@@ -113,7 +101,7 @@ export default function ApprovalModal({
       onApprove(notes, attachments, finalSopReference, undefined);
       return;
     }
-    
+
     // Validation for Accountant
     if (userRole === 'accountant') {
       if (budgetAvailable === null) {
@@ -325,7 +313,7 @@ export default function ApprovalModal({
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
-        
+
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <div>
@@ -345,7 +333,7 @@ export default function ApprovalModal({
         </div>
 
         <div className="p-6 space-y-6">
-          
+
           {/* Request Details Section */}
           <div className="bg-gray-50 rounded-lg p-4">
             <h4 className="text-lg font-semibold text-gray-900 mb-3">{request.title}</h4>
@@ -372,26 +360,25 @@ export default function ApprovalModal({
             <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
               <h4 className="text-lg font-medium text-blue-900 mb-4">Budget Verification Details</h4>
               <p className="text-sm text-blue-700 mb-3">Budget information verified by Accountant:</p>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="bg-white rounded-lg p-3 border border-blue-200">
                   <span className="text-xs font-medium text-gray-600">Budget Allocated</span>
                   <p className="text-lg font-semibold text-blue-600">₹{request.budgetAllocated.toLocaleString()}</p>
                 </div>
-                
+
                 {request.budgetSpent !== undefined && (
                   <div className="bg-white rounded-lg p-3 border border-blue-200">
                     <span className="text-xs font-medium text-gray-600">Budget Spent</span>
                     <p className="text-lg font-semibold text-orange-600">₹{request.budgetSpent.toLocaleString()}</p>
                   </div>
                 )}
-                
+
                 {request.budgetBalance !== undefined && (
                   <div className="bg-white rounded-lg p-3 border border-blue-200">
                     <span className="text-xs font-medium text-gray-600">Budget Available</span>
-                    <p className={`text-lg font-semibold ${
-                      request.budgetBalance >= 0 ? 'text-green-600' : 'text-red-600'
-                    }`}>
+                    <p className={`text-lg font-semibold ${request.budgetBalance >= 0 ? 'text-green-600' : 'text-red-600'
+                      }`}>
                       ₹{request.budgetBalance.toLocaleString()}
                     </p>
                   </div>
@@ -403,11 +390,10 @@ export default function ApprovalModal({
                 <div className="mt-4 p-3 bg-white rounded-lg border border-blue-200">
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium text-gray-700">Budget Analysis:</span>
-                    <span className={`inline-flex px-3 py-1 rounded-full text-sm font-medium ${
-                      request.budgetBalance >= request.costEstimate 
-                        ? 'bg-green-100 text-green-800' 
-                        : 'bg-red-100 text-red-800'
-                    }`}>
+                    <span className={`inline-flex px-3 py-1 rounded-full text-sm font-medium ${request.budgetBalance >= request.costEstimate
+                      ? 'bg-green-100 text-green-800'
+                      : 'bg-red-100 text-red-800'
+                      }`}>
                       {request.budgetBalance >= request.costEstimate ? '✓ Sufficient Budget' : '⚠ Insufficient Budget'}
                     </span>
                   </div>
@@ -422,11 +408,10 @@ export default function ApprovalModal({
                 <div className="mt-4 p-3 bg-white rounded-lg border border-blue-200">
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium text-gray-700">Accountant Decision:</span>
-                    <span className={`inline-flex px-3 py-1 rounded-full text-sm font-medium ${
-                      request.budgetAvailable 
-                        ? 'bg-green-100 text-green-800' 
-                        : 'bg-red-100 text-red-800'
-                    }`}>
+                    <span className={`inline-flex px-3 py-1 rounded-full text-sm font-medium ${request.budgetAvailable
+                      ? 'bg-green-100 text-green-800'
+                      : 'bg-red-100 text-red-800'
+                      }`}>
                       {request.budgetAvailable ? 'Budget Approved' : 'Budget Not Available'}
                     </span>
                   </div>
@@ -444,7 +429,7 @@ export default function ApprovalModal({
           {isSopVerifier && (
             <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
               <h4 className="text-lg font-medium text-blue-900 mb-4">SOP Reference Verification</h4>
-              
+
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -495,7 +480,7 @@ export default function ApprovalModal({
                 {sopReferenceAvailable === false && (
                   <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
                     <p className="text-sm text-yellow-800">
-                      <strong>Note:</strong> No SOP reference is available for this type of request. 
+                      <strong>Note:</strong> No SOP reference is available for this type of request.
                       This will be recorded in the approval history.
                     </p>
                   </div>
@@ -508,7 +493,7 @@ export default function ApprovalModal({
           {isAccountant && (
             <div className="bg-green-50 rounded-lg p-4 border border-green-200">
               <h4 className="text-lg font-medium text-green-900 mb-4">Budget Verification</h4>
-              
+
               <div className="space-y-4">
                 {/* Budget Fields */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -523,10 +508,15 @@ export default function ApprovalModal({
                         value={budgetAllocated || ''}
                         onChange={(e) => handleBudgetAllocatedChange(Number(e.target.value) || 0)}
                         placeholder="0"
-                        className="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                        className="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 no-spinner"
                         disabled={loading}
                         min="0"
-                        step="1"
+                        onWheel={(e) => (e.target as HTMLInputElement).blur()}
+                        onKeyDown={(e) => {
+                          if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                            e.preventDefault();
+                          }
+                        }}
                       />
                     </div>
                   </div>
@@ -542,10 +532,15 @@ export default function ApprovalModal({
                         value={budgetSpent || ''}
                         onChange={(e) => handleBudgetSpentChange(Number(e.target.value) || 0)}
                         placeholder="0"
-                        className="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                        className="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 no-spinner"
                         disabled={loading}
                         min="0"
-                        step="1"
+                        onWheel={(e) => (e.target as HTMLInputElement).blur()}
+                        onKeyDown={(e) => {
+                          if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                            e.preventDefault();
+                          }
+                        }}
                       />
                     </div>
                   </div>
@@ -558,45 +553,25 @@ export default function ApprovalModal({
                       <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">₹</span>
                       <input
                         type="number"
-                        value={budgetBalance}
-                        readOnly
-                        className={`w-full pl-8 pr-3 py-2 border rounded-lg bg-gray-50 ${
-                          budgetBalance >= 0 ? 'border-green-300 text-green-700' : 'border-red-300 text-red-700'
-                        }`}
+                        value={budgetBalance || ''}
+                        onChange={(e) => setBudgetBalance(Number(e.target.value) || 0)}
+                        className={`w-full pl-8 pr-3 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 no-spinner ${budgetBalance >= 0 ? 'border-green-300 text-green-700' : 'border-red-300 text-red-700'
+                          }`}
+                        disabled={loading}
+                        onWheel={(e) => (e.target as HTMLInputElement).blur()}
+                        onKeyDown={(e) => {
+                          if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                            e.preventDefault();
+                          }
+                        }}
                       />
                     </div>
                     <p className="text-xs text-gray-500 mt-1">
-                      Allocated - Spent = Available
+                      Enter the remaining available budget balance.
                     </p>
                   </div>
                 </div>
 
-                {/* Budget Status Display */}
-                {request.costEstimate > 0 && (budgetAllocated > 0 || budgetSpent > 0) && (
-                  <div className="mt-4">
-                    <div className="bg-white rounded-lg p-4 border border-gray-200">
-                      <h5 className="text-sm font-medium text-gray-700 mb-3">Budget Analysis</h5>
-                      <div className="grid grid-cols-2 gap-4 text-sm">
-                        <div>
-                          <span className="text-gray-600">Request Amount:</span>
-                          <span className="ml-2 font-medium">₹{request.costEstimate.toLocaleString()}</span>
-                        </div>
-                        <div>
-                          <span className="text-gray-600">Available Budget:</span>
-                          <span className={`ml-2 font-medium ${budgetBalance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                            ₹{budgetBalance.toLocaleString()}
-                          </span>
-                        </div>
-                        <div className="col-span-2">
-                          <span className="text-gray-600">Status:</span>
-                          <span className={`ml-2 font-medium ${budgetBalance >= request.costEstimate ? 'text-green-600' : 'text-red-600'}`}>
-                            {budgetBalance >= request.costEstimate ? '✓ Sufficient Budget' : '⚠ Insufficient Budget'}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
 
                 {/* Manual Budget Status Override (if needed) */}
                 <div>
@@ -628,7 +603,7 @@ export default function ApprovalModal({
                     </label>
                   </div>
                   <p className="text-xs text-gray-500 mt-1">
-                    This is auto-determined based on your budget entries above, but you can override if needed.
+                    Select the final budget status based on your verification.
                   </p>
                 </div>
 
@@ -636,7 +611,7 @@ export default function ApprovalModal({
                 {request.costEstimate > 0 && budgetAvailable === true && (
                   <div className="p-3 bg-green-100 border border-green-300 rounded-lg">
                     <p className="text-sm text-green-800">
-                      <strong>✓ Budget Available:</strong> Sufficient funds are available for this request. 
+                      <strong>✓ Budget Available:</strong> Sufficient funds are available for this request.
                       The request will proceed through the standard approval workflow.
                     </p>
                   </div>
@@ -645,7 +620,7 @@ export default function ApprovalModal({
                 {request.costEstimate === 0 && (
                   <div className="p-3 bg-blue-100 border border-blue-300 rounded-lg">
                     <p className="text-sm text-blue-800">
-                      <strong>ℹ No Cost Estimate:</strong> This request has no associated cost. 
+                      <strong>ℹ No Cost Estimate:</strong> This request has no associated cost.
                       Budget verification is not required, but you can still record budget information for tracking.
                     </p>
                   </div>
@@ -653,11 +628,11 @@ export default function ApprovalModal({
               </div>
             </div>
           )}
-          
+
           {/* Document Attachments Section */}
           <div>
             <h4 className="text-lg font-medium text-gray-900 mb-4">Document Attachments</h4>
-            
+
             {/* Upload Buttons */}
             <div className="flex gap-3 mb-4">
               <input
@@ -746,7 +721,7 @@ export default function ApprovalModal({
           {/* Action Section */}
           <div>
             <h4 className="text-lg font-medium text-gray-900 mb-3">Action</h4>
-            
+
             {(isSopVerifier || isAccountant) ? (
               // Simplified interface for SOP and Accountant - only approve option
               <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
@@ -757,8 +732,8 @@ export default function ApprovalModal({
                   </span>
                 </div>
                 <p className="text-sm text-green-600 mt-1">
-                  {isSopVerifier 
-                    ? 'Complete SOP verification and forward to next step' 
+                  {isSopVerifier
+                    ? 'Complete SOP verification and forward to next step'
                     : 'Complete budget verification and forward to next step'
                   }
                 </p>
@@ -800,7 +775,7 @@ export default function ApprovalModal({
                         <span className="font-medium text-green-700">Approve to Chief Director</span>
                       </div>
                       <p className="text-sm text-green-600 mt-1">
-                        {request.status === 'dean_verification' 
+                        {request.status === 'dean_verification'
                           ? 'Department verification complete. Approve and send to Chief Director.'
                           : 'Approve and send directly to Chief Director.'
                         }
@@ -819,7 +794,7 @@ export default function ApprovalModal({
                       </p>
                     </div>
                   )}
-                  
+
                   {action === 'clarify' && request.status === 'dean_review' && (
                     <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
                       <div className="flex items-center">
@@ -829,7 +804,7 @@ export default function ApprovalModal({
                       <p className="text-sm text-blue-600 mt-1">
                         Send this request to HR, IT, AUDIT, or MMA department for verification. They will review and return it to you for final approval.
                       </p>
-                      
+
                       {/* Department Selection */}
                       <div className="mt-3">
                         <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -850,7 +825,7 @@ export default function ApprovalModal({
                       </div>
                     </div>
                   )}
-                  
+
                   {action === 'reject' && (
                     <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
                       <div className="flex items-center">
@@ -860,7 +835,7 @@ export default function ApprovalModal({
                       <p className="text-sm text-red-600 mt-1">Permanently reject this request</p>
                     </div>
                   )}
-                  
+
                   {action === 'reject_with_clarification' && (
                     <div className="p-3 bg-orange-50 border border-orange-200 rounded-lg">
                       <div className="flex items-center">
@@ -901,7 +876,7 @@ export default function ApprovalModal({
                       </p>
                     </div>
                   )}
-                  
+
                   {action === 'reject' && (
                     <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
                       <div className="flex items-center">
@@ -911,7 +886,7 @@ export default function ApprovalModal({
                       <p className="text-sm text-red-600 mt-1">Permanently reject this request</p>
                     </div>
                   )}
-                  
+
                   {action === 'reject_with_clarification' && (
                     <div className="p-3 bg-orange-50 border border-orange-200 rounded-lg">
                       <div className="flex items-center">
@@ -952,7 +927,7 @@ export default function ApprovalModal({
                       </p>
                     </div>
                   )}
-                  
+
                   {action === 'reject' && (
                     <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
                       <div className="flex items-center">
@@ -962,7 +937,7 @@ export default function ApprovalModal({
                       <p className="text-sm text-red-600 mt-1">Permanently reject this request</p>
                     </div>
                   )}
-                  
+
                   {action === 'reject_with_clarification' && (
                     <div className="p-3 bg-orange-50 border border-orange-200 rounded-lg">
                       <div className="flex items-center">
@@ -1016,7 +991,7 @@ export default function ApprovalModal({
                       </p>
                     </div>
                   )}
-                  
+
                   {action === 'reject_with_clarification' && (
                     <div className="p-3 bg-orange-50 border border-orange-200 rounded-lg">
                       <div className="flex items-center">
@@ -1028,7 +1003,7 @@ export default function ApprovalModal({
                       </p>
                     </div>
                   )}
-                  
+
                   {action === 'reject' && (
                     <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
                       <div className="flex items-center">
@@ -1065,7 +1040,7 @@ export default function ApprovalModal({
                       <p className="text-sm text-red-600 mt-1">Permanently reject this request</p>
                     </div>
                   )}
-                  
+
                   {action === 'approve' && userRole !== 'chairman' && (
                     <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
                       <div className="flex items-center">
@@ -1075,7 +1050,7 @@ export default function ApprovalModal({
                       <p className="text-sm text-green-600 mt-1">Approve and forward to next level</p>
                     </div>
                   )}
-                  
+
                   {action === 'approve' && userRole === 'chairman' && (
                     <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
                       <div className="flex items-center">
@@ -1085,7 +1060,7 @@ export default function ApprovalModal({
                       <p className="text-sm text-green-600 mt-1">Grant final approval for this request</p>
                     </div>
                   )}
-                  
+
                   {action === 'reject_with_clarification' && (
                     <div className="p-3 bg-orange-50 border border-orange-200 rounded-lg">
                       <div className="flex items-center">
@@ -1105,9 +1080,9 @@ export default function ApprovalModal({
           {/* Notes Section */}
           <div>
             <h4 className="text-lg font-medium text-gray-900 mb-3">
-              {(isSopVerifier || isAccountant) ? 'Comments (Optional)' : 
-               (['hr', 'it', 'audit', 'mma'].includes(userRole) && action === 'forward') ? 'Comments (Optional)' :
-               action === 'approve' ? 'Comments (Optional)' : 'Notes'}
+              {(isSopVerifier || isAccountant) ? 'Comments (Optional)' :
+                (['hr', 'it', 'audit', 'mma'].includes(userRole) && action === 'forward') ? 'Comments (Optional)' :
+                  action === 'approve' ? 'Comments (Optional)' : 'Notes'}
             </h4>
             <textarea
               value={notes}
@@ -1116,14 +1091,14 @@ export default function ApprovalModal({
                 isSopVerifier
                   ? "Add any comments about the SOP verification... (Optional)"
                   : isAccountant
-                  ? "Add any comments about the budget verification... (Optional)"
-                  : (['hr', 'it', 'audit', 'mma'].includes(userRole) && action === 'forward')
-                  ? "Add any comments about your department verification... (Optional)"
-                  : action === 'approve' 
-                  ? "Add any comments or notes for this approval..."
-                  : action === 'reject_with_clarification'
-                  ? "What query do you have for the requester?"
-                  : "Please provide a reason for rejection..."
+                    ? "Add any comments about the budget verification... (Optional)"
+                    : (['hr', 'it', 'audit', 'mma'].includes(userRole) && action === 'forward')
+                      ? "Add any comments about your department verification... (Optional)"
+                      : action === 'approve'
+                        ? "Add any comments or notes for this approval..."
+                        : action === 'reject_with_clarification'
+                          ? "What query do you have for the requester?"
+                          : "Please provide a reason for rejection..."
               }
               className="w-full h-32 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
               disabled={loading}
