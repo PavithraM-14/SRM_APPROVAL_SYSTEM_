@@ -65,8 +65,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const shouldShowDepartment = !!(user?.department && user?.role && rolesWithDepartments.has(user.role));
-  const formattedDepartment = shouldShowDepartment ? formatLabel(user?.department) : '';
-  const formattedRole = user?.role ? formatLabel(user.role) : '';
+  const formattedDepartment = shouldShowDepartment ? formatLabel(user?.department).toUpperCase() : '';
+  const formattedRole = user?.role ? formatLabel(user.role).toUpperCase() : '';
 
   // Function to check if navigation item is active
   const isActiveRoute = (href: string) => {
