@@ -43,7 +43,6 @@ const navigation: NavItem[] = [
 
 const rolesWithDepartments = new Set<UserRole>([
   UserRole.REQUESTER,
-  UserRole.INSTITUTION_MANAGER,
 ]);
 
 const formatLabel = (value?: string | UserRole) => {
