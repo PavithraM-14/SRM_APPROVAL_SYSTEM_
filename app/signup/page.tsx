@@ -28,7 +28,8 @@ const roleOptions = [
 ];
 
 const rolesWithDepartment = [UserRole.REQUESTER];
-const rolesWithoutCollege = [UserRole.CHAIRMAN];
+// Roles that do not need to select an Institution
+const rolesWithoutCollege = [UserRole.CHAIRMAN, UserRole.DEAN, UserRole.CHIEF_DIRECTOR];
 
 export default function SignupPage() {
   const [step, setStep] = useState<'form' | 'otp'>('form');
