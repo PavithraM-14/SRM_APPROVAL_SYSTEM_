@@ -196,6 +196,25 @@ function hasRequestReachedUserLevel(
     return hasRequestReachedUserLevelBeforeRejection(request, userRole, history);
   }
 
+  // Special handling for department checks - only show to targeted department
+  if (currentStatus === RequestStatus.DEPARTMENT_CHECKS &&
+      [UserRole.MMA, UserRole.HR, UserRole.AUDIT, UserRole.IT].includes(userRole)) {
+    
+    // Find the latest clarification request from Dean
+    const latestClarification = history
+      .filter((h: any) => h.action === ActionType.CLARIFY && h.queryTarget)
+      .sort((a: any, b: any) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())[0];
+
+    // Only show to the department that was specifically targeted
+    if (latestClarification) {
+      const targetedRole = latestClarification.queryTarget; // e.g., 'hr', 'mma'
+      const currentUserRole = userRole.toLowerCase(); // Convert UserRole.HR to 'hr'
+      return targetedRole === currentUserRole;
+    }
+
+    return false; // No clarification found, don't show to any department
+  }
+
   // Get all statuses that this user role can handle
   const userStatuses = getAllStatusesForRole(userRole);
 
@@ -406,36 +425,9 @@ function categorizeRequestForUser(
   }
 
   // Check if request needs query from this user
-  // IMPORTANT: Only REQUESTERS and DEAN (in Dean-mediated cases) can provide query responses
+  // IMPORTANT: Only REQUESTERS can provide query responses
   if (request.pendingQuery && request.queryLevel === userRole) {
-    // Special handling for Dean-mediated queries
-    if (userRole === UserRole.DEAN) {
-      // Check if this is a Dean-mediated query from above Dean level
-      const isDeanMediated = request.history?.some((h: any) =>
-        h.action === ActionType.REJECT_WITH_CLARIFICATION && h.isDeanMediated
-      );
-
-      if (isDeanMediated) {
-        // Check if requester has provided query
-        const requesterClarified = request.history?.some((h: any) =>
-          h.action === ActionType.CLARIFY_AND_REAPPROVE && h.actor?.role === 'requester'
-        );
-
-        if (requesterClarified) {
-          return {
-            category: 'pending',
-            reason: 'Review requester query and re-approve',
-            userAction: 'clarify'
-          };
-        } else {
-          return {
-            category: 'pending',
-            reason: 'Handle rejection from above Dean level',
-            userAction: 'clarify'
-          };
-        }
-      }
-    } else if (userRole === UserRole.REQUESTER) {
+    if (userRole === UserRole.REQUESTER) {
       // Only requesters can provide query responses
       return {
         category: 'pending',
@@ -444,7 +436,7 @@ function categorizeRequestForUser(
       };
     }
 
-    // For all other roles (VP, Manager, etc.), they should NOT be able to respond to their own query requests
+    // For all other roles (VP, Manager, Dean, etc.), they should NOT be able to respond to their own query requests
     // They should see it as rejected/completed until requester responds
   }
 

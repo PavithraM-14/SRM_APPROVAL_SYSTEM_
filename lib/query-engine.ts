@@ -8,29 +8,11 @@ export const queryEngine = {
   /**
    * Get the queries target based on rejection level
    * NEW LOGIC:
-   * - Above Dean level (HOI, Chief Director, Chairman) → Dean handles queries with requester
-   * - Dean and below → Direct to requester
+   * - ALL queries go directly to requester (no Dean mediation)
    */
   getQueryTarget(currentStatus: RequestStatus, currentRole: UserRole): { status: RequestStatus; role: UserRole; isDeanMediated: boolean } | null {
     
-    // Roles above Dean level - VP, HOI, Chief Director, Chairman
-    const aboveDeanRoles = [
-      UserRole.VP,
-      UserRole.HEAD_OF_INSTITUTION,
-      UserRole.CHIEF_DIRECTOR,
-      UserRole.CHAIRMAN,
-    ];
-    
-    // If rejection is from above Dean level, Dean mediates
-    if (aboveDeanRoles.includes(currentRole)) {
-      return {
-        status: RequestStatus.DEAN_REVIEW,
-        role: UserRole.DEAN,
-        isDeanMediated: true
-      };
-    }
-    
-    // Dean and below (including HOI, VP, Manager) - direct to requester
+    // All queries go directly to requester
     return {
       status: RequestStatus.SUBMITTED,
       role: UserRole.REQUESTER,
@@ -76,21 +58,15 @@ export const queryEngine = {
 
   /**
    * Check if user can provide response for a request
-   * IMPORTANT: Only REQUESTERS and DEAN (in Dean-mediated cases) can provide responses to queries
+   * IMPORTANT: Only REQUESTERS can provide responses to queries
    */
   canProvideClarification(request: any, userRole: UserRole, userId: string): boolean {
-    // Only requesters can provide responses to queries (except for Dean in special cases)
+    // Only requesters can provide responses to queries
     if (userRole === UserRole.REQUESTER) {
       return this.isPendingClarificationForUser(request, userRole, userId);
     }
     
-    // Dean can provide response only in Dean-mediated cases (above Dean level rejections)
-    if (userRole === UserRole.DEAN) {
-      return this.isPendingClarificationForUser(request, userRole, userId) && 
-             this.isDeanMediatedClarification(request);
-    }
-    
-    // All other roles (VP, Manager, etc.) cannot provide responses to queries
+    // All other roles (VP, Manager, Dean, etc.) cannot provide responses to queries
     // They can only Raise Queries, not respond to them
     return false;
   },

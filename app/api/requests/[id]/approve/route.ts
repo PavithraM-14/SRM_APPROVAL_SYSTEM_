@@ -339,7 +339,7 @@ export async function POST(
         actionType = ActionType.FORWARD;
         break;
 
-      case 'reject_with_query':
+      case 'reject_with_clarification':
         // Validate that query request is provided
         if (!notes || notes.trim() === '') {
           return NextResponse.json({ error: 'Queries for the requester are required when raising queries' }, { status: 400 });
@@ -351,7 +351,7 @@ export async function POST(
           return NextResponse.json({ error: 'Cannot send queries - no target found' }, { status: 400 });
         }
 
-        console.log('[DEBUG] Reject with query (NEW WORKFLOW):', {
+        console.log('[DEBUG] Reject with clarification (NEW WORKFLOW):', {
           currentStatus: requestRecord.status,
           currentRole: user.role,
           queryTarget: queryTarget,
@@ -375,19 +375,13 @@ export async function POST(
           return NextResponse.json({ error: 'This request is not pending response from you' }, { status: 400 });
         }
 
-        // Handle different query workflows
+        // Handle requester providing query response
         if (user.role === UserRole.REQUESTER) {
-          // Requester providing query
-          if (queryEngine.isDeanMediatedClarification(requestRecord)) {
-            // Dean-mediated: Requester → Dean
-            nextStatus = RequestStatus.DEAN_REVIEW;
-          } else {
-            // Direct: Requester → Original Rejector
-            const returnStatus = queryEngine.getReturnStatus(requestRecord);
-            nextStatus = returnStatus || RequestStatus.MANAGER_REVIEW;
-          }
+          // Always send back to the original rejector (no Dean mediation)
+          const returnStatus = queryEngine.getReturnStatus(requestRecord);
+          nextStatus = returnStatus || RequestStatus.MANAGER_REVIEW;
         } else if (user.role === UserRole.DEAN) {
-          // Dean reviewing requester's query and re-approving
+          // Dean reviewing requester's query and re-approving (legacy support)
           const returnStatus = queryEngine.getReturnStatus(requestRecord);
           nextStatus = returnStatus || RequestStatus.MANAGER_REVIEW;
         } else {
@@ -396,12 +390,11 @@ export async function POST(
 
         actionType = ActionType.CLARIFY_AND_REAPPROVE;
 
-        console.log('[DEBUG] Clarify and reapprove (NEW WORKFLOW):', {
+        console.log('[DEBUG] Clarify and reapprove:', {
           currentStatus: requestRecord.status,
           targetStatus: nextStatus,
           userRole: user.role,
-          queryResponse: notes,
-          isDeanMediated: queryEngine.isDeanMediatedClarification(requestRecord)
+          queryResponse: notes
         });
         break;
 
@@ -499,33 +492,24 @@ export async function POST(
     }
 
     // Handle query workflow fields
-    if (action === 'reject_with_query' || action === 'dean_send_to_requester') {
+    if (action === 'reject_with_clarification' || action === 'dean_send_to_requester') {
       historyEntry.queryRequest = notes;
       historyEntry.requiresClarification = true;
       if (attachments?.length) historyEntry.attachments = attachments;
 
-      // Store original rejector info for Dean-mediated queries
-      if (action === 'reject_with_query') {
-        const queryTarget = queryEngine.getQueryTarget(requestRecord.status, user.role as UserRole);
-        if (queryTarget?.isDeanMediated) {
-          historyEntry.originalRejector = user.id;
-          historyEntry.isDeanMediated = true;
-        }
+      // Store original rejector info for tracking
+      if (action === 'reject_with_clarification') {
+        historyEntry.originalRejector = user.id;
       }
 
-      if (action === 'dean_send_to_requester' && isDeanMediatedFlow) {
-        historyEntry.isDeanMediated = true;
+      if (action === 'dean_send_to_requester') {
+        // Legacy support for dean_send_to_requester action
       }
     }
 
     if (action === 'query_and_reapprove') {
       historyEntry.queryResponse = notes;
       if (attachments?.length) historyEntry.queryAttachments = attachments;
-
-      // Mark if this is a Dean re-approval after reviewing requester's query
-      if (user.role === UserRole.DEAN && queryEngine.isDeanMediatedClarification(requestRecord)) {
-        historyEntry.isDeanReapproval = true;
-      }
     }
 
     // 🔹 ACCOUNTANT BUDGET AVAILABILITY - already handled above
@@ -543,11 +527,11 @@ export async function POST(
     }
 
     // Handle query workflow updates
-    if (action === 'reject_with_query' || action === 'dean_send_to_requester') {
+    if (action === 'reject_with_clarification' || action === 'dean_send_to_requester') {
       if (!updateData.$set) updateData.$set = {};
       updateData.$set.pendingQuery = true;
 
-      if (action === 'reject_with_query') {
+      if (action === 'reject_with_clarification') {
         const queryTarget = queryEngine.getQueryTarget(requestRecord.status, user.role as UserRole);
         updateData.$set.queryLevel = queryTarget?.role;
       } else {
@@ -560,22 +544,14 @@ export async function POST(
       if (!updateData.$set) updateData.$set = {};
 
       if (user.role === UserRole.REQUESTER) {
-        // Requester provided query
-        if (queryEngine.isDeanMediatedClarification(requestRecord)) {
-          // Dean-mediated: Requester → Dean for review
-          updateData.$set.queryLevel = UserRole.DEAN;
-          updateData.$set.pendingQuery = true; // Still pending, but now with Dean
+        // Requester provided query - send back to original rejector
+        const originalRejector = queryEngine.getOriginalRejector(requestRecord);
+        if (originalRejector) {
+          updateData.$set.queryLevel = originalRejector.role;
+          updateData.$set.pendingQuery = true; // Now pending with original rejector
         } else {
-          // Direct: Requester → Original Rejector
-          // Find the original rejector and set them as the query level
-          const originalRejector = queryEngine.getOriginalRejector(requestRecord);
-          if (originalRejector) {
-            updateData.$set.queryLevel = originalRejector.role;
-            updateData.$set.pendingQuery = true; // Now pending with original rejector
-          } else {
-            updateData.$set.pendingQuery = false;
-            updateData.$set.queryLevel = null;
-          }
+          updateData.$set.pendingQuery = false;
+          updateData.$set.queryLevel = null;
         }
       } else {
         // Dean or other reviewer approved after query - workflow complete
@@ -618,8 +594,8 @@ export async function POST(
       updateData,
       { new: true }
     )
-      .populate('requester', 'name email empId')
-      .populate('history.actor', 'name email empId');
+      .populate('requester', 'name email empId role')
+      .populate('history.actor', 'name email empId role');
 
     console.log('[DEBUG] Request updated successfully');
     return NextResponse.json(updatedRequest);

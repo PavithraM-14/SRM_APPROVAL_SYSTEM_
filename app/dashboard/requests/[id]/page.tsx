@@ -373,7 +373,7 @@ export default function RequestDetailPage({ params }: { params: { id: string } }
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          action: 'reject_with_query',
+          action: 'reject_with_clarification',
           notes: queryRequest,
           attachments
         }),
@@ -381,11 +381,14 @@ export default function RequestDetailPage({ params }: { params: { id: string } }
       
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to request query');
+        throw new Error(errorData.error || 'Failed to request clarification');
       }
 
       await fetchRequest();
       setIsApprovalModalOpen(false);
+      
+      // Show success message
+      alert('Query raised successfully! The requester will be notified.');
 
     } catch (err) {
       console.error('Clarification request error:', err);

@@ -71,8 +71,8 @@ export async function GET(request: NextRequest) {
 
     // Get all requests and apply sophisticated visibility filtering
     const allRequests = await Request.find({})
-      .populate('requester', 'name email empId')
-      .populate('history.actor', 'name email empId')
+      .populate('requester', 'name email empId role')
+      .populate('history.actor', 'name email empId role')
       .sort({ updatedAt: -1 })
       .lean(); // Convert to plain objects
 

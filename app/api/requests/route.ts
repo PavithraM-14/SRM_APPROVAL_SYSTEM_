@@ -89,8 +89,8 @@ export async function GET(request: NextRequest) {
     }
 
     const allRequests = await Request.find(baseQuery)
-      .populate('requester', 'name email empId')
-      .populate('history.actor', 'name email empId')
+      .populate('requester', 'name email empId role')
+      .populate('history.actor', 'name email empId role')
       .sort({ updatedAt: -1, createdAt: -1 })
       .lean(); // Convert to plain objects for better performance
 
