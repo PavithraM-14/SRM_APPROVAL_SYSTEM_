@@ -6,11 +6,17 @@ const isGmail = process.env.EMAIL_HOST?.includes('gmail') || process.env.EMAIL_U
 
 const transporterConfig = isGmail 
   ? {
-      service: 'gmail',
+      host: 'smtp.gmail.com',
+      port: 465,
+      secure: true, // true for 465
       auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASSWORD,
       },
+      // Force IPv4 if IPv6 is flaky in the container
+      family: 4, 
+      // Increase connection timeout
+      connectionTimeout: 10000, 
     }
   : {
       host: process.env.EMAIL_HOST,
