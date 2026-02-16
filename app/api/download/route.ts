@@ -16,6 +16,10 @@ function getUploadRoots(): string[] {
       : resolve(process.cwd(), configuredPath));
   }
 
+  if (process.env.RENDER) {
+    roots.push('/tmp/uploads');
+  }
+
   roots.push(join(process.cwd(), 'public', 'uploads'));
   roots.push('/tmp/uploads');
 

@@ -14,6 +14,12 @@ function getUploadRootCandidates(): string[] {
       : resolve(process.cwd(), configuredPath));
   }
 
+  // On Render, prioritize /tmp if no persistent disk is configured
+  // This ensures uploads work (ephemerally) without permission errors
+  if (process.env.RENDER) {
+    candidates.push('/tmp/uploads');
+  }
+
   // Fallbacks for environments where configured path isn't writable
   candidates.push(join(process.cwd(), 'public', 'uploads'));
   candidates.push('/tmp/uploads');
