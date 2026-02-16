@@ -17,17 +17,38 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Security: Only allow files from uploads directory
-    if (!filePath.startsWith('/uploads/')) {
+    const normalizedPath = decodeURIComponent(filePath).replace(/\\/g, '/').trim();
+
+    // Security: Prevent path traversal
+    if (!normalizedPath || normalizedPath.includes('..')) {
       return NextResponse.json(
         { error: 'Invalid file path' },
         { status: 403 }
       );
     }
 
-    const fullPath = join(process.cwd(), 'public', filePath);
-    
-    if (!existsSync(fullPath)) {
+    // Resolve storage path. Supports:
+    // 1) /uploads/queries/file.pdf
+    // 2) uploads/queries/file.pdf
+    // 3) legacy filename-only values like sample-document.pdf
+    const relativePath = normalizedPath.startsWith('/') ? normalizedPath.slice(1) : normalizedPath;
+    const candidates = relativePath.startsWith('uploads/')
+      ? [relativePath]
+      : [`uploads/queries/${relativePath}`, `uploads/${relativePath}`, relativePath];
+
+    let fullPath: string | null = null;
+    let resolvedRelativePath: string | null = null;
+
+    for (const candidate of candidates) {
+      const candidatePath = join(process.cwd(), 'public', candidate);
+      if (existsSync(candidatePath)) {
+        fullPath = candidatePath;
+        resolvedRelativePath = candidate;
+        break;
+      }
+    }
+
+    if (!fullPath || !resolvedRelativePath) {
       return NextResponse.json(
         { error: 'File not found' },
         { status: 404 }
@@ -35,7 +56,7 @@ export async function GET(request: NextRequest) {
     }
 
     const fileBuffer = await readFile(fullPath);
-    const fileName = filePath.split('/').pop() || 'view';
+    const fileName = resolvedRelativePath.split('/').pop() || 'view';
     
     // Determine content type based on file extension
     const extension = fileName.split('.').pop()?.toLowerCase();
