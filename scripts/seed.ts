@@ -129,7 +129,6 @@ async function seed() {
       // Scenario 1: Fully approved request (Chairman approved)
       const approvedRequest = await Request.create({
         requestId: generateRequestId(),
-        requestId: generateRequestId(),
         title: 'New Laboratory Equipment Purchase',
         purpose: 'Purchase of advanced laboratory equipment for Computer Science department to enhance research capabilities and student learning experience.',
         college: colleges[0],

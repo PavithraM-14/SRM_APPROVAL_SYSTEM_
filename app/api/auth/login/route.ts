@@ -15,6 +15,14 @@ interface AuthUser {
   department?: string;
 }
 
+function getJwtSecret(): Uint8Array {
+  if (!process.env.JWT_SECRET) {
+    throw new Error('JWT_SECRET is not configured');
+  }
+
+  return new TextEncoder().encode(process.env.JWT_SECRET);
+}
+
 export async function POST(request: NextRequest) {
   try {
     await connectDB();
@@ -44,9 +52,7 @@ export async function POST(request: NextRequest) {
     }
     
     // Create JWT token
-    const secret = new TextEncoder().encode(
-      process.env.JWT_SECRET || 'fallback_secret_key_here'
-    );
+    const secret = getJwtSecret();
     
     const token = await new SignJWT({ 
       id: user._id.toString(),

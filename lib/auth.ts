@@ -12,6 +12,14 @@ export interface AuthUser {
   department?: string;
 }
 
+function getJwtSecret(): Uint8Array {
+  if (!process.env.JWT_SECRET) {
+    throw new Error('JWT_SECRET is not configured');
+  }
+
+  return new TextEncoder().encode(process.env.JWT_SECRET);
+}
+
 export async function getCurrentUser(): Promise<AuthUser | null> {
   try {
     const cookieStore = cookies();
@@ -20,9 +28,7 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
     const authToken = cookieStore.get('auth-token');
     if (authToken) {
       try {
-        const secret = new TextEncoder().encode(
-          process.env.JWT_SECRET || 'fallback_secret_key_here'
-        );
+        const secret = getJwtSecret();
         
         const { payload } = await jwtVerify(authToken.value, secret);
         

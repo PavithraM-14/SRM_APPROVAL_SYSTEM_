@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { Suspense, useState, useEffect, useCallback, useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import useSWR from 'swr';
 import QueryIndicator from '../../../components/QueryIndicator';
@@ -27,13 +27,13 @@ interface Request {
   };
 }
 
-export default function RequestsPage() {
+function RequestsPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const statusFilter = searchParams.get('status');
   
   const { data, error, isLoading, mutate } = useSWR('/api/requests', fetcher);
-  const requests = data?.requests || [];
+  const requests: Request[] = useMemo(() => data?.requests ?? [], [data?.requests]);
 
   const [filteredRequests, setFilteredRequests] = useState<Request[]>([]);
   const [currentUser, setCurrentUser] = useState<any>(null);
@@ -419,5 +419,19 @@ export default function RequestsPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function RequestsPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex justify-center items-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        </div>
+      }
+    >
+      <RequestsPageContent />
+    </Suspense>
   );
 }

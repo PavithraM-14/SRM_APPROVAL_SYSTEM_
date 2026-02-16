@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 interface Request {
@@ -32,12 +32,7 @@ export default function InProgressPage() {
   const [error, setError] = useState<string | null>(null);
   const [currentUser, setCurrentUser] = useState<any>(null);
 
-  useEffect(() => {
-    fetchCurrentUser();
-    fetchInProgressRequests();
-  }, []);
-
-  const fetchCurrentUser = async () => {
+  const fetchCurrentUser = useCallback(async () => {
     try {
       const response = await fetch('/api/auth/me', {
         credentials: 'include'
@@ -55,9 +50,9 @@ export default function InProgressPage() {
     } catch (err) {
       console.error('Error fetching current user:', err);
     }
-  };
+  }, [router]);
 
-  const fetchInProgressRequests = async () => {
+  const fetchInProgressRequests = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -78,7 +73,12 @@ export default function InProgressPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchCurrentUser();
+    fetchInProgressRequests();
+  }, [fetchCurrentUser, fetchInProgressRequests]);
 
   const getStatusBadgeClass = (status: string) => {
     switch (status.toLowerCase()) {
@@ -301,7 +301,7 @@ export default function InProgressPage() {
             No involvement history
           </h3>
           <p className="text-sm sm:text-base text-gray-500 mt-1">
-            You haven't approved any requests yet.
+            You haven&apos;t approved any requests yet.
           </p>
         </div>
       ) : (
@@ -310,7 +310,7 @@ export default function InProgressPage() {
           {/* Results Summary */}
           <div className="mb-4 pb-4 border-b border-gray-200">
             <p className="text-xs sm:text-sm text-gray-600">
-              {requests.length} request{requests.length !== 1 ? 's' : ''} you've been involved in approving
+              {requests.length} request{requests.length !== 1 ? 's' : ''} you&apos;ve been involved in approving
             </p>
           </div>
 

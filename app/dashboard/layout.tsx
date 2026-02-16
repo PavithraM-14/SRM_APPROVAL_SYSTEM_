@@ -1,6 +1,6 @@
  'use client';
 
-import { useEffect, useState } from 'react';
+import { Suspense, useCallback, useEffect, useState } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import {
@@ -56,7 +56,7 @@ const formatLabel = (value?: string | UserRole) => {
     .join(' ');
 };
 
-export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [queryCount, setClarificationCount] = useState(0);
@@ -105,20 +105,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     return true;
   };
 
-  useEffect(() => {
-    checkAuth();
-  }, []);
-
-  useEffect(() => {
-    if (user && (user.role === 'requester' || user.role === 'dean')) {
-      fetchClarificationCount();
-      // Set up interval to refresh count every 30 seconds
-      const interval = setInterval(fetchClarificationCount, 30000);
-      return () => clearInterval(interval);
-    }
-  }, [user]);
-
-  const checkAuth = async () => {
+  const checkAuth = useCallback(async () => {
     try {
       const res = await fetch('/api/auth/me', { credentials: 'include' });
       if (res.ok) {
@@ -131,9 +118,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     } finally {
       setLoading(false);
     }
-  };
+  }, [router]);
 
-  const fetchClarificationCount = async () => {
+  const fetchClarificationCount = useCallback(async () => {
+    if (!user) {
+      return;
+    }
+
     try {
       const response = await fetch('/api/requests', { credentials: 'include' });
       if (!response.ok) return;
@@ -149,7 +140,20 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     } catch (err) {
       console.error('Error fetching query count:', err);
     }
-  };
+  }, [user]);
+
+  useEffect(() => {
+    checkAuth();
+  }, [checkAuth]);
+
+  useEffect(() => {
+    if (user && (user.role === 'requester' || user.role === 'dean')) {
+      fetchClarificationCount();
+      // Set up interval to refresh count every 30 seconds
+      const interval = setInterval(fetchClarificationCount, 30000);
+      return () => clearInterval(interval);
+    }
+  }, [user, fetchClarificationCount]);
 
   const handleLogout = async () => {
     await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
@@ -264,5 +268,19 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </main>
       </div>
     </div>
+  );
+}
+
+export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600" />
+        </div>
+      }
+    >
+      <DashboardLayoutContent>{children}</DashboardLayoutContent>
+    </Suspense>
   );
 }

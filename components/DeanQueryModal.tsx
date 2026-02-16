@@ -98,7 +98,7 @@ export default function DeanQueryModal({
         {requesterClarification && (
           <div className="p-6 border-b border-gray-200">
             <h4 className="text-sm font-medium text-gray-900 mb-2">
-              Requester's Response to Queries:
+              Requester&apos;s Response to Queries:
             </h4>
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
               <p className="text-gray-800">{requesterClarification.response}</p>
@@ -169,7 +169,7 @@ export default function DeanQueryModal({
             {!showReapprovalForm ? (
               <div>
                 <h4 className="text-sm font-medium text-gray-900 mb-4">
-                  Review the requester's response and decide:
+                  Review the requester&apos;s response and decide:
                 </h4>
                 
                 <div className="space-y-3">

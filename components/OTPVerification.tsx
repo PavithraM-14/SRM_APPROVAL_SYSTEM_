@@ -166,7 +166,7 @@ export default function OTPVerification({ email, type, onVerify, onResend, onBac
             Verify Your Email
           </h2>
           <p className="mt-1 text-gray-600 text-sm">
-            We've sent a 6-digit code to<br />
+            We&apos;ve sent a 6-digit code to<br />
             <span className="font-semibold text-gray-900">{email}</span>
           </p>
         </div>
@@ -228,7 +228,7 @@ export default function OTPVerification({ email, type, onVerify, onResend, onBac
           )}
 
           <div className="text-center mb-6">
-            <p className="text-sm text-gray-600 mb-2">Didn't receive the code?</p>
+            <p className="text-sm text-gray-600 mb-2">Didn&apos;t receive the code?</p>
             {countdown > 0 ? (
               <p className="text-sm text-gray-500">
                 Resend OTP in <span className="font-semibold text-blue-700">{countdown}s</span>

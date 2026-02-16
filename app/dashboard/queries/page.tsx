@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import QueryIndicator from '../../../components/QueryIndicator';
 import QueryModal from '../../../components/QueryModal';
@@ -38,17 +38,7 @@ export default function QueriesPage() {
   const [isDeanQueryModalOpen, setIsDeanQueryModalOpen] = useState(false);
   const [processingClarification, setProcessingClarification] = useState(false);
 
-  useEffect(() => {
-    fetchCurrentUser();
-  }, []);
-
-  useEffect(() => {
-    if (currentUser) {
-      fetchQueriesRequests();
-    }
-  }, [currentUser]);
-
-  const fetchCurrentUser = async () => {
+  const fetchCurrentUser = useCallback(async () => {
     try {
       const response = await fetch('/api/auth/me', { credentials: 'include' });
       if (!response.ok) throw new Error('Failed to fetch user');
@@ -64,9 +54,13 @@ export default function QueriesPage() {
       console.error('Error fetching user:', err);
       setError('Failed to load user information');
     }
-  };
+  }, [router]);
 
-  const fetchQueriesRequests = async () => {
+  const fetchQueriesRequests = useCallback(async () => {
+    if (!currentUser) {
+      return;
+    }
+
     try {
       setLoading(true);
       setError(null);
@@ -89,7 +83,17 @@ export default function QueriesPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentUser]);
+
+  useEffect(() => {
+    fetchCurrentUser();
+  }, [fetchCurrentUser]);
+
+  useEffect(() => {
+    if (currentUser) {
+      fetchQueriesRequests();
+    }
+  }, [currentUser, fetchQueriesRequests]);
 
   const handleRequestClick = (request: Request) => {
     setSelectedRequest(request);

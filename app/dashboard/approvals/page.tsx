@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { Suspense, useCallback, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import QueryIndicator from '../../../components/QueryIndicator';
@@ -25,7 +25,7 @@ interface Request {
   queryLevel?: string;
 }
 
-export default function ApprovalsPage() {
+function ApprovalsPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const statusFilter = searchParams.get('status'); // Get status from URL query
@@ -36,16 +36,6 @@ export default function ApprovalsPage() {
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [activeTab, setActiveTab] = useState<string>(statusFilter || 'pending');
 
-  useEffect(() => {
-    fetchCurrentUser();
-  }, []);
-
-  useEffect(() => {
-    if (currentUser) {
-      fetchApprovals(activeTab);
-    }
-  }, [currentUser, activeTab]);
-
   // Update active tab when URL changes
   useEffect(() => {
     if (statusFilter) {
@@ -55,7 +45,7 @@ export default function ApprovalsPage() {
     }
   }, [statusFilter]);
 
-  const fetchCurrentUser = async () => {
+  const fetchCurrentUser = useCallback(async () => {
     console.log('[DEBUG] fetchCurrentUser called in approvals page');
     try {
       const response = await fetch('/api/auth/me', {
@@ -75,9 +65,9 @@ export default function ApprovalsPage() {
     } catch (err) {
       console.error('Error fetching current user:', err);
     }
-  };
+  }, [router]);
 
-  const fetchApprovals = async (status: string = 'pending') => {
+  const fetchApprovals = useCallback(async (status: string = 'pending') => {
     console.log('[DEBUG] fetchApprovals called with status:', status);
     try {
       setLoading(true);
@@ -108,7 +98,17 @@ export default function ApprovalsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchCurrentUser();
+  }, [fetchCurrentUser]);
+
+  useEffect(() => {
+    if (currentUser) {
+      fetchApprovals(activeTab);
+    }
+  }, [currentUser, activeTab, fetchApprovals]);
 
   const handleTabChange = (tab: string) => {
     setActiveTab(tab);
@@ -375,5 +375,19 @@ export default function ApprovalsPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function ApprovalsPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex justify-center items-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        </div>
+      }
+    >
+      <ApprovalsPageContent />
+    </Suspense>
   );
 }

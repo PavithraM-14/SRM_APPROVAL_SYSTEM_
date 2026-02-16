@@ -231,31 +231,33 @@ npm run test:ci # Run tests once
 
 ## 🚀 Deployment
 
-### Vercel Deployment (Recommended)
+### Render Deployment (Recommended)
 
-1. **Install Vercel CLI**
-```bash
-npm i -g vercel
-```
+This repository includes `render.yaml` for one-click Blueprint deployment.
 
-2. **Deploy**
-```bash
-vercel --prod
-```
+1. **Push this repository to GitHub**
 
-3. **Environment Variables**
-Set these in Vercel dashboard:
+2. **Create Render service from Blueprint**
+- In Render dashboard, choose **New +** → **Blueprint**
+- Select your repository and confirm `render.yaml`
+
+3. **Set required environment variables in Render**
 - `MONGODB_URI`
-- `NEXT_PUBLIC_APP_NAME`  
-- `NEXT_PUBLIC_BASE_URL`
 - `JWT_SECRET`
+- `NEXT_PUBLIC_BASE_URL` (your Render URL)
 
-### Other Platforms
-The app can be deployed to any platform supporting Next.js:
-- Netlify
-- AWS Amplify  
-- Railway
-- Render
+4. **Optional email variables**
+- `EMAIL_HOST`, `EMAIL_PORT`, `EMAIL_USER`, `EMAIL_PASSWORD`, `EMAIL_FROM`
+
+5. **Deploy**
+- Build command: `npm ci && npm run build`
+- Start command: `npm run start`
+- Health check: `/api/health`
+
+### Notes for Production
+- Ensure `JWT_SECRET` is a long random value.
+- Do not commit real credentials in `.env.example` or source files.
+- Run `npm run build` locally before pushing.
 
 ## 📈 Future Enhancements
 

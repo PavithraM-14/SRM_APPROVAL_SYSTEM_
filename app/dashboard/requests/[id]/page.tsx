@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useCallback, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import ApprovalModal from '../../../../components/ApprovalModal';
 import QueryModal from '../../../../components/QueryModal';
@@ -166,9 +166,9 @@ interface Request {
   history: ApprovalHistoryItem[];
   pendingQuery?: boolean;
   queryLevel?: string;
-  budgetAllocated?: number;
-  budgetSpent?: number;
-  budgetBalance?: number;
+  budgetAllocated: number;
+  budgetSpent: number;
+  budgetBalance: number;
   budgetAvailable?: boolean;
 }
 
@@ -185,24 +185,21 @@ export default function RequestDetailPage({ params }: { params: { id: string } }
   const [showApprovalHistory, setShowApprovalHistory] = useState(false);
   const [processingApproval, setProcessingApproval] = useState(false);
 
-  useEffect(() => {
-    fetchRequest();
-    fetchCurrentUser();
-  }, [params.id]);
-
-  const fetchCurrentUser = async () => {
+  const fetchCurrentUser = useCallback(async () => {
     try {
       const response = await fetch('/api/auth/me');
       if (response.ok) {
         const userData = await response.json();
         setCurrentUser(userData);
+        return userData;
       }
     } catch (err) {
       console.error('Error fetching current user:', err);
     }
-  };
+    return null;
+  }, []);
 
-  const fetchRequest = async () => {
+  const fetchRequest = useCallback(async (userOverride?: any) => {
     try {
       setLoading(true);
       setError(null);
@@ -224,14 +221,20 @@ export default function RequestDetailPage({ params }: { params: { id: string } }
       }
 
       const data = await response.json();
-      setRequest(data);
+      setRequest({
+        ...data,
+        budgetAllocated: data.budgetAllocated ?? 0,
+        budgetSpent: data.budgetSpent ?? 0,
+        budgetBalance: data.budgetBalance ?? 0,
+      });
 
       // Auto-open appropriate queries modal if request needs response from current user
       // IMPORTANT: Only REQUESTERS and DEAN (in Dean-mediated cases) can provide responses to queries
-      if (currentUser && data.pendingQuery && data.queryLevel === currentUser.role) {
-        if (currentUser.role === 'dean' && queryEngine.isDeanMediatedClarification(data)) {
+      const activeUser = userOverride ?? currentUser;
+      if (activeUser && data.pendingQuery && data.queryLevel === activeUser.role) {
+        if (activeUser.role === 'dean' && queryEngine.isDeanMediatedClarification(data)) {
           setIsDeanQueryModalOpen(true);
-        } else if (currentUser.role === 'requester') {
+        } else if (activeUser.role === 'requester') {
           // Only auto-open for requesters, not for the original rejectors
           setIsQueryModalOpen(true);
         }
@@ -245,7 +248,16 @@ export default function RequestDetailPage({ params }: { params: { id: string } }
     } finally {
       setLoading(false);
     }
-  };
+  }, [params.id, currentUser]);
+
+  useEffect(() => {
+    const initializeData = async () => {
+      const userData = await fetchCurrentUser();
+      await fetchRequest(userData);
+    };
+
+    initializeData();
+  }, [fetchCurrentUser, fetchRequest]);
 
   const handleForward = async (notes: string, attachments: string[]) => {
     try {

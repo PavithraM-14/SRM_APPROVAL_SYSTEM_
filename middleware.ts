@@ -12,6 +12,14 @@ const protectedRoutes = {
   },
 } as const;
 
+function getJwtSecret(): Uint8Array {
+  if (!process.env.JWT_SECRET) {
+    throw new Error('JWT_SECRET is not configured');
+  }
+
+  return new TextEncoder().encode(process.env.JWT_SECRET);
+}
+
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const method = request.method;
@@ -43,9 +51,7 @@ export async function middleware(request: NextRequest) {
 
   try {
     // Verify JWT token
-    const secret = new TextEncoder().encode(
-      process.env.JWT_SECRET || 'fallback_secret_key_here'
-    );
+    const secret = getJwtSecret();
     
     const { payload } = await jwtVerify(authToken.value, secret);
     const userRole = payload.role as UserRole;
