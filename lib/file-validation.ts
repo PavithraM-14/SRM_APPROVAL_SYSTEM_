@@ -111,10 +111,13 @@ export function sanitizeFilename(filename: string): string {
 }
 
 export function generateSecureFilename(originalName: string): string {
-  const timestamp = Date.now();
-  const randomString = Math.random().toString(36).substring(2, 15);
+  // Extract extension
   const extension = originalName.split('.').pop()?.toLowerCase() || '';
-  const sanitizedName = sanitizeFilename(originalName.replace(/\.[^/.]+$/, ''));
   
-  return `${timestamp}_${randomString}_${sanitizedName}.${extension}`;
+  // Remove extension from name and sanitize
+  const nameWithoutExt = originalName.replace(/\.[^/.]+$/, '');
+  const sanitizedName = sanitizeFilename(nameWithoutExt);
+  
+  // Return sanitized original filename
+  return `${sanitizedName}.${extension}`;
 }
