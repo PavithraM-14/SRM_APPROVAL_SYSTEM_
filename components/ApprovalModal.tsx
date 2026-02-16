@@ -858,7 +858,7 @@ export default function ApprovalModal({
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
                   disabled={loading}
                 >
-                  <option value="forward">Complete Verification & Send to Dean</option>
+                  <option value="forward">Complete Verification & Forward to Dean</option>
                   <option value="reject">Reject</option>
                   <option value="reject_with_clarification">Raise Query</option>
                 </select>
@@ -869,10 +869,10 @@ export default function ApprovalModal({
                     <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
                       <div className="flex items-center">
                         <CheckCircleIcon className="w-5 h-5 text-green-600 mr-2" />
-                        <span className="font-medium text-green-700">Complete Verification & Send to Dean</span>
+                        <span className="font-medium text-green-700">Complete Verification & Forward to Dean</span>
                       </div>
                       <p className="text-sm text-green-600 mt-1">
-                        Complete your department verification and send back to Dean for final approval.
+                        Complete your department verification and forward back to Dean for final approval.
                       </p>
                     </div>
                   )}

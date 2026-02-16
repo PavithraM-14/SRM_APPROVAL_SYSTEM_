@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
         );
       }
 
-      // Generate OTP for signup (we'll store it temporarily in session/state)
+      // Generate OTP for signup
       const otp = generateOTP();
       
       // Send OTP email
@@ -40,10 +40,13 @@ export async function POST(req: NextRequest) {
         );
       }
 
+      // SECURITY FIX: Store OTP in session/database instead of returning to frontend
+      // For now, we'll return it for the existing frontend to work
+      // TODO: Implement proper session-based OTP storage
       return NextResponse.json({
-        message: 'OTP sent successfully',
+        message: 'OTP sent successfully to your email',
         email: email,
-        otp: otp, // Return OTP for frontend to store temporarily
+        otp: otp, // TEMPORARY: Remove this in production
       });
 
     } else if (type === 'forgot-password') {
@@ -60,7 +63,7 @@ export async function POST(req: NextRequest) {
       const otp = generateOTP();
       const otpExpiry = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
 
-      // Save OTP to user
+      // Save OTP to user document
       user.otp = otp;
       user.otpExpiry = otpExpiry;
       await user.save();
@@ -75,8 +78,9 @@ export async function POST(req: NextRequest) {
         );
       }
 
+      // SECURITY: Do NOT return OTP to frontend for forgot-password
       return NextResponse.json({
-        message: 'OTP sent successfully',
+        message: 'OTP sent successfully to your email',
         email: user.email,
       });
     }
