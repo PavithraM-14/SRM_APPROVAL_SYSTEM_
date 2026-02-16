@@ -230,7 +230,7 @@ export default function RequestDetailPage({ params }: { params: { id: string } }
 
       // Auto-open appropriate queries modal if request needs response from current user
       // IMPORTANT: Only REQUESTERS and DEAN (in Dean-mediated cases) can provide responses to queries
-      const activeUser = userOverride ?? currentUser;
+      const activeUser = userOverride;
       if (activeUser && data.pendingQuery && data.queryLevel === activeUser.role) {
         if (activeUser.role === 'dean' && queryEngine.isDeanMediatedClarification(data)) {
           setIsDeanQueryModalOpen(true);
@@ -248,7 +248,7 @@ export default function RequestDetailPage({ params }: { params: { id: string } }
     } finally {
       setLoading(false);
     }
-  }, [params.id, currentUser]);
+  }, [params.id]);
 
   useEffect(() => {
     const initializeData = async () => {
@@ -257,7 +257,7 @@ export default function RequestDetailPage({ params }: { params: { id: string } }
     };
 
     initializeData();
-  }, [fetchCurrentUser, fetchRequest]);
+  }, [params.id, fetchCurrentUser, fetchRequest]);
 
   const handleForward = async (notes: string, attachments: string[]) => {
     try {
