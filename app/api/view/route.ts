@@ -57,9 +57,18 @@ export async function GET(request: NextRequest) {
       withoutUploadsPrefix,
       join('queries', withoutUploadsPrefix),
       relativePath,
+      // Try just the filename to be safe
+      relativePath.split('/').pop() || '',
+      join('queries', relativePath.split('/').pop() || '')
     ];
 
     const uploadRoots = getUploadRoots();
+
+    console.log('View Debug:', {
+        requested: filePath,
+        roots: uploadRoots,
+        candidates
+    });
 
     let fullPath: string | null = null;
     let resolvedRelativePath: string | null = null;
