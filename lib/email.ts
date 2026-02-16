@@ -22,6 +22,15 @@ export function generateOTP(): string {
 
 // Send OTP email
 export async function sendOTPEmail(email: string, otp: string, name?: string): Promise<boolean> {
+  console.log('Attempting to send OTP email to:', email);
+  console.log('Email Config:', {
+    host: process.env.EMAIL_HOST,
+    port: process.env.EMAIL_PORT,
+    user: process.env.EMAIL_USER ? 'Set' : 'Missing',
+    pass: process.env.EMAIL_PASSWORD ? 'Set' : 'Missing',
+    secure: process.env.EMAIL_SECURE
+  });
+
   try {
     const mailOptions = {
       from: `"SRM-RMP Approval System" <${process.env.EMAIL_FROM}>`,
