@@ -2,37 +2,27 @@ import nodemailer from 'nodemailer';
 
 const isGmail = process.env.EMAIL_HOST?.includes('gmail') || process.env.EMAIL_USER?.includes('@gmail.com');
 
-// Helper to create transporter with specific config
-const createTransporter = (forceSecure: boolean) => {
-  if (isGmail) {
-    return nodemailer.createTransport({
-      host: 'smtp.gmail.com',
-      port: forceSecure ? 465 : 587,
-      secure: forceSecure,
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASSWORD,
-      },
-      family: 4, // Force IPv4
-    });
-  }
-  
-  return nodemailer.createTransport({
-    host: process.env.EMAIL_HOST,
-    port: parseInt(process.env.EMAIL_PORT || '587'),
-    secure: process.env.EMAIL_SECURE === 'true',
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASSWORD,
-    },
-    tls: { rejectUnauthorized: false },
-  });
-};
-
-// Primary transporter (Secure 465)
-const transporterSecure = createTransporter(true);
-// Fallback transporter (TLS 587)
-const transporterFallback = createTransporter(false);
+// Create transporter
+const transporter = nodemailer.createTransport(
+  isGmail
+    ? ({
+        service: 'gmail',
+        auth: {
+          user: process.env.EMAIL_USER,
+          pass: process.env.EMAIL_PASSWORD,
+        },
+      } as any)
+    : ({
+        host: process.env.EMAIL_HOST,
+        port: parseInt(process.env.EMAIL_PORT || '587'),
+        secure: process.env.EMAIL_SECURE === 'true',
+        auth: {
+          user: process.env.EMAIL_USER,
+          pass: process.env.EMAIL_PASSWORD,
+        },
+        tls: { rejectUnauthorized: false },
+      } as any)
+);
 
 // Generate 6-digit OTP
 export function generateOTP(): string {
@@ -85,32 +75,20 @@ export async function sendOTPEmail(email: string, otp: string, name?: string): P
   };
 
   try {
-    // Attempt 1: Try secure connection (465)
-    console.log('Trying primary transport (Port 465)...');
-    const info = await transporterSecure.sendMail(mailOptions);
-    console.log(`Email sent via Port 465. MessageID: ${info.messageId}`);
+    console.log('Sending OTP email...');
+    const info = await transporter.sendMail(mailOptions);
+    console.log(`Email sent successfully. MessageID: ${info.messageId}`);
     return true;
-  } catch (errorSecure) {
-    console.error('Port 465 failed:', errorSecure);
-    
-    try {
-      // Attempt 2: Try fallback connection (587)
-      console.log('Trying fallback transport (Port 587)...');
-      const info = await transporterFallback.sendMail(mailOptions);
-      console.log(`Email sent via Port 587. MessageID: ${info.messageId}`);
-      return true;
-    } catch (errorFallback) {
-      console.error('All email attempts failed.');
-      console.error('Port 587 error:', errorFallback);
-      return false;
-    }
+  } catch (error) {
+    console.error('Failed to send email:', error);
+    return false;
   }
 }
 
 // Verify transporter configuration (useful for debugging)
 export async function verifyEmailConfig(): Promise<boolean> {
   try {
-    await transporterSecure.verify();
+    await transporter.verify();
     console.log('Email service is ready');
     return true;
   } catch (error) {
