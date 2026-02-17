@@ -8,6 +8,7 @@ import QueryIndicator from '../../../../components/QueryIndicator';
 import DeanQueryModal from '../../../../components/DeanQueryModal';
 import ApprovalHistory from '../../../../components/ApprovalHistory';
 import ApprovalWorkflow from '../../../../components/ApprovalWorkflow';
+import AttachmentList from '../../../../components/AttachmentList';
 import { RequestStatus, ActionType, UserRole } from '../../../../lib/types';
 import { approvalEngine } from '../../../../lib/approval-engine';
 import { queryEngine } from '../../../../lib/query-engine';
@@ -894,51 +895,11 @@ export default function RequestDetailPage({ params }: { params: { id: string } }
 
           {/* ✅ UPDATED Attachments Section with View Button */}
           {request.attachments?.length > 0 && (
-            <div className="mt-4 sm:mt-6">
-              <h4 className="text-sm sm:text-base font-semibold text-gray-900 mb-3 bg-gray-100 px-3 py-2 rounded-md">Attachments</h4>
-              <div className="border rounded-lg divide-y divide-gray-200">
-                {request.attachments.map((a, i) => {
-                  const fileName = a.split('/').pop();
-                  const isPDF = fileName?.toLowerCase().endsWith('.pdf');
-                  
-                  return (
-                    <div key={i} className="p-3 flex flex-col xs:flex-row xs:justify-between xs:items-center gap-2">
-                      <span className="text-xs sm:text-sm break-all flex-1 min-w-0">{fileName}</span>
-                      <div className="flex gap-2">
-                        {/* View Button (only for PDFs) */}
-                        {isPDF && (
-                          <a 
-                            href={`/api/view?file=${encodeURIComponent(a)}`} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="text-green-600 hover:text-green-800 transition-colors text-xs sm:text-sm font-medium px-2 py-1 rounded bg-green-50 hover:bg-green-100 whitespace-nowrap flex items-center gap-1"
-                          >
-                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                            </svg>
-                            View
-                          </a>
-                        )}
-                        
-                        {/* Download Button */}
-                        <a 
-                          href={`/api/download?file=${encodeURIComponent(a)}`} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="text-blue-600 hover:text-blue-800 transition-colors text-xs sm:text-sm font-medium px-2 py-1 rounded bg-blue-50 hover:bg-blue-100 whitespace-nowrap flex items-center gap-1"
-                        >
-                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                          </svg>
-                          Download
-                        </a>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
+            <AttachmentList 
+              attachments={request.attachments}
+              title="Attachments"
+              className="mt-4 sm:mt-6"
+            />
           )}
 
           
@@ -953,47 +914,12 @@ export default function RequestDetailPage({ params }: { params: { id: string } }
 
             const files: string[] = latestRequesterClarification.queryAttachments || [];
             return (
-              <div className="mt-4 sm:mt-6">
-                <h4 className="text-sm sm:text-base font-semibold text-gray-900 mb-3 bg-gray-100 px-3 py-2 rounded-md">Query Response Attachments</h4>
-                <div className="border rounded-lg divide-y divide-gray-200">
-                  {files.map((a, i) => {
-                    const fileName = a.split('/').pop();
-                    const isPDF = fileName?.toLowerCase().endsWith('.pdf');
-                    return (
-                      <div key={i} className="p-3 flex flex-col xs:flex-row xs:justify-between xs:items-center gap-2 bg-blue-50">
-                        <span className="text-xs sm:text-sm break-all flex-1 min-w-0 text-blue-800">{fileName}</span>
-                        <div className="flex gap-2">
-                          {isPDF && (
-                            <a
-                              href={`/api/view?file=${encodeURIComponent(a)}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-green-600 hover:text-green-800 transition-colors text-xs sm:text-sm font-medium px-2 py-1 rounded bg-green-50 hover:bg-green-100 whitespace-nowrap flex items-center gap-1"
-                            >
-                              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                              </svg>
-                              View
-                            </a>
-                          )}
-                          <a
-                            href={`/api/download?file=${encodeURIComponent(a)}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-blue-600 hover:text-blue-800 transition-colors text-xs sm:text-sm font-medium px-2 py-1 rounded bg-blue-50 hover:bg-blue-100 whitespace-nowrap flex items-center gap-1"
-                          >
-                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                            </svg>
-                            Download
-                          </a>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
+              <AttachmentList 
+                attachments={files}
+                title="Query Response Attachments"
+                className="mt-4 sm:mt-6"
+                highlightColor="green"
+              />
             );
           })()}
 

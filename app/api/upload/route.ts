@@ -1,34 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { writeFile, mkdir } from 'fs/promises';
-import { isAbsolute, join, resolve } from 'path';
-import { existsSync } from 'fs';
+import connectDB from '../../../lib/mongodb';
+import File from '../../../models/File';
+import { getCurrentUser } from '../../../lib/auth';
 import { validateFiles, generateSecureFilename } from '../../../lib/file-validation';
-
-function getUploadRootCandidates(): string[] {
-  const candidates: string[] = [];
-
-  const configuredPath = process.env.UPLOAD_DIR?.trim();
-  if (configuredPath) {
-    candidates.push(isAbsolute(configuredPath)
-      ? configuredPath
-      : resolve(process.cwd(), configuredPath));
-  }
-
-  // On Render, prioritize /tmp if no persistent disk is configured
-  // This ensures uploads work (ephemerally) without permission errors
-  if (process.env.RENDER) {
-    candidates.push('/tmp/uploads');
-  }
-
-  // Fallbacks for environments where configured path isn't writable
-  candidates.push(join(process.cwd(), 'public', 'uploads'));
-  candidates.push('/tmp/uploads');
-
-  return Array.from(new Set(candidates));
-}
 
 export async function POST(request: NextRequest) {
   try {
+    await connectDB();
+    
+    // Get current user for tracking
+    const user = await getCurrentUser();
+    if (!user) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
     const formData = await request.formData();
     const files = formData.getAll('files') as File[];
     const isQuery = formData.get('isQuery') === 'true';
@@ -49,43 +37,41 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const uploadRootCandidates = getUploadRootCandidates();
-    let lastUploadError: unknown = null;
+    const uploadedFiles: string[] = [];
 
-    for (const rootPath of uploadRootCandidates) {
-      try {
-        const uploadDir = join(rootPath, 'queries');
+    for (const file of files) {
+      const bytes = await file.arrayBuffer();
+      const buffer = Buffer.from(bytes);
 
-        if (!existsSync(uploadDir)) {
-          await mkdir(uploadDir, { recursive: true });
-        }
+      const filename = generateSecureFilename(file.name);
 
-        const uploadedFiles: string[] = [];
+      // Store file in MongoDB
+      const fileDoc = await File.create({
+        filename: filename,
+        originalName: file.name,
+        mimeType: file.type,
+        size: file.size,
+        data: buffer,
+        uploadedBy: user.id,
+        isQuery: isQuery
+      });
 
-        for (const file of files) {
-          const bytes = await file.arrayBuffer();
-          const buffer = Buffer.from(bytes);
-
-          const filename = generateSecureFilename(file.name);
-          const filepath = join(uploadDir, filename);
-          await writeFile(filepath, buffer);
-
-          // Keep DB path format stable
-          uploadedFiles.push(`/uploads/queries/${filename}`);
-        }
-
-        return NextResponse.json({
-          success: true,
-          files: uploadedFiles,
-          message: `${uploadedFiles.length} file(s) uploaded successfully`
-        });
-      } catch (error) {
-        lastUploadError = error;
-      }
+      // Return file ID as reference (instead of file path)
+      uploadedFiles.push(fileDoc._id.toString());
     }
 
-    console.error('All upload paths failed:', lastUploadError);
-    throw lastUploadError;
+    console.log('✅ Files uploaded to MongoDB:', {
+      count: uploadedFiles.length,
+      fileIds: uploadedFiles,
+      uploadedBy: user.email,
+      isQuery
+    });
+
+    return NextResponse.json({
+      success: true,
+      files: uploadedFiles,
+      message: `${uploadedFiles.length} file(s) uploaded successfully`
+    });
 
   } catch (error) {
     console.error('File upload error:', error);
