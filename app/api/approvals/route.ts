@@ -8,6 +8,10 @@ import { filterRequestsByVisibility, analyzeRequestVisibility } from '../../../l
 import mongoose from 'mongoose';
 import { approvalEngine } from '../../../lib/approval-engine';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+export const runtime = 'nodejs';
+
 // Function to get role-based filter for pending approvals
 function getPendingApprovalsFilter(userRole: UserRole, userId: any) {
   let filter: any = {};

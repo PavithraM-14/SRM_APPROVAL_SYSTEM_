@@ -20,9 +20,15 @@ services:
         sync: false
       - key: UPLOAD_DIR
         sync: false
-      - key: MAILERSEND_API_KEY
+      - key: EMAIL_HOST
         sync: false
-      - key: MAILERSEND_SENDER_EMAIL
+      - key: EMAIL_PORT
         sync: false
-      - key: MAILERSEND_SENDER_NAME
+      - key: EMAIL_USER
+        sync: false
+      - key: EMAIL_PASSWORD
+        sync: false
+      - key: EMAIL_FROM
+        sync: false
+      - key: EMAIL_SECURE
         sync: false
