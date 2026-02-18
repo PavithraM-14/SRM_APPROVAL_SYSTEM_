@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import User from '@/models/User';
-import { generateOTP, sendOTPEmail } from '@/lib/email';
+import { generateOTP, getEmailConfigurationError, sendOTPEmail } from '@/lib/email';
 
 export async function POST(req: NextRequest) {
   try {
@@ -24,8 +24,14 @@ export async function POST(req: NextRequest) {
       const emailSent = await sendOTPEmail(email, otp);
 
       if (!emailSent) {
+        const emailConfigError = getEmailConfigurationError();
+
         return NextResponse.json(
-          { error: 'Failed to send OTP email. Please try again.' },
+          {
+            error: emailConfigError
+              ? `OTP service is not configured on server: ${emailConfigError}`
+              : 'Failed to send OTP email. Please try again.'
+          },
           { status: 500 }
         );
       }
@@ -58,8 +64,14 @@ export async function POST(req: NextRequest) {
       const emailSent = await sendOTPEmail(user.email, otp, user.name);
 
       if (!emailSent) {
+        const emailConfigError = getEmailConfigurationError();
+
         return NextResponse.json(
-          { error: 'Failed to send OTP email. Please try again.' },
+          {
+            error: emailConfigError
+              ? `OTP service is not configured on server: ${emailConfigError}`
+              : 'Failed to send OTP email. Please try again.'
+          },
           { status: 500 }
         );
       }

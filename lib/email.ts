@@ -1,5 +1,19 @@
 import { EmailParams, MailerSend, Recipient, Sender } from 'mailersend';
 
+export function getEmailConfigurationError(): string | null {
+  const apiKey = process.env.MAILERSEND_API_KEY || process.env.API_KEY;
+
+  if (!apiKey) {
+    return 'MAILERSEND_API_KEY is missing';
+  }
+
+  if (!process.env.MAILERSEND_SENDER_EMAIL) {
+    return 'MAILERSEND_SENDER_EMAIL is missing';
+  }
+
+  return null;
+}
+
 /**
  * Create and configure MailerSend client
  */
