@@ -6,7 +6,7 @@ import User from '../models/User';
 import Request from '../models/Request';
 import BudgetRecord from '../models/BudgetRecord';
 import SOPRecord from '../models/SOPRecord';
-import { UserRole, RequestStatus, ActionType } from '../lib/types';
+import { UserRole } from '../lib/types';
 
 
 // Load environment variables from .env.local
@@ -15,11 +15,6 @@ dotenv.config({ path: path.resolve(process.cwd(), '.env.local') });
 const colleges = ['EEC', 'Medicine', 'Business'];
 const departments = ['Computer Science', 'Mechanical', 'Electrical', 'Civil'];
 const expenseCategories = ['Equipment', 'Software', 'Travel', 'Training', 'Infrastructure'];
-
-// Helper function to generate unique 6-digit request IDs
-function generateRequestId(): string {
-  return Math.floor(100000 + Math.random() * 900000).toString();
-}
 
 async function seed() {
   try {
@@ -40,7 +35,7 @@ async function seed() {
     await BudgetRecord.deleteMany({});
     await SOPRecord.deleteMany({});
 
-    // Create users for each role
+    // Create users for each role - all from EEC college
     const users = [];
     let contactCounter = 9876543210;
     
@@ -55,11 +50,10 @@ async function seed() {
       }
       
       const user = await User.create({
-        // Match README: requester@srmrmp.edu.in, institution_manager@srmrmp.edu.in, etc.
         email: `${role}@gmail.com`,
         name: getRoleDisplayName(role),
-        empId: `EMP${role.toUpperCase()}`, // Add employee ID
-        contactNo: `+91 ${contactCounter.toString().slice(-10)}`, // Format contact number correctly
+        empId: `EMP${role.toUpperCase()}`,
+        contactNo: `+91 ${contactCounter.toString().slice(-10)}`,
         password: plainPassword, // Pass plain password - model will hash it
         role,
         college: 'EEC', // All users belong to EEC college
@@ -69,7 +63,7 @@ async function seed() {
       contactCounter++; // Increment for next user
     }
 
-    console.log(`✅ Created ${users.length} users`);
+    console.log(`✅ Created ${users.length} users (all from EEC college)`);
 
     // Create budget records
     const budgetRecords = [];
@@ -111,6 +105,7 @@ async function seed() {
     }
 
     console.log(`✅ Created ${sopRecords.length} SOP records`);
+<<<<<<< Updated upstream
 
     // Create sample requests with realistic workflow scenarios
     const requester = users.find(u => u.role === UserRole.REQUESTER);
@@ -1479,13 +1474,16 @@ async function seed() {
       console.log('     - ₹35,000 request (Manager → Dean → Chief Director - low cost)');
       console.log('     - ₹0 request (Manager → Dean → Chief Director - no cost)');
     }
+=======
+    console.log('✅ No requests created - database contains only users, budget records, and SOP records');
+>>>>>>> Stashed changes
 
     console.log('🎉 Database seeded successfully!');
     console.log('\n👥 Login Credentials:');
     console.log('Password for all users: password123\n');
     
     users.forEach(user => {
-      console.log(`${user.email}`);
+      console.log(`${user.email} - ${user.name} (${user.role})`);
     });
 
   } catch (error) {
@@ -1513,8 +1511,6 @@ function getRoleDisplayName(role: UserRole): string {
   };
   return roleNames[role] || role;
 }
-
-
 
 // Run the seed function
 if (require.main === module) {
