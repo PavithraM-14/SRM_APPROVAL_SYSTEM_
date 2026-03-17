@@ -141,9 +141,9 @@ export const queryEngine = {
 
     const roleDisplayMap: Record<string, string> = {
       'chairman': 'Chairman',
-      'chief_director': 'Chief Director',
+      'chief_director': 'Head of Campus',
       'head_of_institution': 'Head of Institution',
-      'dean': 'Dean',
+      'dean': 'Admin Dept',
       'vp': 'Vice President',
       'institution_manager': 'Institution Manager',
       'accountant': 'Accountant',

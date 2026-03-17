@@ -17,12 +17,12 @@ const roleOptions = [
   { value: UserRole.ACCOUNTANT, label: 'Accountant' },
   { value: UserRole.VP, label: 'Vice President' },
   { value: UserRole.HEAD_OF_INSTITUTION, label: 'Head of Institution' },
-  { value: UserRole.DEAN, label: 'Dean' },
+  { value: UserRole.DEAN, label: 'Admin Dept' },
   { value: UserRole.MMA, label: 'MMA' },
   { value: UserRole.HR, label: 'HR' },
   { value: UserRole.AUDIT, label: 'Audit' },
   { value: UserRole.IT, label: 'IT' },
-  { value: UserRole.CHIEF_DIRECTOR, label: 'Chief Director' },
+  { value: UserRole.CHIEF_DIRECTOR, label: 'Head of Campus' },
   { value: UserRole.CHAIRMAN, label: 'Chairman' },
 ];
 

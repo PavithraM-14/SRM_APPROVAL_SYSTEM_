@@ -741,7 +741,7 @@ export default function ApprovalModal({
                 >
                   {request.status === 'dean_review' ? (
                     <>
-                      <option value="approve">Forward to Chief Director</option>
+                      <option value="approve">Forward to Head of Campus</option>
                       <option value="send_to_chairman">Forward to Chairman</option>
                       <option value="clarify">Forward to Department for Verification</option>
                       <option value="reject">Reject</option>
@@ -750,7 +750,7 @@ export default function ApprovalModal({
                   ) : (
                     // dean_verification status - after department verification
                     <>
-                      <option value="approve">Forward to Chief Director</option>
+                      <option value="approve">Forward to Head of Campus</option>
                       <option value="send_to_chairman">Forward to Chairman</option>
                       <option value="reject">Reject</option>
                       <option value="reject_with_clarification">Raise Query</option>
@@ -764,12 +764,12 @@ export default function ApprovalModal({
                     <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
                       <div className="flex items-center">
                         <CheckCircleIcon className="w-5 h-5 text-green-600 mr-2" />
-                        <span className="font-medium text-green-700">Forward to Chief Director</span>
+                        <span className="font-medium text-green-700">Forward to Head of Campus</span>
                       </div>
                       <p className="text-sm text-green-600 mt-1">
                         {request.status === 'dean_verification'
-                          ? 'Department verification complete. Forward to Chief Director.'
-                          : 'Forward directly to Chief Director.'
+                          ? 'Department verification complete. Forward to Head of Campus.'
+                          : 'Forward directly to Head of Campus.'
                         }
                       </p>
                     </div>
@@ -850,7 +850,7 @@ export default function ApprovalModal({
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
                   disabled={loading}
                 >
-                  <option value="forward">Complete Verification & Forward to Dean</option>
+                  <option value="forward">Complete Verification & Forward to Admin Dept</option>
                   <option value="reject">Reject</option>
                   <option value="reject_with_clarification">Raise Query</option>
                 </select>
@@ -861,10 +861,10 @@ export default function ApprovalModal({
                     <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
                       <div className="flex items-center">
                         <CheckCircleIcon className="w-5 h-5 text-green-600 mr-2" />
-                        <span className="font-medium text-green-700">Complete Verification & Forward to Dean</span>
+                        <span className="font-medium text-green-700">Complete Verification & Forward to Admin Dept</span>
                       </div>
                       <p className="text-sm text-green-600 mt-1">
-                        Complete your department verification and forward back to Dean for final approval.
+                        Complete your department verification and forward back to Admin Dept for final approval.
                       </p>
                     </div>
                   )}
@@ -952,7 +952,7 @@ export default function ApprovalModal({
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
                   disabled={loading}
                 >
-                  <option value="send_to_dean">Forward to Dean</option>
+                  <option value="send_to_dean">Forward to Admin Dept</option>
                   <option value="send_to_vp">Forward to VP</option>
                   <option value="reject_with_clarification">Raise Query</option>
                   <option value="reject">Reject</option>
@@ -964,10 +964,10 @@ export default function ApprovalModal({
                     <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
                       <div className="flex items-center">
                         <CheckCircleIcon className="w-5 h-5 text-blue-600 mr-2" />
-                        <span className="font-medium text-blue-700">Forward to Dean</span>
+                        <span className="font-medium text-blue-700">Forward to Admin Dept</span>
                       </div>
                       <p className="text-sm text-blue-600 mt-1">
-                        Forward this request directly to Dean for review. Dean will then forward to Chairman for final approval.
+                        Forward this request directly to Admin Dept for review. Admin Dept will then forward to Chairman for final approval.
                       </p>
                     </div>
                   )}
@@ -979,7 +979,7 @@ export default function ApprovalModal({
                         <span className="font-medium text-green-700">Forward to VP</span>
                       </div>
                       <p className="text-sm text-green-600 mt-1">
-                        Forward this request through normal approval flow: VP → HOI → Dean → Chief Director.
+                        Forward this request through normal approval flow: VP → HOI → Admin Dept → Head of Campus.
                       </p>
                     </div>
                   )}

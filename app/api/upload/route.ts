@@ -74,3 +74,13 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+    });
+
+  } catch (error) {
+    console.error('File upload error:', error);
+    return NextResponse.json(
+      { error: error instanceof Error ? `Failed to upload files: ${error.message}` : 'Failed to upload files' },
+      { status: 500 }
+    );
+  }
+}

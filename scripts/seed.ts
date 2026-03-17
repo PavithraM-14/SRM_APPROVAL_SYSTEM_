@@ -184,21 +184,21 @@ async function seed() {
             actor: hoi._id,
             timestamp: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000),
             newStatus: RequestStatus.DEAN_REVIEW,
-            notes: 'HOI approved, forwarded to Dean'
+            notes: 'HOI approved, forwarded to Admin Dept'
           },
           {
             action: ActionType.APPROVE,
             actor: dean._id,
             timestamp: new Date(Date.now() - 13 * 24 * 60 * 60 * 1000),
             newStatus: RequestStatus.CHIEF_DIRECTOR_APPROVAL,
-            notes: 'Dean approved, forwarded to Chief Director'
+            notes: 'Admin Dept approved, forwarded to Head of Campus'
           },
           {
             action: ActionType.APPROVE,
             actor: chiefDirector._id,
             timestamp: new Date(Date.now() - 12 * 24 * 60 * 60 * 1000),
             newStatus: RequestStatus.CHAIRMAN_APPROVAL,
-            notes: 'Chief Director approved, forwarded to Chairman'
+            notes: 'Head of Campus approved, forwarded to Chairman'
           },
           {
             action: ActionType.APPROVE,
@@ -271,7 +271,7 @@ async function seed() {
       });
       requests.push(rejectedByVP);
 
-      // Scenario 3: Request rejected by Dean (after VP and HOI approved)
+      // Scenario 3: Request rejected by Admin Dept (after VP and HOI approved)
       const rejectedByDean = await Request.create({
         requestId: generateRequestId(),
         title: 'Conference Travel Request',
@@ -332,7 +332,7 @@ async function seed() {
             actor: hoi._id,
             timestamp: new Date(Date.now() - 12 * 24 * 60 * 60 * 1000),
             newStatus: RequestStatus.DEAN_REVIEW,
-            notes: 'HOI approved, forwarded to Dean'
+            notes: 'HOI approved, forwarded to Admin Dept'
           },
           {
             action: ActionType.REJECT,
@@ -455,7 +455,7 @@ async function seed() {
       });
       requests.push(atVPLevel);
 
-      // Scenario 7: At Dean level
+      // Scenario 7: At Admin Dept level
       const atDeanLevel = await Request.create({
         requestId: generateRequestId(),
         title: 'Library Book Collection Expansion',
@@ -502,7 +502,7 @@ async function seed() {
             actor: manager._id,
             timestamp: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000),
             newStatus: RequestStatus.DEAN_REVIEW,
-            notes: 'Budget not available, forwarded directly to Dean'
+            notes: 'Budget not available, forwarded directly to Admin Dept'
           }
         ]
       });
@@ -555,21 +555,21 @@ async function seed() {
             actor: manager._id,
             timestamp: new Date(Date.now() - 21 * 24 * 60 * 60 * 1000),
             newStatus: RequestStatus.DEAN_REVIEW,
-            notes: 'Budget not available, forwarded to Dean'
+            notes: 'Budget not available, forwarded to Admin Dept'
           },
           {
             action: ActionType.APPROVE,
             actor: dean._id,
             timestamp: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000),
             newStatus: RequestStatus.CHIEF_DIRECTOR_APPROVAL,
-            notes: 'Dean approved, forwarded to Chief Director'
+            notes: 'Admin Dept approved, forwarded to Head of Campus'
           },
           {
             action: ActionType.APPROVE,
             actor: chiefDirector._id,
             timestamp: new Date(Date.now() - 19 * 24 * 60 * 60 * 1000),
             newStatus: RequestStatus.CHAIRMAN_APPROVAL,
-            notes: 'Chief Director approved, forwarded to Chairman'
+            notes: 'Head of Campus approved, forwarded to Chairman'
           },
           {
             action: ActionType.APPROVE,
@@ -582,7 +582,7 @@ async function seed() {
       });
       requests.push(anotherApproved);
 
-      // Scenario 9: Chairman rejected, Dean needs to handle (NEW WORKFLOW)
+      // Scenario 9: Chairman rejected, Admin Dept needs to handle (NEW WORKFLOW)
       const chairmanRejectedToDean = await Request.create({
         requestId: generateRequestId(),
         title: 'Expensive Equipment Purchase',
@@ -645,21 +645,21 @@ async function seed() {
             actor: hoi._id,
             timestamp: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000),
             newStatus: RequestStatus.DEAN_REVIEW,
-            notes: 'HOI approved, forwarded to Dean'
+            notes: 'HOI approved, forwarded to Admin Dept'
           },
           {
             action: ActionType.APPROVE,
             actor: dean._id,
             timestamp: new Date(Date.now() - 13 * 24 * 60 * 60 * 1000),
             newStatus: RequestStatus.CHIEF_DIRECTOR_APPROVAL,
-            notes: 'Dean approved, forwarded to Chief Director'
+            notes: 'Admin Dept approved, forwarded to Head of Campus'
           },
           {
             action: ActionType.APPROVE,
             actor: chiefDirector._id,
             timestamp: new Date(Date.now() - 12 * 24 * 60 * 60 * 1000),
             newStatus: RequestStatus.CHAIRMAN_APPROVAL,
-            notes: 'Chief Director approved, forwarded to Chairman'
+            notes: 'Head of Campus approved, forwarded to Chairman'
           },
           {
             action: ActionType.REJECT_WITH_CLARIFICATION,
@@ -671,7 +671,7 @@ async function seed() {
             requiresClarification: true,
             originalRejector: chairman._id,
             isDeanMediated: true,
-            notes: 'Chairman rejected - Dean to handle query with requester'
+            notes: 'Chairman rejected - Admin Dept to handle query with requester'
           }
         ]
       });
@@ -709,7 +709,7 @@ async function seed() {
       });
       requests.push(rejectedByManager);
 
-      // Scenario 11: Manager rejected, requester needs to clarify (NEW WORKFLOW - Below Dean)
+      // Scenario 11: Manager rejected, requester needs to clarify (NEW WORKFLOW - Below Admin Dept)
       const managerRejectedToRequester = await Request.create({
         requestId: generateRequestId(),
         title: 'Manager Rejected Request',
@@ -799,7 +799,7 @@ async function seed() {
       });
       requests.push(requesterClarifiedToVP);
 
-      // Scenario 12: HOI rejected, requester needs to clarify (NEW WORKFLOW - Below Dean)
+      // Scenario 12: HOI rejected, requester needs to clarify (NEW WORKFLOW - Below Admin Dept)
       const hoiRejectedToRequester = await Request.create({
         requestId: generateRequestId(),
         title: 'HOI Rejected - Direct to Requester',
@@ -850,11 +850,11 @@ async function seed() {
       });
       requests.push(hoiRejectedToRequester);
 
-      // Scenario 13: Chief Director rejected, Dean reviewing requester's query (Above Dean Level)
+      // Scenario 13: Head of Campus Rejected, Admin Dept reviewing requester's query (Above Dean Level)
       const chiefDirectorRejectedDeanReviewing = await Request.create({
         requestId: generateRequestId(),
-        title: 'Chief Director Rejected - Dean Reviewing',
-        purpose: 'This request was rejected by Chief Director, sent to Dean, then to requester, and requester has provided query. Now Dean is reviewing.',
+        title: 'Head of Campus Rejected - Admin Dept reviewing',
+        purpose: 'This request was rejected by Head of Campus, sent to Admin Dept, then to requester, and requester has provided query. Now Dean is reviewing.',
         college: colleges[1],
         department: departments[3],
         costEstimate: 800000,
@@ -892,14 +892,14 @@ async function seed() {
             actor: hoi._id,
             timestamp: new Date(Date.now() - 17 * 24 * 60 * 60 * 1000),
             newStatus: RequestStatus.DEAN_REVIEW,
-            notes: 'HOI approved, forwarded to Dean'
+            notes: 'HOI approved, forwarded to Admin Dept'
           },
           {
             action: ActionType.APPROVE,
             actor: dean._id,
             timestamp: new Date(Date.now() - 16 * 24 * 60 * 60 * 1000),
             newStatus: RequestStatus.CHIEF_DIRECTOR_APPROVAL,
-            notes: 'Dean approved, forwarded to Chief Director'
+            notes: 'Admin Dept approved, forwarded to Head of Campus'
           },
           {
             action: ActionType.REJECT_WITH_CLARIFICATION,
@@ -911,7 +911,7 @@ async function seed() {
             requiresClarification: true,
             originalRejector: chiefDirector._id,
             isDeanMediated: true,
-            notes: 'Chief Director rejected - Dean to handle query (above Dean level)'
+            notes: 'Head of Campus Rejected - Admin Dept to handle query (above Dean level)'
           },
           {
             action: ActionType.REJECT_WITH_CLARIFICATION,
@@ -919,9 +919,9 @@ async function seed() {
             timestamp: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000),
             previousStatus: RequestStatus.DEAN_REVIEW,
             newStatus: RequestStatus.SUBMITTED,
-            queryRequest: 'The Chief Director needs more justification for this equipment purchase. Please provide: 1) Detailed cost-benefit analysis, 2) Alternative equipment options considered, 3) Expected ROI timeline, 4) Usage projections.',
+            queryRequest: 'The Head of Campus needs more justification for this equipment purchase. Please provide: 1) Detailed cost-benefit analysis, 2) Alternative equipment options considered, 3) Expected ROI timeline, 4) Usage projections.',
             requiresClarification: true,
-            notes: 'Dean forwarding Chief Director concerns to requester'
+            notes: 'Admin Dept forwarding Head of Campus concerns to requester'
           },
           {
             action: ActionType.CLARIFY_AND_REAPPROVE,
@@ -997,21 +997,21 @@ async function seed() {
             actor: hoi._id,
             timestamp: new Date(Date.now() - 24 * 24 * 60 * 60 * 1000),
             newStatus: RequestStatus.DEAN_REVIEW,
-            notes: 'HOI approved, forwarded to Dean'
+            notes: 'HOI approved, forwarded to Admin Dept'
           },
           {
             action: ActionType.APPROVE,
             actor: dean._id,
             timestamp: new Date(Date.now() - 23 * 24 * 60 * 60 * 1000),
             newStatus: RequestStatus.CHIEF_DIRECTOR_APPROVAL,
-            notes: 'Dean approved, forwarded to Chief Director'
+            notes: 'Admin Dept approved, forwarded to Head of Campus'
           },
           {
             action: ActionType.APPROVE,
             actor: chiefDirector._id,
             timestamp: new Date(Date.now() - 22 * 24 * 60 * 60 * 1000),
             newStatus: RequestStatus.CHAIRMAN_APPROVAL,
-            notes: 'Chief Director approved, awaiting final Chairman approval'
+            notes: 'Head of Campus approved, awaiting final Chairman approval'
           }
         ]
       });
@@ -1109,14 +1109,14 @@ async function seed() {
             actor: hoi._id,
             timestamp: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000),
             newStatus: RequestStatus.DEAN_REVIEW,
-            notes: 'HOI approved emergency leave, forwarded to Dean'
+            notes: 'HOI approved emergency leave, forwarded to Admin Dept'
           },
           {
             action: ActionType.APPROVE,
             actor: dean._id,
             timestamp: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
             newStatus: RequestStatus.APPROVED,
-            notes: 'Dean approved emergency leave - request completed'
+            notes: 'Admin Dept approved emergency leave - request completed'
           }
         ]
       });
@@ -1149,14 +1149,14 @@ async function seed() {
 
       // ===== COST-BASED APPROVAL TESTING SCENARIOS =====
       
-      // Low Cost Request 1: ₹30,000 - Should stop at Chief Director
+      // Low Cost Request 1: ₹30,000 - Should stop at Head of Campus
       const lowCostRequest1 = await Request.create({
         requestId: generateRequestId(),
         title: 'Office Supplies Purchase',
         purpose: 'Purchase of basic office supplies including stationery, printer cartridges, and desk accessories.',
         college: colleges[0],
         department: departments[0],
-        costEstimate: 30000, // ≤ ₹50,000 - Should stop at Chief Director
+        costEstimate: 30000, // ≤ ₹50,000 - Should stop at Head of Campus
         expenseCategory: 'Equipment',
         sopReference: sopRecords[0].code,
         attachments: ['sample-document.pdf'],
@@ -1189,32 +1189,32 @@ async function seed() {
             actor: hoi._id,
             timestamp: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
             newStatus: RequestStatus.DEAN_REVIEW,
-            notes: 'HOI approved, forwarded to Dean'
+            notes: 'HOI approved, forwarded to Admin Dept'
           },
           {
             action: ActionType.APPROVE,
             actor: dean._id,
             timestamp: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000),
             newStatus: RequestStatus.CHIEF_DIRECTOR_APPROVAL,
-            notes: 'Dean approved, forwarded to Chief Director'
+            notes: 'Admin Dept approved, forwarded to Head of Campus'
           }
         ]
       });
       requests.push(lowCostRequest1);
 
-      // Low Cost Request 2: ₹45,000 - Should stop at Chief Director
+      // Low Cost Request 2: ₹45,000 - Should stop at Head of Campus
       const lowCostRequest2 = await Request.create({
         requestId: generateRequestId(),
         title: 'Minor Equipment Repair',
         purpose: 'Repair and maintenance of existing laboratory equipment including calibration and parts replacement.',
         college: colleges[1],
         department: departments[1],
-        costEstimate: 45000, // ≤ ₹50,000 - Should stop at Chief Director
+        costEstimate: 45000, // ≤ ₹50,000 - Should stop at Head of Campus
         expenseCategory: 'Equipment',
         sopReference: sopRecords[1].code,
         attachments: ['sample-document.pdf'],
         requester: requester._id,
-        status: RequestStatus.APPROVED, // Already approved by Chief Director (cost ≤ ₹50,000)
+        status: RequestStatus.APPROVED, // Already approved by Head of Campus (cost ≤ ₹50,000)
         history: [
           {
             action: ActionType.CREATE,
@@ -1242,39 +1242,39 @@ async function seed() {
             actor: hoi._id,
             timestamp: new Date(Date.now() - 9 * 24 * 60 * 60 * 1000),
             newStatus: RequestStatus.DEAN_REVIEW,
-            notes: 'HOI approved, forwarded to Dean'
+            notes: 'HOI approved, forwarded to Admin Dept'
           },
           {
             action: ActionType.APPROVE,
             actor: dean._id,
             timestamp: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000),
             newStatus: RequestStatus.CHIEF_DIRECTOR_APPROVAL,
-            notes: 'Dean approved, forwarded to Chief Director'
+            notes: 'Admin Dept approved, forwarded to Head of Campus'
           },
           {
             action: ActionType.APPROVE,
             actor: chiefDirector._id,
             timestamp: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
             newStatus: RequestStatus.APPROVED,
-            notes: 'Chief Director approved - Final approval (cost ≤ ₹50,000, no Chairman required)'
+            notes: 'Head of Campus approved - Final approval (cost ≤ ₹50,000, no Chairman required)'
           }
         ]
       });
       requests.push(lowCostRequest2);
 
-      // Boundary Test: ₹50,000 exactly - Should stop at Chief Director
+      // Boundary Test: ₹50,000 exactly - Should stop at Head of Campus
       const boundaryCostRequest = await Request.create({
         requestId: generateRequestId(),
         title: 'Software License - Boundary Test',
         purpose: 'Purchase of software license for department use - exactly at ₹50,000 boundary.',
         college: colleges[2],
         department: departments[2],
-        costEstimate: 50000, // = ₹50,000 - Should stop at Chief Director
+        costEstimate: 50000, // = ₹50,000 - Should stop at Head of Campus
         expenseCategory: 'Software',
         sopReference: sopRecords[2].code,
         attachments: ['sample-document.pdf'],
         requester: requester._id,
-        status: RequestStatus.APPROVED, // Already approved by Chief Director (cost ≤ ₹50,000)
+        status: RequestStatus.APPROVED, // Already approved by Head of Campus (cost ≤ ₹50,000)
         history: [
           {
             action: ActionType.CREATE,
@@ -1302,21 +1302,21 @@ async function seed() {
             actor: hoi._id,
             timestamp: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
             newStatus: RequestStatus.DEAN_REVIEW,
-            notes: 'HOI approved, forwarded to Dean'
+            notes: 'HOI approved, forwarded to Admin Dept'
           },
           {
             action: ActionType.APPROVE,
             actor: dean._id,
             timestamp: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000),
             newStatus: RequestStatus.CHIEF_DIRECTOR_APPROVAL,
-            notes: 'Dean approved, forwarded to Chief Director'
+            notes: 'Admin Dept approved, forwarded to Head of Campus'
           },
           {
             action: ActionType.APPROVE,
             actor: chiefDirector._id,
             timestamp: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
             newStatus: RequestStatus.APPROVED,
-            notes: 'Chief Director approved - Final approval (cost = ₹50,000, no Chairman required)'
+            notes: 'Head of Campus approved - Final approval (cost = ₹50,000, no Chairman required)'
           }
         ]
       });
@@ -1324,14 +1324,14 @@ async function seed() {
 
       // ===== BUDGET NOT AVAILABLE FLOW TEST SCENARIOS =====
       
-      // Budget Not Available 1: High cost (₹75,000) - Should go Dean → Chairman
+      // Budget Not Available 1: High cost (₹75,000) - Should go Admin Dept → Chairman
       const budgetNotAvailableHighCost = await Request.create({
         requestId: generateRequestId(),
         title: 'High Cost Equipment - Budget Not Available',
         purpose: 'Purchase of specialized equipment when budget is not available - should go to Chairman due to high cost.',
         college: colleges[0],
         department: departments[1],
-        costEstimate: 75000, // > ₹50,000 - Should go Dean → Chairman
+        costEstimate: 75000, // > ₹50,000 - Should go Admin Dept → Chairman
         expenseCategory: 'Equipment',
         sopReference: sopRecords[0].code,
         attachments: ['sample-document.pdf'],
@@ -1351,27 +1351,27 @@ async function seed() {
             actor: manager._id,
             timestamp: new Date(Date.now() - 9 * 24 * 60 * 60 * 1000),
             newStatus: RequestStatus.DEAN_REVIEW,
-            notes: 'Budget not available, forwarded directly to Dean'
+            notes: 'Budget not available, forwarded directly to Admin Dept'
           },
           {
             action: ActionType.APPROVE,
             actor: dean._id,
             timestamp: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000),
             newStatus: RequestStatus.CHAIRMAN_APPROVAL,
-            notes: 'Dean approved - High cost (₹75,000) with no budget, forwarded to Chairman'
+            notes: 'Admin Dept approved - High cost (₹75,000) with no budget, forwarded to Chairman'
           }
         ]
       });
       requests.push(budgetNotAvailableHighCost);
 
-      // Budget Not Available 2: Low cost (₹35,000) - Should go Dean → Chairman
+      // Budget Not Available 2: Low cost (₹35,000) - Should go Admin Dept → Chairman
       const budgetNotAvailableLowCost = await Request.create({
         requestId: generateRequestId(),
         title: 'Low Cost Supplies - Budget Not Available',
         purpose: 'Purchase of office supplies when budget is not available - should go to Chairman regardless of cost.',
         college: colleges[1],
         department: departments[2],
-        costEstimate: 35000, // ≤ ₹50,000 - But still goes Dean → Chairman (budget not available)
+        costEstimate: 35000, // ≤ ₹50,000 - But still goes Admin Dept → Chairman (budget not available)
         expenseCategory: 'Equipment',
         sopReference: sopRecords[1].code,
         attachments: ['sample-document.pdf'],
@@ -1391,14 +1391,14 @@ async function seed() {
             actor: manager._id,
             timestamp: new Date(Date.now() - 11 * 24 * 60 * 60 * 1000),
             newStatus: RequestStatus.DEAN_REVIEW,
-            notes: 'Budget not available, forwarded directly to Dean'
+            notes: 'Budget not available, forwarded directly to Admin Dept'
           },
           {
             action: ActionType.APPROVE,
             actor: dean._id,
             timestamp: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000),
             newStatus: RequestStatus.CHAIRMAN_APPROVAL,
-            notes: 'Dean approved - Budget not available, forwarded to Chairman'
+            notes: 'Admin Dept approved - Budget not available, forwarded to Chairman'
           },
           {
             action: ActionType.APPROVE,
@@ -1411,14 +1411,14 @@ async function seed() {
       });
       requests.push(budgetNotAvailableLowCost);
 
-      // Budget Not Available 3: No cost (₹0) - Should go Dean → Chairman
+      // Budget Not Available 3: No cost (₹0) - Should go Admin Dept → Chairman
       const budgetNotAvailableNoCost = await Request.create({
         requestId: generateRequestId(),
         title: 'No Cost Request - Budget Not Available',
         purpose: 'Administrative request with no cost when budget is not available - should go to Chairman regardless of cost.',
         college: colleges[2],
         department: departments[0],
-        costEstimate: 0, // No cost - But still goes Dean → Chairman (budget not available)
+        costEstimate: 0, // No cost - But still goes Admin Dept → Chairman (budget not available)
         expenseCategory: 'Administrative',
         sopReference: sopRecords[2].code,
         attachments: ['sample-document.pdf'],
@@ -1438,14 +1438,14 @@ async function seed() {
             actor: manager._id,
             timestamp: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
             newStatus: RequestStatus.DEAN_REVIEW,
-            notes: 'Budget not available, forwarded directly to Dean'
+            notes: 'Budget not available, forwarded directly to Admin Dept'
           },
           {
             action: ActionType.APPROVE,
             actor: dean._id,
             timestamp: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000),
             newStatus: RequestStatus.CHAIRMAN_APPROVAL,
-            notes: 'Dean approved - Budget not available, forwarded to Chairman'
+            notes: 'Admin Dept approved - Budget not available, forwarded to Chairman'
           }
         ]
       });
@@ -1462,19 +1462,19 @@ async function seed() {
       console.log('     - Emergency leave (fully approved)');
       console.log('     - Maternity leave (pending at VP, mixed case title)');
       console.log('   • 5 CORRECTED CLARIFICATION WORKFLOW scenarios:');
-      console.log('     - Chairman rejected → Dean handling (Above Dean)');
-      console.log('     - Manager rejected → Requester clarifying (Below Dean)');
-      console.log('     - VP rejected → Requester clarified → VP reviewing (Below Dean)');
-      console.log('     - HOI rejected → Requester clarifying (Below Dean)');
-      console.log('     - Chief Director → Dean → Requester → Dean reviewing (Above Dean)');
+      console.log('     - Chairman rejected → Admin Dept handling (Above Admin Dept)');
+      console.log('     - Manager rejected → Requester clarifying (Below Admin Dept)');
+      console.log('     - VP rejected → Requester clarified → VP reviewing (Below Admin Dept)');
+      console.log('     - HOI rejected → Requester clarifying (Below Admin Dept)');
+      console.log('     - Head of Campus → Admin Dept → Requester → Admin Dept reviewing (Above Admin Dept)');
       console.log('   • 3 COST-BASED APPROVAL TEST scenarios:');
-      console.log('     - ₹30,000 request (pending at Chief Director - should stop here)');
-      console.log('     - ₹45,000 request (approved by Chief Director - stopped correctly)');
-      console.log('     - ₹50,000 request (approved by Chief Director - boundary test)');
+      console.log('     - ₹30,000 request (pending at Head of Campus - should stop here)');
+      console.log('     - ₹45,000 request (approved by Head of Campus - stopped correctly)');
+      console.log('     - ₹50,000 request (approved by Head of Campus - boundary test)');
       console.log('   • 3 BUDGET NOT AVAILABLE FLOW scenarios:');
-      console.log('     - ₹75,000 request (Manager → Dean → Chairman - high cost)');
-      console.log('     - ₹35,000 request (Manager → Dean → Chief Director - low cost)');
-      console.log('     - ₹0 request (Manager → Dean → Chief Director - no cost)');
+      console.log('     - ₹75,000 request (Manager → Admin Dept → Chairman - high cost)');
+      console.log('     - ₹35,000 request (Manager → Admin Dept → Head of Campus - low cost)');
+      console.log('     - ₹0 request (Manager → Admin Dept → Head of Campus - no cost)');
     }
 
     console.log('🎉 Database seeded successfully!');
