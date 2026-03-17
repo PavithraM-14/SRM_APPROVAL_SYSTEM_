@@ -903,6 +903,22 @@ export default function RequestDetailPage({ params }: { params: { id: string } }
             />
           )}
 
+          {/* Manager forwarded attachments - visible to all roles */}
+          {(() => {
+            const forwardedAttachments = request.history
+              ?.filter((h: any) => h.action === 'forward' && h.attachments?.length > 0)
+              ?.flatMap((h: any) => h.attachments as string[]) || [];
+            if (forwardedAttachments.length === 0) return null;
+            return (
+              <AttachmentList
+                attachments={forwardedAttachments}
+                title="Documents from Manager"
+                className="mt-4 sm:mt-6"
+                highlightColor="green"
+              />
+            );
+          })()}
+
           
 
           {/* Query Response Attachments (latest) */}
