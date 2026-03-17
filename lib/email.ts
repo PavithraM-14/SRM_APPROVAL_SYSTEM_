@@ -2,8 +2,17 @@ import nodemailer from 'nodemailer';
 
 const APP_NAME = process.env.NEXT_PUBLIC_APP_NAME || 'SRM Approval System';
 
+const getSmtpCredentials = () => {
+  const user = (process.env.EMAIL_USER || '').trim();
+  const passwordRaw = (process.env.EMAIL_PASSWORD || '').trim();
+  const pass = passwordRaw.replace(/\s+/g, '');
+
+  return { user, pass };
+};
+
 const hasSmtpConfig = () => {
-  return Boolean(process.env.EMAIL_USER && process.env.EMAIL_PASSWORD);
+  const { user, pass } = getSmtpCredentials();
+  return Boolean(user && pass);
 };
 
 export function getEmailConfigurationError(): string | null {
@@ -19,13 +28,15 @@ const createSmtpTransporter = () => {
     throw new Error('EMAIL_USER and EMAIL_PASSWORD must be set for SMTP');
   }
 
+  const { user, pass } = getSmtpCredentials();
+
   return nodemailer.createTransport({
     host: process.env.EMAIL_HOST || 'smtp.gmail.com',
     port: Number(process.env.EMAIL_PORT || 587),
     secure: process.env.EMAIL_SECURE === 'true',
     auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASSWORD,
+      user,
+      pass,
     },
   });
 };
@@ -40,7 +51,7 @@ async function sendEmailWithSmtp(options: {
   const transporter = createSmtpTransporter();
 
   return transporter.sendMail({
-    from: `"${APP_NAME}" <${process.env.EMAIL_FROM || process.env.EMAIL_USER}>`,
+    from: `"${APP_NAME}" <${(process.env.EMAIL_FROM || getSmtpCredentials().user).trim()}>`,
     to: options.toEmail,
     subject: options.subject,
     html: options.html,

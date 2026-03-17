@@ -28,15 +28,6 @@ export async function POST() {
         department: 'Management'
       },
       {
-        email: 'sop@test.com',
-        name: 'SOP Verifier',
-        empId: 'SOP001',
-        password: 'password123',
-        role: UserRole.SOP_VERIFIER,
-        college: 'Administration',
-        department: 'SOP Management'
-      },
-      {
         email: 'accountant@test.com',
         name: 'Test Accountant',
         empId: 'ACC001',

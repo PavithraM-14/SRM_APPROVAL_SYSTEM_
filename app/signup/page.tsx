@@ -14,7 +14,6 @@ import { DENTAL_DEPARTMENTS, ENGINEERING_DEPARTMENTS, FSH_DEPARTMENTS, EEC_DEPAR
 const roleOptions = [
   { value: UserRole.REQUESTER, label: 'Requester/HOD' },
   { value: UserRole.INSTITUTION_MANAGER, label: 'Institution Manager' },
-  { value: UserRole.SOP_VERIFIER, label: 'SOP Verifier' },
   { value: UserRole.ACCOUNTANT, label: 'Accountant' },
   { value: UserRole.VP, label: 'Vice President' },
   { value: UserRole.HEAD_OF_INSTITUTION, label: 'Head of Institution' },

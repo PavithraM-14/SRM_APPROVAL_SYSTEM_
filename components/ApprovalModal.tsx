@@ -22,7 +22,7 @@ interface ApprovalModalProps {
   onApprove: (notes: string, attachments: string[], sopReference?: string, budgetAvailable?: boolean, budgetData?: { allocated: number; spent: number; balance: number }) => void;
   onReject: (notes: string) => void;
   onRejectWithClarification: (queryRequest: string, attachments: string[]) => void;
-  onForward?: (notes: string, attachments: string[]) => void;
+  onForward?: (notes: string, attachments: string[], sopReference?: string) => void;
   onClarify?: (notes: string, attachments: string[], target?: string) => void;
   onSendToDean?: (notes: string, attachments: string[]) => void;
   onSendToVP?: (notes: string, attachments: string[]) => void;
@@ -63,7 +63,7 @@ export default function ApprovalModal({
   const [showUrlInput, setShowUrlInput] = useState(false);
   const [target, setTarget] = useState(''); // For Dean department selection
 
-  // SOP specific fields
+  // Institution Manager SOP reference fields (entered when forwarding to budget check)
   const [sopReference, setSopReference] = useState('');
   const [sopReferenceAvailable, setSopReferenceAvailable] = useState<boolean | null>(null);
 
@@ -86,22 +86,6 @@ export default function ApprovalModal({
   };
 
   const handleSubmit = () => {
-    // Validation for SOP Verifier
-    if (userRole === 'sop_verifier') {
-      if (sopReferenceAvailable === null) {
-        alert('Please select whether SOP reference is available or not');
-        return;
-      }
-      if (sopReferenceAvailable && !sopReference.trim()) {
-        alert('Please enter the SOP reference number');
-        return;
-      }
-      // For SOP, always approve - no other actions allowed
-      const finalSopReference = sopReferenceAvailable ? sopReference : undefined;
-      onApprove(notes, attachments, finalSopReference, undefined);
-      return;
-    }
-
     // Validation for Accountant
     if (userRole === 'accountant') {
       if (budgetAvailable === null) {
@@ -131,8 +115,17 @@ export default function ApprovalModal({
 
     // For Institution Manager in manager_review status, handle forward action
     if (userRole === 'institution_manager' && request.status === 'manager_review' && action === 'forward') {
+      if (sopReferenceAvailable === null) {
+        alert('Please select whether SOP reference is available or not');
+        return;
+      }
+      if (sopReferenceAvailable && !sopReference.trim()) {
+        alert('Please enter the SOP reference number');
+        return;
+      }
+      const finalSopReference = sopReferenceAvailable ? sopReference : undefined;
       if (onForward) {
-        onForward(notes, attachments);
+        onForward(notes, attachments, finalSopReference);
       } else {
         alert('Forward action not configured');
       }
@@ -307,7 +300,6 @@ export default function ApprovalModal({
     setAttachments(prev => prev.filter((_, i) => i !== index));
   };
 
-  const isSopVerifier = userRole === 'sop_verifier';
   const isAccountant = userRole === 'accountant';
 
   return (
@@ -318,7 +310,7 @@ export default function ApprovalModal({
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <div>
             <h3 className="text-xl font-semibold text-gray-900 mb-1">
-              {isSopVerifier ? 'SOP Verification' : isAccountant ? 'Budget Verification' : 'Process Request'}
+              {isAccountant ? 'Budget Verification' : 'Process Request'}
             </h3>
             <p className="text-sm text-gray-500">
               Current status: <span className="font-mono">{request.status || 'pending'}</span>
@@ -425,8 +417,8 @@ export default function ApprovalModal({
             </div>
           )}
 
-          {/* SOP Verifier Specific Section */}
-          {isSopVerifier && (
+          {/* SOP Reference Section for Institution Manager */}
+          {userRole === 'institution_manager' && request.status === 'manager_review' && (
             <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
               <h4 className="text-lg font-medium text-blue-900 mb-4">SOP Reference Verification</h4>
 
@@ -722,19 +714,19 @@ export default function ApprovalModal({
           <div>
             <h4 className="text-lg font-medium text-gray-900 mb-3">Action</h4>
 
-            {(isSopVerifier || isAccountant) ? (
-              // Simplified interface for SOP and Accountant - only approve option
+            {(isAccountant) ? (
+              // Simplified interface for Accountant - only approve option
               <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
                 <div className="flex items-center">
                   <CheckCircleIcon className="w-5 h-5 text-green-600 mr-2" />
                   <span className="font-medium text-green-700">
-                    {isSopVerifier ? 'Complete SOP Verification' : 'Complete Budget Verification'}
+                    {isAccountant ? 'Complete Budget Verification' : 'Complete Verification'}
                   </span>
                 </div>
                 <p className="text-sm text-green-600 mt-1">
-                  {isSopVerifier
-                    ? 'Complete SOP verification and forward to next step'
-                    : 'Complete budget verification and forward to next step'
+                  {isAccountant
+                    ? 'Complete budget verification and forward to next step'
+                    : 'Complete verification and forward to next step'
                   }
                 </p>
               </div>
@@ -909,7 +901,7 @@ export default function ApprovalModal({
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
                   disabled={loading}
                 >
-                  <option value="forward">Forward to SOP & Budget Verification</option>
+                  <option value="forward">Forward to Budget Verification</option>
                   <option value="reject">Reject</option>
                   <option value="reject_with_clarification">Raise Query</option>
                 </select>
@@ -920,10 +912,10 @@ export default function ApprovalModal({
                     <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
                       <div className="flex items-center">
                         <CheckCircleIcon className="w-5 h-5 text-green-600 mr-2" />
-                        <span className="font-medium text-green-700">Forward to SOP & Budget Verification</span>
+                        <span className="font-medium text-green-700">Forward to Budget Verification</span>
                       </div>
                       <p className="text-sm text-green-600 mt-1">
-                        This will forward the request to both SOP Verifier and Accountant simultaneously for processing.
+                        This will forward the request to the Accountant for budget verification.
                       </p>
                     </div>
                   )}
@@ -1080,7 +1072,7 @@ export default function ApprovalModal({
           {/* Notes Section */}
           <div>
             <h4 className="text-lg font-medium text-gray-900 mb-3">
-              {(isSopVerifier || isAccountant) ? 'Comments (Optional)' :
+              {isAccountant ? 'Comments (Optional)' :
                 (['hr', 'it', 'audit', 'mma'].includes(userRole) && action === 'forward') ? 'Comments (Optional)' :
                   action === 'approve' ? 'Comments (Optional)' : 'Notes'}
             </h4>
@@ -1088,9 +1080,7 @@ export default function ApprovalModal({
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               placeholder={
-                isSopVerifier
-                  ? "Add any comments about the SOP verification... (Optional)"
-                  : isAccountant
+                isAccountant
                     ? "Add any comments about the budget verification... (Optional)"
                     : (['hr', 'it', 'audit', 'mma'].includes(userRole) && action === 'forward')
                       ? "Add any comments about your department verification... (Optional)"
@@ -1103,7 +1093,7 @@ export default function ApprovalModal({
               className="w-full h-32 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
               disabled={loading}
             />
-            {((isSopVerifier || isAccountant) || (['hr', 'it', 'audit', 'mma'].includes(userRole) && action === 'forward')) && (
+            {(isAccountant || (['hr', 'it', 'audit', 'mma'].includes(userRole) && action === 'forward')) && (
               <p className="text-xs text-gray-500 mt-1">
                 Comments are optional. You can leave this blank if no additional notes are needed.
               </p>
@@ -1123,14 +1113,15 @@ export default function ApprovalModal({
               onClick={handleSubmit}
               className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors disabled:opacity-50"
               disabled={loading || (
-                // For SOP and Accountant, only check their specific requirements
-                (isSopVerifier && sopReferenceAvailable === null) ||
-                (isSopVerifier && sopReferenceAvailable === true && !sopReference.trim()) ||
+                // For Accountant, only check their specific requirements
                 (isAccountant && budgetAvailable === null) ||
+                // For institution manager in manager_review with forward action, check SOP reference
+                (userRole === 'institution_manager' && request.status === 'manager_review' && action === 'forward' && sopReferenceAvailable === null) ||
+                (userRole === 'institution_manager' && request.status === 'manager_review' && action === 'forward' && sopReferenceAvailable === true && !sopReference.trim()) ||
                 // For department users, notes are optional for forward action, required for reject actions
                 (['hr', 'it', 'audit', 'mma'].includes(userRole) && action !== 'forward' && !notes.trim()) ||
                 // For other roles, check notes requirement for non-approve actions
-                (!isSopVerifier && !isAccountant && !['hr', 'it', 'audit', 'mma'].includes(userRole) && action !== 'approve' && !notes.trim())
+                (!isAccountant && !['hr', 'it', 'audit', 'mma'].includes(userRole) && action !== 'approve' && !notes.trim())
               )}
             >
               {loading ? 'Processing...' : 'Submit'}

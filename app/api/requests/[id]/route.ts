@@ -28,7 +28,6 @@ export async function GET(
     const allowedRoles = [
       UserRole.REQUESTER,
       UserRole.INSTITUTION_MANAGER,
-      UserRole.SOP_VERIFIER,
       UserRole.ACCOUNTANT,
       UserRole.VP,
       UserRole.HEAD_OF_INSTITUTION,
@@ -52,7 +51,6 @@ export async function GET(
     const institutionalRoles = [
       UserRole.REQUESTER,
       UserRole.INSTITUTION_MANAGER,
-      UserRole.SOP_VERIFIER,
       UserRole.ACCOUNTANT,
       UserRole.VP,
       UserRole.HEAD_OF_INSTITUTION

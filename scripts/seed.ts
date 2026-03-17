@@ -1,6 +1,10 @@
-import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import path from 'path';
+
+// Load environment variables BEFORE any other imports that read process.env
+dotenv.config({ path: path.resolve(process.cwd(), '.env.local') });
+
+import mongoose from 'mongoose';
 import connectDB from '../lib/mongodb';
 import User from '../models/User';
 import Request from '../models/Request';
@@ -8,19 +12,12 @@ import BudgetRecord from '../models/BudgetRecord';
 import SOPRecord from '../models/SOPRecord';
 import { ActionType, RequestStatus, UserRole } from '../lib/types';
 
-
-// Load environment variables from .env.local
-dotenv.config({ path: path.resolve(process.cwd(), '.env.local') });
-
 const colleges = ['EEC', 'Medicine', 'Business'];
 const departments = ['Computer Science', 'Mechanical', 'Electrical', 'Civil'];
 const expenseCategories = ['Equipment', 'Software', 'Travel', 'Training', 'Infrastructure'];
 
 function generateRequestId(): string {
-  const now = new Date();
-  const datePart = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`;
-  const randomPart = Math.floor(1000 + Math.random() * 9000);
-  return `REQ-${datePart}-${randomPart}`;
+  return String(Math.floor(100000 + Math.random() * 900000));
 }
 
 async function seed() {
@@ -116,7 +113,6 @@ async function seed() {
     // Create sample requests with realistic workflow scenarios
     const requester = users.find(u => u.role === UserRole.REQUESTER);
     const manager = users.find(u => u.role === UserRole.INSTITUTION_MANAGER);
-    const sopVerifier = users.find(u => u.role === UserRole.SOP_VERIFIER);
     const accountant = users.find(u => u.role === UserRole.ACCOUNTANT);
     const vp = users.find(u => u.role === UserRole.VP);
     const hoi = users.find(u => u.role === UserRole.HEAD_OF_INSTITUTION);
@@ -124,7 +120,7 @@ async function seed() {
     const chiefDirector = users.find(u => u.role === UserRole.CHIEF_DIRECTOR);
     const chairman = users.find(u => u.role === UserRole.CHAIRMAN);
     
-    if (requester && manager && sopVerifier && accountant && vp && dean && chairman) {
+    if (requester && manager && accountant && vp && dean && chairman) {
       const requests = [];
       
       // Scenario 1: Fully approved request (Chairman approved)
@@ -152,15 +148,15 @@ async function seed() {
             action: ActionType.FORWARD,
             actor: manager._id,
             timestamp: new Date(Date.now() - 19 * 24 * 60 * 60 * 1000),
-            newStatus: RequestStatus.PARALLEL_VERIFICATION,
-            notes: 'Forwarded for parallel verification'
+            newStatus: RequestStatus.BUDGET_CHECK,
+            notes: 'Forwarded for budget verification'
           },
           {
             action: ActionType.APPROVE,
-            actor: sopVerifier._id,
+            actor: manager._id,
             timestamp: new Date(Date.now() - 18 * 24 * 60 * 60 * 1000),
-            newStatus: RequestStatus.SOP_COMPLETED,
-            notes: 'SOP verification completed'
+            newStatus: RequestStatus.BUDGET_CHECK,
+            notes: 'SOP reference recorded, forwarded for budget verification'
           },
           {
             action: ActionType.APPROVE,
@@ -240,15 +236,15 @@ async function seed() {
             action: ActionType.FORWARD,
             actor: manager._id,
             timestamp: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000),
-            newStatus: RequestStatus.PARALLEL_VERIFICATION,
-            notes: 'Forwarded for parallel verification'
+            newStatus: RequestStatus.BUDGET_CHECK,
+            notes: 'Forwarded for budget verification'
           },
           {
             action: ActionType.APPROVE,
-            actor: sopVerifier._id,
+            actor: manager._id,
             timestamp: new Date(Date.now() - 13 * 24 * 60 * 60 * 1000),
-            newStatus: RequestStatus.SOP_COMPLETED,
-            notes: 'SOP verification completed'
+            newStatus: RequestStatus.BUDGET_CHECK,
+            notes: 'SOP reference recorded, forwarded for budget verification'
           },
           {
             action: ActionType.APPROVE,
@@ -300,15 +296,15 @@ async function seed() {
             action: ActionType.FORWARD,
             actor: manager._id,
             timestamp: new Date(Date.now() - 17 * 24 * 60 * 60 * 1000),
-            newStatus: RequestStatus.PARALLEL_VERIFICATION,
-            notes: 'Forwarded for parallel verification'
+            newStatus: RequestStatus.BUDGET_CHECK,
+            notes: 'Forwarded for budget verification'
           },
           {
             action: ActionType.APPROVE,
-            actor: sopVerifier._id,
+            actor: manager._id,
             timestamp: new Date(Date.now() - 16 * 24 * 60 * 60 * 1000),
-            newStatus: RequestStatus.SOP_COMPLETED,
-            notes: 'SOP verification completed'
+            newStatus: RequestStatus.BUDGET_CHECK,
+            notes: 'SOP reference recorded, forwarded for budget verification'
           },
           {
             action: ActionType.APPROVE,
@@ -386,7 +382,7 @@ async function seed() {
         sopReference: sopRecords[4].code,
         attachments: ['sample-document.pdf'],
         requester: requester._id,
-        status: RequestStatus.PARALLEL_VERIFICATION,
+        status: RequestStatus.BUDGET_CHECK,
         history: [
           {
             action: ActionType.CREATE,
@@ -399,8 +395,8 @@ async function seed() {
             action: ActionType.FORWARD,
             actor: manager._id,
             timestamp: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
-            newStatus: RequestStatus.PARALLEL_VERIFICATION,
-            notes: 'Manager approved, forwarded for parallel verification'
+            newStatus: RequestStatus.BUDGET_CHECK,
+            notes: 'Manager approved, forwarded for budget verification'
           }
         ]
       });
@@ -431,15 +427,15 @@ async function seed() {
             action: ActionType.FORWARD,
             actor: manager._id,
             timestamp: new Date(Date.now() - 11 * 24 * 60 * 60 * 1000),
-            newStatus: RequestStatus.PARALLEL_VERIFICATION,
-            notes: 'Forwarded for parallel verification'
+            newStatus: RequestStatus.BUDGET_CHECK,
+            notes: 'Forwarded for budget verification'
           },
           {
             action: ActionType.APPROVE,
-            actor: sopVerifier._id,
+            actor: manager._id,
             timestamp: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000),
-            newStatus: RequestStatus.SOP_COMPLETED,
-            notes: 'SOP verification completed'
+            newStatus: RequestStatus.BUDGET_CHECK,
+            notes: 'SOP reference recorded, forwarded for budget verification'
           },
           {
             action: ActionType.APPROVE,
@@ -484,15 +480,15 @@ async function seed() {
             action: ActionType.FORWARD,
             actor: manager._id,
             timestamp: new Date(Date.now() - 9 * 24 * 60 * 60 * 1000),
-            newStatus: RequestStatus.PARALLEL_VERIFICATION,
-            notes: 'Forwarded for parallel verification'
+            newStatus: RequestStatus.BUDGET_CHECK,
+            notes: 'Forwarded for budget verification'
           },
           {
             action: ActionType.APPROVE,
-            actor: sopVerifier._id,
+            actor: manager._id,
             timestamp: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000),
-            newStatus: RequestStatus.SOP_COMPLETED,
-            notes: 'SOP verification completed'
+            newStatus: RequestStatus.BUDGET_CHECK,
+            notes: 'SOP reference recorded, forwarded for budget verification'
           },
           {
             action: ActionType.APPROVE,
@@ -537,15 +533,15 @@ async function seed() {
             action: ActionType.FORWARD,
             actor: manager._id,
             timestamp: new Date(Date.now() - 24 * 24 * 60 * 60 * 1000),
-            newStatus: RequestStatus.PARALLEL_VERIFICATION,
-            notes: 'Forwarded for parallel verification'
+            newStatus: RequestStatus.BUDGET_CHECK,
+            notes: 'Forwarded for budget verification'
           },
           {
             action: ActionType.APPROVE,
-            actor: sopVerifier._id,
+            actor: manager._id,
             timestamp: new Date(Date.now() - 23 * 24 * 60 * 60 * 1000),
-            newStatus: RequestStatus.SOP_COMPLETED,
-            notes: 'SOP verification completed'
+            newStatus: RequestStatus.BUDGET_CHECK,
+            notes: 'SOP reference recorded, forwarded for budget verification'
           },
           {
             action: ActionType.APPROVE,
@@ -613,15 +609,15 @@ async function seed() {
             action: ActionType.FORWARD,
             actor: manager._id,
             timestamp: new Date(Date.now() - 19 * 24 * 60 * 60 * 1000),
-            newStatus: RequestStatus.PARALLEL_VERIFICATION,
-            notes: 'Forwarded for parallel verification'
+            newStatus: RequestStatus.BUDGET_CHECK,
+            notes: 'Forwarded for budget verification'
           },
           {
             action: ActionType.APPROVE,
-            actor: sopVerifier._id,
+            actor: manager._id,
             timestamp: new Date(Date.now() - 18 * 24 * 60 * 60 * 1000),
-            newStatus: RequestStatus.SOP_COMPLETED,
-            notes: 'SOP verification completed'
+            newStatus: RequestStatus.BUDGET_CHECK,
+            notes: 'SOP reference recorded, forwarded for budget verification'
           },
           {
             action: ActionType.APPROVE,
@@ -965,15 +961,15 @@ async function seed() {
             action: ActionType.FORWARD,
             actor: manager._id,
             timestamp: new Date(Date.now() - 29 * 24 * 60 * 60 * 1000),
-            newStatus: RequestStatus.PARALLEL_VERIFICATION,
-            notes: 'Forwarded for parallel verification'
+            newStatus: RequestStatus.BUDGET_CHECK,
+            notes: 'Forwarded for budget verification'
           },
           {
             action: ActionType.APPROVE,
-            actor: sopVerifier._id,
+            actor: manager._id,
             timestamp: new Date(Date.now() - 28 * 24 * 60 * 60 * 1000),
-            newStatus: RequestStatus.SOP_COMPLETED,
-            notes: 'SOP verification completed'
+            newStatus: RequestStatus.BUDGET_CHECK,
+            notes: 'SOP reference recorded, forwarded for budget verification'
           },
           {
             action: ActionType.APPROVE,
@@ -1500,7 +1496,6 @@ function getRoleDisplayName(role: UserRole): string {
   const roleNames = {
     [UserRole.REQUESTER]: 'Raj',
     [UserRole.INSTITUTION_MANAGER]: 'Tharun',
-    [UserRole.SOP_VERIFIER]: 'Akash',
     [UserRole.ACCOUNTANT]: 'Swathy',
     [UserRole.VP]: 'Shri',
     [UserRole.HEAD_OF_INSTITUTION]: 'Priya',

@@ -260,7 +260,7 @@ export default function RequestDetailPage({ params }: { params: { id: string } }
     initializeData();
   }, [params.id, fetchCurrentUser, fetchRequest]);
 
-  const handleForward = async (notes: string, attachments: string[]) => {
+  const handleForward = async (notes: string, attachments: string[], sopReference?: string) => {
     try {
       setProcessingApproval(true);
       const response = await fetch(`/api/requests/${params.id}/approve`, {
@@ -269,7 +269,8 @@ export default function RequestDetailPage({ params }: { params: { id: string } }
         body: JSON.stringify({
           action: 'forward',
           notes,
-          attachments
+          attachments,
+          sopReference
         }),
       });
       
@@ -645,7 +646,7 @@ export default function RequestDetailPage({ params }: { params: { id: string } }
   };
 
   const hideWorkflowAndHistory =
-    currentUser?.role === 'sop_verifier' || currentUser?.role === 'accountant';
+    currentUser?.role === 'accountant';
 
   const handleBackToRequests = () => {
     // Try to go back in history first, fallback to appropriate page based on user role

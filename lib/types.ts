@@ -3,7 +3,6 @@ import { z } from 'zod';
 export enum UserRole {
   REQUESTER = 'requester',
   INSTITUTION_MANAGER = 'institution_manager',
-  SOP_VERIFIER = 'sop_verifier',
   ACCOUNTANT = 'accountant',
   VP = 'vp',
   HEAD_OF_INSTITUTION = 'head_of_institution',
@@ -19,13 +18,9 @@ export enum UserRole {
 export enum RequestStatus {
   SUBMITTED = 'submitted',
   MANAGER_REVIEW = 'manager_review',
-  // Parallel verification statuses
-  PARALLEL_VERIFICATION = 'parallel_verification', // Both SOP and Budget verification in progress
-  SOP_VERIFICATION = 'sop_verification',
+  // Budget verification by Accountant
   BUDGET_CHECK = 'budget_check',
-  SOP_COMPLETED = 'sop_completed', // SOP verification done, waiting for budget
-  BUDGET_COMPLETED = 'budget_completed', // Budget verification done, waiting for SOP
-  INSTITUTION_VERIFIED = 'institution_verified', // Both verifications complete
+  INSTITUTION_VERIFIED = 'institution_verified', // Budget verification complete, SOP reference recorded by manager
   VP_APPROVAL = 'vp_approval',
   HOI_APPROVAL = 'hoi_approval',
   DEAN_REVIEW = 'dean_review',

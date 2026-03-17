@@ -8,13 +8,9 @@ type Transition = {
 
 export const approvalEngine = {
   transitions: <Transition[]>[
-    { from: RequestStatus.MANAGER_REVIEW, to: RequestStatus.PARALLEL_VERIFICATION, requiredRole: UserRole.INSTITUTION_MANAGER },
+    { from: RequestStatus.MANAGER_REVIEW, to: RequestStatus.BUDGET_CHECK, requiredRole: UserRole.INSTITUTION_MANAGER },
 
-    { from: RequestStatus.PARALLEL_VERIFICATION, to: RequestStatus.SOP_COMPLETED, requiredRole: UserRole.SOP_VERIFIER },
-    { from: RequestStatus.PARALLEL_VERIFICATION, to: RequestStatus.BUDGET_COMPLETED, requiredRole: UserRole.ACCOUNTANT },
-
-    { from: RequestStatus.SOP_COMPLETED, to: RequestStatus.INSTITUTION_VERIFIED, requiredRole: UserRole.ACCOUNTANT },
-    { from: RequestStatus.BUDGET_COMPLETED, to: RequestStatus.INSTITUTION_VERIFIED, requiredRole: UserRole.SOP_VERIFIER },
+    { from: RequestStatus.BUDGET_CHECK, to: RequestStatus.INSTITUTION_VERIFIED, requiredRole: UserRole.ACCOUNTANT },
 
     { from: RequestStatus.INSTITUTION_VERIFIED, to: RequestStatus.VP_APPROVAL, requiredRole: UserRole.INSTITUTION_MANAGER },
 
@@ -41,7 +37,7 @@ export const approvalEngine = {
 
     // Rejections
     { from: RequestStatus.MANAGER_REVIEW, to: RequestStatus.REJECTED, requiredRole: UserRole.INSTITUTION_MANAGER },
-    { from: RequestStatus.PARALLEL_VERIFICATION, to: RequestStatus.REJECTED, requiredRole: [UserRole.SOP_VERIFIER, UserRole.ACCOUNTANT] },
+    { from: RequestStatus.BUDGET_CHECK, to: RequestStatus.REJECTED, requiredRole: UserRole.ACCOUNTANT },
     { from: RequestStatus.VP_APPROVAL, to: RequestStatus.REJECTED, requiredRole: UserRole.VP },
     { from: RequestStatus.HOI_APPROVAL, to: RequestStatus.REJECTED, requiredRole: UserRole.HEAD_OF_INSTITUTION },
     { from: RequestStatus.DEAN_REVIEW, to: RequestStatus.REJECTED, requiredRole: UserRole.DEAN },
@@ -76,26 +72,14 @@ export const approvalEngine = {
 
       case UserRole.INSTITUTION_MANAGER:
         if (currentStatus === RequestStatus.MANAGER_REVIEW && action === ActionType.FORWARD) {
-          return RequestStatus.PARALLEL_VERIFICATION;
+          return RequestStatus.BUDGET_CHECK;
         }
         // Institution Manager no longer has automatic routing from institution_verified
         // They use the "send_to_dean" action instead
         break;
 
-      case UserRole.SOP_VERIFIER:
-        if (currentStatus === RequestStatus.PARALLEL_VERIFICATION) {
-          return RequestStatus.SOP_COMPLETED;
-        }
-        if (currentStatus === RequestStatus.BUDGET_COMPLETED) {
-          return RequestStatus.INSTITUTION_VERIFIED;
-        }
-        break;
-
       case UserRole.ACCOUNTANT:
-        if (currentStatus === RequestStatus.PARALLEL_VERIFICATION) {
-          return RequestStatus.BUDGET_COMPLETED;
-        }
-        if (currentStatus === RequestStatus.SOP_COMPLETED) {
+        if (currentStatus === RequestStatus.BUDGET_CHECK) {
           return RequestStatus.INSTITUTION_VERIFIED;
         }
         break;

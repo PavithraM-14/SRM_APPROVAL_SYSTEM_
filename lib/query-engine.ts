@@ -133,8 +133,6 @@ export const queryEngine = {
       [RequestStatus.DEAN_REVIEW]: 'dean',
       [RequestStatus.VP_APPROVAL]: 'vp',
       [RequestStatus.MANAGER_REVIEW]: 'institution_manager',
-      [RequestStatus.PARALLEL_VERIFICATION]: 'parallel_verification',
-      [RequestStatus.SOP_VERIFICATION]: 'sop_verifier',
       [RequestStatus.BUDGET_CHECK]: 'accountant',
     };
 
@@ -148,9 +146,7 @@ export const queryEngine = {
       'dean': 'Dean',
       'vp': 'Vice President',
       'institution_manager': 'Institution Manager',
-      'sop_verifier': 'SOP Verifier',
       'accountant': 'Accountant',
-      'parallel_verification': 'Parallel Verification',
     };
 
     return { role, name: roleDisplayMap[role] };
@@ -176,10 +172,7 @@ export const queryEngine = {
       [RequestStatus.DEAN_REVIEW]: RequestStatus.DEAN_REVIEW,
       [RequestStatus.VP_APPROVAL]: RequestStatus.VP_APPROVAL,
       [RequestStatus.MANAGER_REVIEW]: RequestStatus.MANAGER_REVIEW,
-      // Parallel verification: send back to the combined stage
-      [RequestStatus.PARALLEL_VERIFICATION]: RequestStatus.PARALLEL_VERIFICATION,
-      [RequestStatus.SOP_VERIFICATION]: RequestStatus.PARALLEL_VERIFICATION,
-      [RequestStatus.BUDGET_CHECK]: RequestStatus.PARALLEL_VERIFICATION,
+      [RequestStatus.BUDGET_CHECK]: RequestStatus.BUDGET_CHECK,
     };
 
     return statusToReturnMap[latestRejection.previousStatus] || null;

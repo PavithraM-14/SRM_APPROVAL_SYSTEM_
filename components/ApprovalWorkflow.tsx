@@ -20,11 +20,7 @@ const getStatusBadgeClass = (status: string, isCurrent: boolean, isCompleted: bo
 const getStatusDisplayName = (status: string) => {
   const statusMap: Record<string, string> = {
     'manager_review': 'Manager Review',
-    'parallel_verification': 'Verification',
-    'sop_verification': 'SOP Verification',
     'budget_check': 'Budget Check',
-    'sop_completed': 'SOP Completed',
-    'budget_completed': 'Budget Completed',
     'institution_verified': 'Manager Approval',
     'vp_approval': 'VP Approval',
     'hoi_approval': 'HOI Approval',
@@ -36,8 +32,6 @@ const getStatusDisplayName = (status: string) => {
     'approved': 'Approved',
     'rejected': 'Rejected',
     'query_required': 'Queries Required',
-    'sop_query': 'SOP Queries',
-    'budget_query': 'Budget Queries',
     'department_query': 'Department Queries'
   };
   
@@ -48,7 +42,7 @@ const ApprovalWorkflow: React.FC<ApprovalWorkflowProps> = ({ currentStatus }) =>
   // Define the main approval workflow steps
   const workflowSteps = [
     { id: 'manager_review', name: 'Manager Review' },
-    { id: 'parallel_verification', name: 'Verification' },
+    { id: 'budget_check', name: 'Budget Check' },
     { id: 'institution_verified', name: 'Manager Approval' },
     { id: 'vp_approval', name: 'VP Approval' },
     { id: 'hoi_approval', name: 'HOI Approval' },
@@ -60,10 +54,10 @@ const ApprovalWorkflow: React.FC<ApprovalWorkflowProps> = ({ currentStatus }) =>
   ];
 
   // Check if current status is a query status
-  const isQueryStatus = ['sop_query', 'budget_query', 'query_required', 'department_checks'].includes(currentStatus);
+  const isQueryStatus = ['query_required', 'department_checks'].includes(currentStatus);
   
   // Check if current status is a verification status
-  const isParallelStatus = ['parallel_verification', 'sop_completed', 'budget_completed', 'institution_verified'].includes(currentStatus);
+  const isParallelStatus = ['budget_check', 'institution_verified'].includes(currentStatus);
   
   // Find the index of the current status in main workflow
   const currentStatusIndex = workflowSteps.findIndex(step => step.id === currentStatus);
@@ -89,8 +83,6 @@ const ApprovalWorkflow: React.FC<ApprovalWorkflowProps> = ({ currentStatus }) =>
                   {getStatusDisplayName(currentStatus)}
                 </h4>
                 <p className="text-sm text-yellow-700">
-                  {String(currentStatus) === 'sop_query' && 'Waiting for SOP verification queries from Institution Manager'}
-                  {String(currentStatus) === 'budget_query' && 'Waiting for budget queries from Institution Manager'}
                   {String(currentStatus) === 'query_required' && 'Waiting for response from Requester'}
                   {String(currentStatus) === 'department_checks' && 'Waiting for department response'}
                 </p>

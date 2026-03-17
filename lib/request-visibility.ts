@@ -22,7 +22,6 @@ export function analyzeRequestVisibility(
   const institutionalRoles = [
     // UserRole.REQUESTER, // REMOVED: Requesters are filtered by ID, so college check is redundant and can hide legitimate requests
     UserRole.INSTITUTION_MANAGER,
-    UserRole.SOP_VERIFIER,
     UserRole.ACCOUNTANT,
     UserRole.VP,
     UserRole.HEAD_OF_INSTITUTION
@@ -330,20 +329,12 @@ function getAllStatusesForRole(userRole: UserRole): RequestStatus[] {
     [UserRole.REQUESTER]: [],
     [UserRole.INSTITUTION_MANAGER]: [
       RequestStatus.MANAGER_REVIEW,
-      RequestStatus.PARALLEL_VERIFICATION,
+      RequestStatus.BUDGET_CHECK,
       RequestStatus.INSTITUTION_VERIFIED
-    ],
-    [UserRole.SOP_VERIFIER]: [
-      RequestStatus.SOP_VERIFICATION,
-      RequestStatus.PARALLEL_VERIFICATION,
-      RequestStatus.SOP_COMPLETED,
-      RequestStatus.BUDGET_COMPLETED
     ],
     [UserRole.ACCOUNTANT]: [
       RequestStatus.BUDGET_CHECK,
-      RequestStatus.PARALLEL_VERIFICATION,
-      RequestStatus.BUDGET_COMPLETED,
-      RequestStatus.SOP_COMPLETED
+      RequestStatus.INSTITUTION_VERIFIED
     ],
     [UserRole.VP]: [RequestStatus.VP_APPROVAL],
     [UserRole.HEAD_OF_INSTITUTION]: [RequestStatus.HOI_APPROVAL],

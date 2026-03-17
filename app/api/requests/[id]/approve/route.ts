@@ -72,7 +72,6 @@ export async function POST(
     const institutionalRoles = [
       UserRole.REQUESTER,
       UserRole.INSTITUTION_MANAGER,
-      UserRole.SOP_VERIFIER,
       UserRole.ACCOUNTANT,
       UserRole.VP,
       UserRole.HEAD_OF_INSTITUTION
@@ -184,24 +183,9 @@ export async function POST(
     switch (action) {
 
       case 'approve':
-        // Check if this is parallel verification completion
-        if (requestRecord.status === RequestStatus.PARALLEL_VERIFICATION) {
-          if (user.role === UserRole.SOP_VERIFIER) {
-            nextStatus = RequestStatus.SOP_COMPLETED;
-          } else if (user.role === UserRole.ACCOUNTANT) {
-            // Simplified: accountant just confirms budget availability
-            nextStatus = RequestStatus.BUDGET_COMPLETED;
-          }
-        } else if (requestRecord.status === RequestStatus.SOP_COMPLETED && user.role === UserRole.ACCOUNTANT) {
-          // After both verifications complete, go to Institution Manager for final verification
+        // Check if this is budget verification completion
+        if (requestRecord.status === RequestStatus.BUDGET_CHECK && user.role === UserRole.ACCOUNTANT) {
           nextStatus = RequestStatus.INSTITUTION_VERIFIED;
-        } else if (requestRecord.status === RequestStatus.BUDGET_COMPLETED && user.role === UserRole.SOP_VERIFIER) {
-          // After both verifications complete, go to Institution Manager for final verification
-          nextStatus = RequestStatus.INSTITUTION_VERIFIED;
-        } else if (requestRecord.status === RequestStatus.BUDGET_CHECK && user.role === UserRole.ACCOUNTANT) {
-          // Simplified: accountant just confirms budget availability
-          // After accountant approval, always go back to manager for routing decision
-          nextStatus = RequestStatus.MANAGER_REVIEW;
         } else {
           // ✅ COST-BASED FINAL APPROVAL LOGIC
           if (
@@ -427,8 +411,8 @@ export async function POST(
       nextStatus = RequestStatus.HOI_APPROVAL;
     }
 
-    // 🔹 SOP stores reference number
-    if (user.role === UserRole.SOP_VERIFIER && sopReference) {
+    // 🔹 Institution Manager stores SOP reference when forwarding to budget check
+    if (user.role === UserRole.INSTITUTION_MANAGER && action === 'forward' && sopReference) {
       requestRecord.sopReference = sopReference;
       await requestRecord.save();
     }
@@ -459,8 +443,8 @@ export async function POST(
         historyEntry.budgetAvailable = budgetAvailable;
     }
 
-    // Store SOP reference in history
-    if (user.role === UserRole.SOP_VERIFIER && sopReference) {
+    // Store SOP reference in history (set by Institution Manager when forwarding)
+    if (user.role === UserRole.INSTITUTION_MANAGER && action === 'forward' && sopReference) {
       historyEntry.sopReference = sopReference;
     }
 
