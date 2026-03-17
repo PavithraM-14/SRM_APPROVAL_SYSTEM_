@@ -9,7 +9,7 @@ import SRMRMP_Logo from '../assets/SRMRMP_LOGO.png';
 import OTPVerification from '../../components/OTPVerification';
 import InstitutionSelect from '../../components/InstitutionSelect';
 import NestedSelect from '../../components/NestedSelect';
-import { DENTAL_DEPARTMENTS, ENGINEERING_DEPARTMENTS, FSH_DEPARTMENTS, EEC_DEPARTMENTS, MANAGEMENT_DEPARTMENTS } from '../../lib/constants';
+import { DENTAL_DEPARTMENTS, ENGINEERING_DEPARTMENTS, FSH_DEPARTMENTS, EEC_DEPARTMENTS, MANAGEMENT_DEPARTMENTS, SEAD_DEPARTMENTS, NIGHTINGALE_DEPARTMENTS } from '../../lib/constants';
 
 const roleOptions = [
   { value: UserRole.REQUESTER, label: 'Requester/HOD' },
@@ -378,8 +378,10 @@ export default function SignupPage() {
                         college === 'EEC' ? EEC_DEPARTMENTS :
                           college?.includes('FSH') ? FSH_DEPARTMENTS :
                             college?.includes('Management') ? MANAGEMENT_DEPARTMENTS :
-                              college?.includes('E&T') ? ENGINEERING_DEPARTMENTS :
-                                ENGINEERING_DEPARTMENTS
+                              college?.includes('SEAD') ? SEAD_DEPARTMENTS :
+                                college === 'SRM Nightingale School' ? NIGHTINGALE_DEPARTMENTS :
+                                  college?.includes('E&T') ? ENGINEERING_DEPARTMENTS :
+                                    ENGINEERING_DEPARTMENTS
                     }
                     placeholder="Select Department"
                     dropUp={true}

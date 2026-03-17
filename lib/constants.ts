@@ -98,3 +98,12 @@ export const MANAGEMENT_DEPARTMENTS = [
     'Common',
     'Management Studies',
 ];
+
+export const SEAD_DEPARTMENTS = [
+    'Architecture',
+    'Design',
+];
+
+export const NIGHTINGALE_DEPARTMENTS = [
+    'Common',
+];

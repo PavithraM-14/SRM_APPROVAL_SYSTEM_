@@ -11,7 +11,7 @@ import CostEstimateInput from '../../../../components/CostEstimateInput';
 import InstitutionSelect from '../../../../components/InstitutionSelect';
 import NestedSelect from '../../../../components/NestedSelect';
 import { Controller } from 'react-hook-form';
-import { DENTAL_DEPARTMENTS, ENGINEERING_DEPARTMENTS, FSH_DEPARTMENTS, EEC_DEPARTMENTS, MANAGEMENT_DEPARTMENTS } from '../../../../lib/constants';
+import { DENTAL_DEPARTMENTS, ENGINEERING_DEPARTMENTS, FSH_DEPARTMENTS, EEC_DEPARTMENTS, MANAGEMENT_DEPARTMENTS, SEAD_DEPARTMENTS, NIGHTINGALE_DEPARTMENTS } from '../../../../lib/constants';
 
 type CreateRequestFormData = z.infer<typeof CreateRequestSchema>;
 
@@ -80,12 +80,13 @@ export default function CreateRequestPage() {
     departmentOptions = MANAGEMENT_DEPARTMENTS;
   } else if (college === 'EEC') {
     departmentOptions = EEC_DEPARTMENTS;
+  } else if (college?.includes('SEAD')) {
+    departmentOptions = SEAD_DEPARTMENTS;
+  } else if (college === 'SRM Nightingale School') {
+    departmentOptions = NIGHTINGALE_DEPARTMENTS;
   } else if (college?.includes('E&T')) {
     departmentOptions = ENGINEERING_DEPARTMENTS;
   }
-  // Default fallback to ENGINEERING if just "SRMIST" or others for now unless specified
-  // Or maybe empty? User didn't specify behavior for other cases. 
-  // Sticking to engineering as default seems safe for "SRMIST - E&T" or generic "SRM" if that happens.
 
   const errorText = 'text-xs text-red-600 mt-1';
 

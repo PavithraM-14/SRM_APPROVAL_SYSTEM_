@@ -16,11 +16,13 @@ const INSTITUTIONS = [
         subOptions: [
             { id: 'E&T', label: 'E&T' },
             { id: 'FSH', label: 'FSH' },
-            { id: 'Management', label: 'Management' }
+            { id: 'Management', label: 'Management' },
+            { id: 'SEAD', label: 'SEAD' }
         ]
     },
     { id: 'EEC', label: 'EEC' },
-    { id: 'DENTAL', label: 'DENTAL' }
+    { id: 'DENTAL', label: 'DENTAL' },
+    { id: 'SRM Nightingale School', label: 'SRM Nightingale School' }
 ];
 
 export default function InstitutionSelect({ value, onChange, error, className }: InstitutionSelectProps) {
@@ -56,11 +58,11 @@ export default function InstitutionSelect({ value, onChange, error, className }:
     // Helper to get display label from value
     const getDisplayLabel = () => {
         if (!value) return 'Select Institution';
-        // If value matches one of our simple options
         if (value === 'EEC') return 'EEC';
         if (value === 'DENTAL') return 'DENTAL';
-        if (value === 'SRM') return 'SRMIST'; // Legacy handling maybe?
-        return value; // Should be "SRMIST - E&T" etc.
+        if (value === 'SRM Nightingale School') return 'SRM Nightingale School';
+        if (value === 'SRM') return 'SRMIST';
+        return value;
     };
 
     return (
