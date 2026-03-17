@@ -648,6 +648,10 @@ export default function RequestDetailPage({ params }: { params: { id: string } }
   const hideWorkflowAndHistory =
     currentUser?.role === 'accountant';
 
+  const canSeeApprovalHistory = [
+    'dean', 'mma', 'hr', 'audit', 'it', 'chief_director', 'chairman',
+  ].includes(currentUser?.role);
+
   const handleBackToRequests = () => {
     // Try to go back in history first, fallback to appropriate page based on user role
     if (window.history.length > 1) {
@@ -1098,53 +1102,56 @@ export default function RequestDetailPage({ params }: { params: { id: string } }
         </div>
       </div>
 
-      {/* Workflow + History (hidden for SOP, Accountant) */}
+      {/* Workflow (hidden for Accountant) */}
       {!hideWorkflowAndHistory && (
         <div className="space-y-4 sm:space-y-6">
           <div className="bg-white shadow rounded-lg sm:rounded-xl p-4 sm:p-6">
             <ApprovalWorkflow currentStatus={request.status} />
           </div>
 
-          <div className="bg-white shadow rounded-lg sm:rounded-xl p-4 sm:p-6">
-            <div className="flex flex-col xs:flex-row xs:items-center xs:justify-between gap-3 mb-4">
-              <h3 className="text-sm sm:text-base font-medium text-gray-900">Approval History</h3>
-              <div className="flex items-center gap-2">
-                <span className="text-xs sm:text-sm text-gray-600">
-                  {showApprovalHistory ? 'Hide' : 'Show'} History
-                </span>
-                <button
-                  onClick={() => setShowApprovalHistory(!showApprovalHistory)}
-                  className={`relative inline-flex h-5 w-9 sm:h-6 sm:w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
-                    showApprovalHistory ? 'bg-blue-600' : 'bg-gray-200'
-                  }`}
-                  role="switch"
-                  aria-checked={showApprovalHistory}
-                  aria-label="Toggle approval history"
-                >
-                  <span
-                    className={`inline-block h-3 w-3 sm:h-4 sm:w-4 transform rounded-full bg-white transition-transform ${
-                      showApprovalHistory ? 'translate-x-5 sm:translate-x-6' : 'translate-x-1'
+          {/* Approval History — only visible to Dean and above */}
+          {canSeeApprovalHistory && (
+            <div className="bg-white shadow rounded-lg sm:rounded-xl p-4 sm:p-6">
+              <div className="flex flex-col xs:flex-row xs:items-center xs:justify-between gap-3 mb-4">
+                <h3 className="text-sm sm:text-base font-medium text-gray-900">Approval History</h3>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs sm:text-sm text-gray-600">
+                    {showApprovalHistory ? 'Hide' : 'Show'} History
+                  </span>
+                  <button
+                    onClick={() => setShowApprovalHistory(!showApprovalHistory)}
+                    className={`relative inline-flex h-5 w-9 sm:h-6 sm:w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                      showApprovalHistory ? 'bg-blue-600' : 'bg-gray-200'
                     }`}
-                  />
-                </button>
+                    role="switch"
+                    aria-checked={showApprovalHistory}
+                    aria-label="Toggle approval history"
+                  >
+                    <span
+                      className={`inline-block h-3 w-3 sm:h-4 sm:w-4 transform rounded-full bg-white transition-transform ${
+                        showApprovalHistory ? 'translate-x-5 sm:translate-x-6' : 'translate-x-1'
+                      }`}
+                    />
+                  </button>
+                </div>
               </div>
+
+              {showApprovalHistory && (
+                <div className="transition-all duration-300 ease-in-out">
+                  <ApprovalHistory history={request.history} currentStatus={request.status} />
+                </div>
+              )}
+
+              {!showApprovalHistory && (
+                <div className="text-center py-8 text-gray-500">
+                  <svg className="mx-auto h-8 w-8 sm:h-12 sm:w-12 text-gray-400 mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  <p className="text-xs sm:text-sm">Click the toggle above to view approval history</p>
+                </div>
+              )}
             </div>
-            
-            {showApprovalHistory && (
-              <div className="transition-all duration-300 ease-in-out">
-                <ApprovalHistory history={request.history} currentStatus={request.status} />
-              </div>
-            )}
-            
-            {!showApprovalHistory && (
-              <div className="text-center py-8 text-gray-500">
-                <svg className="mx-auto h-8 w-8 sm:h-12 sm:w-12 text-gray-400 mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-                <p className="text-xs sm:text-sm">Click the toggle above to view approval history</p>
-              </div>
-            )}
-          </div>
+          )}
         </div>
       )}
 
