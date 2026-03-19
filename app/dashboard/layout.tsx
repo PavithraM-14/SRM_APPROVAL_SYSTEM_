@@ -8,7 +8,8 @@ import {
   DocumentPlusIcon,
   ClipboardDocumentListIcon,
   ClockIcon,
-  ArrowRightStartOnRectangleIcon
+  ArrowRightStartOnRectangleIcon,
+  FlagIcon,
 } from '@heroicons/react/24/outline';
 import { UserRole } from '../../lib/types';
 import { AuthUser } from '../../lib/auth';
@@ -38,7 +39,13 @@ const navigation: NavItem[] = [
     href: '/dashboard/approvals',
     icon: ClipboardDocumentListIcon,
     roles: [UserRole.INSTITUTION_MANAGER, UserRole.ACCOUNTANT, UserRole.VP, UserRole.HEAD_OF_INSTITUTION, UserRole.DEAN, UserRole.MMA, UserRole.HR, UserRole.AUDIT, UserRole.IT, UserRole.CHIEF_DIRECTOR, UserRole.CHAIRMAN] // All non-requester roles
-  }
+  },
+  {
+    name: 'Flagged Requests',
+    href: '/dashboard/flagged',
+    icon: FlagIcon,
+    roles: [UserRole.VP, UserRole.HEAD_OF_INSTITUTION, UserRole.DEAN, UserRole.CHIEF_DIRECTOR, UserRole.CHAIRMAN],
+  },
 ];
 
 const rolesWithDepartments = new Set<UserRole>([
@@ -60,6 +67,7 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [queryCount, setClarificationCount] = useState(0);
+  const [flaggedCount, setFlaggedCount] = useState(0);
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -142,6 +150,20 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
     }
   }, [user]);
 
+  const fetchFlaggedCount = useCallback(async () => {
+    if (!user) return;
+    const flaggedRoles: UserRole[] = [UserRole.VP, UserRole.HEAD_OF_INSTITUTION, UserRole.DEAN, UserRole.CHIEF_DIRECTOR, UserRole.CHAIRMAN];
+    if (!flaggedRoles.includes(user.role as UserRole)) return;
+    try {
+      const res = await fetch('/api/requests/flagged?countOnly=true', { credentials: 'include' });
+      if (!res.ok) return;
+      const data = await res.json();
+      setFlaggedCount(data.count ?? 0);
+    } catch (err) {
+      console.error('Error fetching flagged count:', err);
+    }
+  }, [user]);
+
   useEffect(() => {
     checkAuth();
   }, [checkAuth]);
@@ -154,6 +176,14 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
       return () => clearInterval(interval);
     }
   }, [user, fetchClarificationCount]);
+
+  useEffect(() => {
+    if (user) {
+      fetchFlaggedCount();
+      const interval = setInterval(fetchFlaggedCount, 30000);
+      return () => clearInterval(interval);
+    }
+  }, [user, fetchFlaggedCount]);
 
   const handleLogout = async () => {
     await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
@@ -202,6 +232,11 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
                   {item.name === 'Queries' && queryCount > 0 && (
                     <span className="ml-2 bg-yellow-100 text-yellow-800 text-xs font-semibold px-2 py-1 rounded-full min-w-[20px] text-center">
                       {queryCount}
+                    </span>
+                  )}
+                  {item.name === 'Flagged Requests' && flaggedCount > 0 && (
+                    <span className="ml-2 bg-red-100 text-red-800 text-xs font-semibold px-2 py-1 rounded-full min-w-[20px] text-center">
+                      {flaggedCount}
                     </span>
                   )}
                 </Link>

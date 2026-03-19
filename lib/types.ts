@@ -42,6 +42,9 @@ export enum ActionType {
   FORWARD = 'forward',
   REJECT_WITH_CLARIFICATION = 'reject_with_clarification', // Reject and send back for clarification
   CLARIFY_AND_REAPPROVE = 'clarify_and_reapprove', // Provide clarification and re-approve
+  ESCALATION_REMINDER = 'escalation_reminder',
+  ESCALATION_FLAGGED = 'escalation_flagged',
+  ESCALATION_ACTION = 'escalation_action',
 }
 
 export const CreateRequestSchema = z.object({
@@ -101,6 +104,7 @@ export interface ApprovalHistory {
   isDeanMediated?: boolean;
   isDeanReapproval?: boolean;
   departmentResponse?: string;
+  skippedRole?: string;
   timestamp: Date;
 }
 

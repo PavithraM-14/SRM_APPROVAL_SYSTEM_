@@ -25,8 +25,19 @@ const approvalHistorySchema = new mongoose.Schema({
   isDeanMediated: { type: Boolean, default: false },
   isDeanReapproval: { type: Boolean, default: false },
   departmentResponse: { type: String },
+  skippedRole: { type: String },
   timestamp: { type: Date, default: Date.now },
 });
+
+const escalationSchema = new mongoose.Schema({
+  reminderSent: { type: Boolean, default: false },
+  reminderSentAt: { type: Date },
+  flagged: { type: Boolean, default: false },
+  flaggedAt: { type: Date },
+  stalledRole: { type: String },
+  actedByHigherRole: { type: String },
+  actedByHigherRoleAt: { type: Date },
+}, { _id: false });
 
 const requestSchema = new mongoose.Schema(
   {
@@ -68,6 +79,7 @@ const requestSchema = new mongoose.Schema(
     },
     pendingQuery: { type: Boolean, default: false }, // Flag to indicate request is pending query
     queryLevel: { type: String }, // The level that needs to provide query
+    escalation: { type: escalationSchema, default: () => ({}) },
     history: [approvalHistorySchema],
   },
   {

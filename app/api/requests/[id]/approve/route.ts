@@ -5,6 +5,7 @@ import { getCurrentUser } from '../../../../../lib/auth';
 import { RequestStatus, ActionType, UserRole } from '../../../../../lib/types';
 import { approvalEngine } from '../../../../../lib/approval-engine';
 import { queryEngine } from '../../../../../lib/query-engine';
+import { isHigherRole, getActionsForHigherRole } from '../../../../../lib/escalation-hierarchy';
 
 export async function POST(
   request: NextRequest,
@@ -36,6 +37,7 @@ export async function POST(
       attachments,
       target,
       sopReference,
+      subAction,
     } = await request.json();
 
     action = requestAction;
@@ -48,7 +50,7 @@ export async function POST(
     });
 
     // Validate action - add new actions for budget routing and query workflow
-    if (!['approve', 'reject', 'clarify', 'forward', 'send_to_dean', 'send_to_vp', 'send_to_chairman', 'reject_with_clarification', 'clarify_and_reapprove', 'query_and_reapprove', 'dean_send_to_requester'].includes(action)) {
+    if (!['approve', 'reject', 'clarify', 'forward', 'send_to_dean', 'send_to_vp', 'send_to_chairman', 'reject_with_clarification', 'clarify_and_reapprove', 'query_and_reapprove', 'dean_send_to_requester', 'escalation_action'].includes(action)) {
       console.log('[DEBUG] Invalid action:', action);
       return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
     }
@@ -65,6 +67,70 @@ export async function POST(
       currentStatus: requestRecord.status,
       historyLength: requestRecord.history?.length || 0
     });
+
+    // ── Flagged-request escalation branch ──────────────────────────────────
+    if (requestRecord.escalation?.flagged === true && action === 'escalation_action') {
+      const actingRole = user.role as UserRole;
+      const stalledRole = requestRecord.escalation.stalledRole as UserRole;
+
+      if (!isHigherRole(actingRole, stalledRole)) {
+        return NextResponse.json(
+          { error: 'Not authorized to act on this flagged request' },
+          { status: 403 }
+        );
+      }
+
+      const permittedActions = getActionsForHigherRole(actingRole, stalledRole);
+      const chosenAction = subAction || 'approve';
+
+      if (!permittedActions.includes(chosenAction)) {
+        return NextResponse.json(
+          { error: 'Action not permitted for your role on this flagged request' },
+          { status: 400 }
+        );
+      }
+
+      const actionTypeMap: Record<string, ActionType> = {
+        approve: ActionType.APPROVE,
+        reject: ActionType.REJECT,
+        forward: ActionType.FORWARD,
+      };
+      const mappedActionType = actionTypeMap[chosenAction] ?? ActionType.APPROVE;
+
+      const nextStatus =
+        approvalEngine.getNextStatus(
+          requestRecord.status,
+          mappedActionType,
+          actingRole,
+          { costEstimate: requestRecord.costEstimate }
+        ) || requestRecord.status;
+
+      const escalationHistoryEntry: any = {
+        action: ActionType.ESCALATION_ACTION,
+        actor: user.id,
+        previousStatus: requestRecord.status,
+        newStatus: nextStatus,
+        skippedRole: stalledRole,
+        notes: notes || `Escalation action by ${actingRole}`,
+        timestamp: new Date(),
+      };
+
+      const escalationUpdate: any = {
+        $set: {
+          status: nextStatus,
+          'escalation.actedByHigherRole': actingRole,
+          'escalation.actedByHigherRoleAt': new Date(),
+        },
+        $push: { history: escalationHistoryEntry },
+      };
+
+      const updatedRequest = await Request.findByIdAndUpdate(params.id, escalationUpdate, { new: true })
+        .populate('requester', 'name email empId role')
+        .populate('history.actor', 'name email empId role');
+
+      return NextResponse.json(updatedRequest);
+    }
+    // ── End flagged-request branch ─────────────────────────────────────────
 
     const isDeanMediatedFlow = queryEngine.isDeanMediatedClarification(requestRecord);
 

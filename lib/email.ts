@@ -402,3 +402,182 @@ export async function sendPasswordResetEmail(
     return false;
   }
 }
+
+/**
+ * Send escalation reminder email to a stalled approver
+ * @param toEmail - Recipient email address
+ * @param toName - Recipient name
+ * @param requestTitle - Title of the pending request
+ * @param requestId - ID of the pending request
+ * @param elapsedHours - Hours elapsed since the request reached this approver
+ * @param stalledRole - The role that has not yet acted
+ * @returns Promise<boolean> - true if email sent successfully, false otherwise
+ */
+export async function sendEscalationReminderEmail(
+  toEmail: string,
+  toName: string,
+  requestTitle: string,
+  requestId: string,
+  elapsedHours: number,
+  stalledRole: string
+): Promise<boolean> {
+  try {
+    const hoursRemaining = 10 - elapsedHours;
+    const subject = `Action Required: Pending Approval Request - ${requestTitle}`;
+    const html = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <style>
+            body { 
+              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+              line-height: 1.6; 
+              color: #333;
+              margin: 0;
+              padding: 0;
+              background-color: #f5f5f5;
+            }
+            .container { 
+              max-width: 600px; 
+              margin: 40px auto; 
+              background-color: #ffffff;
+              border-radius: 8px;
+              overflow: hidden;
+              box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            }
+            .header { 
+              background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+              color: white; 
+              padding: 30px 20px; 
+              text-align: center;
+            }
+            .header h1 {
+              margin: 0;
+              font-size: 24px;
+              font-weight: 600;
+            }
+            .content { 
+              padding: 40px 30px;
+            }
+            .content p {
+              margin: 0 0 15px 0;
+              color: #4b5563;
+            }
+            .info-box {
+              background-color: #fffbeb;
+              border: 1px solid #fcd34d;
+              border-radius: 8px;
+              padding: 20px;
+              margin: 20px 0;
+            }
+            .info-box .label {
+              font-size: 12px;
+              text-transform: uppercase;
+              letter-spacing: 0.05em;
+              color: #92400e;
+              font-weight: 600;
+              margin-bottom: 4px;
+            }
+            .info-box .value {
+              font-size: 16px;
+              color: #1f2937;
+              font-weight: 500;
+            }
+            .warning {
+              background-color: #fef2f2;
+              border-left: 4px solid #dc2626;
+              padding: 12px 16px;
+              margin: 20px 0;
+              border-radius: 4px;
+            }
+            .warning strong {
+              color: #991b1b;
+            }
+            .footer { 
+              text-align: center; 
+              padding: 20px 30px;
+              background-color: #f9fafb;
+              border-top: 1px solid #e5e7eb;
+            }
+            .footer p {
+              margin: 5px 0;
+              font-size: 12px; 
+              color: #6b7280;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1>⚠️ Action Required</h1>
+            </div>
+            <div class="content">
+              <p>Hello <strong>${toName}</strong>,</p>
+              <p>A request assigned to <strong>${stalledRole}</strong> has been pending for <strong>${elapsedHours} hours</strong> and requires your immediate attention.</p>
+              <div class="info-box">
+                <div class="label">Request Title</div>
+                <div class="value">${requestTitle}</div>
+                <br/>
+                <div class="label">Request ID</div>
+                <div class="value">${requestId}</div>
+                <br/>
+                <div class="label">Pending Role</div>
+                <div class="value">${stalledRole}</div>
+                <br/>
+                <div class="label">Time Elapsed</div>
+                <div class="value">${elapsedHours} hours</div>
+              </div>
+              <div class="warning">
+                <strong>⚠️ Warning:</strong> This request will be automatically flagged in <strong>${hoursRemaining} hour${hoursRemaining !== 1 ? 's' : ''}</strong> if no action is taken.
+              </div>
+              <p>Please log in to the ${APP_NAME} and review this request as soon as possible.</p>
+            </div>
+            <div class="footer">
+              <p>This is an automated email. Please do not reply.</p>
+              <p>&copy; ${new Date().getFullYear()} ${process.env.NEXT_PUBLIC_APP_NAME || 'SRM Approval System'}. All rights reserved.</p>
+            </div>
+          </div>
+        </body>
+        </html>
+      `;
+    const text = `Hello ${toName},\n\nA request assigned to ${stalledRole} has been pending for ${elapsedHours} hours and requires your immediate attention.\n\nRequest Title: ${requestTitle}\nRequest ID: ${requestId}\nPending Role: ${stalledRole}\nTime Elapsed: ${elapsedHours} hours\n\nWARNING: This request will be automatically flagged in ${hoursRemaining} hour${hoursRemaining !== 1 ? 's' : ''} if no action is taken.\n\nPlease log in to the ${APP_NAME} and review this request as soon as possible.`;
+
+    const delivery = await sendEmail({
+      toEmail,
+      toName,
+      subject,
+      html,
+      text,
+    });
+
+    console.log('✅ Escalation reminder email sent successfully:', {
+      provider: delivery.provider,
+      response: delivery.result,
+      recipient: toEmail,
+      requestId,
+      elapsedHours,
+      timestamp: new Date().toISOString(),
+    });
+
+    return true;
+  } catch (error) {
+    const details = getSmtpErrorDetails(error);
+
+    console.error('❌ Failed to send escalation reminder email:', {
+      error: details.message,
+      statusCode: details.statusCode,
+      providerMessage: details.providerMessage,
+      recipient: toEmail,
+      requestId,
+      timestamp: new Date().toISOString(),
+    });
+
+    if (error instanceof Error) {
+      console.error('Error details:', error.stack);
+    }
+
+    return false;
+  }
+}

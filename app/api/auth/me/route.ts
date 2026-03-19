@@ -1,7 +1,11 @@
 import { NextResponse } from 'next/server';
 import { getCurrentUser } from '../../../../lib/auth';
+import { maybeRunEscalation } from '../../../../lib/escalation-scheduler';
 
 export async function GET() {
+  // Piggyback escalation check on every auth ping — fire-and-forget, never blocks
+  maybeRunEscalation();
+
   try {
     const user = await getCurrentUser();
     

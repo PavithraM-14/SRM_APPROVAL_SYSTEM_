@@ -12,7 +12,8 @@ import AttachmentList from '../../../../components/AttachmentList';
 import { RequestStatus, ActionType, UserRole } from '../../../../lib/types';
 import { approvalEngine } from '../../../../lib/approval-engine';
 import { queryEngine } from '../../../../lib/query-engine';
-import { ExclamationTriangleIcon } from '@heroicons/react/24/outline';
+import { ExclamationTriangleIcon, FlagIcon } from '@heroicons/react/24/outline';
+import { ESCALATION_HIERARCHY } from '../../../../lib/escalation-hierarchy';
 
 // Simple Direct Clarification Modal Component
 interface DirectQueryModalProps {
@@ -149,6 +150,15 @@ interface ApprovalHistoryItem {
   originalRejector?: string;
 }
 
+interface EscalationInfo {
+  flagged: boolean;
+  flaggedAt: string | null;
+  stalledRole: string | null;
+  reminderSent: boolean;
+  actedByHigherRole: string | null;
+  actedByHigherRoleAt: string | null;
+}
+
 interface Request {
   _id: string;
   requestId?: string;
@@ -171,6 +181,7 @@ interface Request {
   budgetSpent: number;
   budgetBalance: number;
   budgetAvailable?: boolean;
+  escalation?: EscalationInfo;
 }
 
 export default function RequestDetailPage({ params }: { params: { id: string } }) {
@@ -946,9 +957,54 @@ export default function RequestDetailPage({ params }: { params: { id: string } }
 
           {/* Process Request Button */}
           {(() => {
+            const escalation = (request as any).escalation as EscalationInfo | undefined;
+            const viewerRole = currentUser?.role as UserRole | undefined;
+
+            // Compute escalation-based flags
+            const stalledRole = escalation?.stalledRole as UserRole | undefined;
+            const viewerIndex = viewerRole ? ESCALATION_HIERARCHY.indexOf(viewerRole) : -1;
+            const stalledIndex = stalledRole ? ESCALATION_HIERARCHY.indexOf(stalledRole) : -1;
+
+            // Viewer is "at or below" stalledRole when their hierarchy index <= stalledRole's index
+            // (both must be in the hierarchy for this to apply)
+            const viewerAtOrBelowStalled =
+              viewerIndex !== -1 && stalledIndex !== -1 && viewerIndex <= stalledIndex;
+
+            const showFlaggedBanner =
+              escalation?.flagged === true &&
+              viewerRole !== undefined &&
+              viewerRole === stalledRole;
+
+            const escalatedPast =
+              !!escalation?.actedByHigherRole && viewerAtOrBelowStalled;
             // Check if request needs response from this user
             // IMPORTANT: Only REQUESTERS and DEAN (in Dean-mediated cases) can provide responses to queries
             const needsClarification = request.pendingQuery && request.queryLevel === currentUser?.role;
+
+            // Flagged banner (shown above action area when viewer is the stalled role)
+            const flaggedBanner = showFlaggedBanner ? (
+              <div className="mt-4 sm:mt-6 flex items-center gap-2 px-4 py-3 bg-yellow-50 border border-yellow-300 rounded-lg">
+                <FlagIcon className="h-5 w-5 text-yellow-600 flex-shrink-0" />
+                <span className="text-sm font-medium text-yellow-800">
+                  Flagged — this request has been flagged for delayed action. You can still take action below.
+                </span>
+              </div>
+            ) : null;
+
+            // Escalated-past message (shown when a higher role has already acted)
+            if (escalatedPast) {
+              return (
+                <>
+                  {flaggedBanner}
+                  <div className="mt-4 sm:mt-6 flex items-center gap-2 px-4 py-3 bg-orange-50 border border-orange-300 rounded-lg">
+                    <ExclamationTriangleIcon className="h-5 w-5 text-orange-600 flex-shrink-0" />
+                    <span className="text-sm font-medium text-orange-800">
+                      This request has been escalated past you
+                    </span>
+                  </div>
+                </>
+              );
+            }
             
             // SPECIAL CASE: Dean handling mediated rejection (regardless of pendingQuery status)
             // The Dean should always see the "Handle Rejection" button when it's a Dean-mediated case
@@ -1055,6 +1111,7 @@ export default function RequestDetailPage({ params }: { params: { id: string } }
 
               return isAuthorized ? (
                 <div className="mt-4 sm:mt-6 flex flex-col gap-3">
+                  {flaggedBanner}
                   {banner}
                   <div className="flex flex-col sm:flex-row gap-3 justify-center sm:justify-start">
                     <button
@@ -1079,25 +1136,28 @@ export default function RequestDetailPage({ params }: { params: { id: string } }
             const isAuthorized = requiredApprovers.includes(currentUser?.role as UserRole);
             
             return isAuthorized ? (
-              <div className="mt-4 sm:mt-6 flex flex-col sm:flex-row gap-3 justify-center sm:justify-start">
-                {/* Main Process Request Button */}
-                <button
-                  onClick={() => setIsApprovalModalOpen(true)}
-                  className="w-full sm:w-auto min-w-[200px] px-4 sm:px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm sm:text-base font-medium active:scale-95 shadow-sm"
-                >
-                  Process Request
-                </button>
-                
-                {/* Dedicated Raise Query Button */}
-                <button
-                  onClick={() => setIsDirectQueryModalOpen(true)}
-                  className="w-full sm:w-auto min-w-[200px] px-4 sm:px-6 py-3 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors text-sm sm:text-base font-medium active:scale-95 shadow-sm flex items-center justify-center gap-2"
-                >
-                  <ExclamationTriangleIcon className="w-5 h-5" />
-                  Raise Query
-                </button>
+              <div className="mt-4 sm:mt-6 flex flex-col gap-3">
+                {flaggedBanner}
+                <div className="flex flex-col sm:flex-row gap-3 justify-center sm:justify-start">
+                  {/* Main Process Request Button */}
+                  <button
+                    onClick={() => setIsApprovalModalOpen(true)}
+                    className="w-full sm:w-auto min-w-[200px] px-4 sm:px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm sm:text-base font-medium active:scale-95 shadow-sm"
+                  >
+                    Process Request
+                  </button>
+                  
+                  {/* Dedicated Raise Query Button */}
+                  <button
+                    onClick={() => setIsDirectQueryModalOpen(true)}
+                    className="w-full sm:w-auto min-w-[200px] px-4 sm:px-6 py-3 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors text-sm sm:text-base font-medium active:scale-95 shadow-sm flex items-center justify-center gap-2"
+                  >
+                    <ExclamationTriangleIcon className="w-5 h-5" />
+                    Raise Query
+                  </button>
+                </div>
               </div>
-            ) : null;
+            ) : flaggedBanner;
           })()}
         </div>
       </div>
