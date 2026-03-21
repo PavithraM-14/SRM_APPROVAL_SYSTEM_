@@ -6,6 +6,7 @@ import { ApprovalHistory as ApprovalHistoryType, RequestStatus } from '../lib/ty
 interface ApprovalHistoryProps {
   history: ApprovalHistoryType[];
   currentStatus: RequestStatus;
+  canSeeNotes?: boolean;
 }
 
 const getStatusBadgeClass = (status: string) => {
@@ -115,7 +116,7 @@ const getFileNameFromUrl = (url: string) => {
   return parts[parts.length - 1] || 'Document';
 };
 
-const ApprovalHistory: React.FC<ApprovalHistoryProps> = ({ history, currentStatus }) => {
+const ApprovalHistory: React.FC<ApprovalHistoryProps> = ({ history, currentStatus, canSeeNotes = true }) => {
   if (!history || history.length === 0) {
     return (
       <div className="bg-white shadow overflow-hidden sm:rounded-lg">
@@ -187,7 +188,7 @@ const ApprovalHistory: React.FC<ApprovalHistoryProps> = ({ history, currentStatu
                     ) : null}
                     
                     {/* Notes - Inline format */}
-                    {historyItem.notes && (
+                    {historyItem.notes && canSeeNotes && (
                       <div className="mt-1 text-sm">
                         <span className="font-medium text-gray-700">Notes: </span>
                         <span className="text-gray-600">{historyItem.notes}</span>
@@ -195,7 +196,7 @@ const ApprovalHistory: React.FC<ApprovalHistoryProps> = ({ history, currentStatu
                     )}
                     
                     {/* Forward Message - Inline format */}
-                    {historyItem.forwardedMessage && (
+                    {historyItem.forwardedMessage && canSeeNotes && (
                       <div className="mt-1 text-sm">
                         <span className="font-medium text-gray-700">Notes: </span>
                         <span className="text-gray-600">{historyItem.forwardedMessage}</span>
@@ -203,7 +204,7 @@ const ApprovalHistory: React.FC<ApprovalHistoryProps> = ({ history, currentStatu
                     )}
 
                     {/* Query Request - Inline format */}
-                    {(historyItem as any).queryRequest && (
+                    {(historyItem as any).queryRequest && canSeeNotes && (
                       <div className="mt-1 text-sm">
                         <span className="font-medium text-gray-700">Query Request: </span>
                         <span className="text-yellow-800">{(historyItem as any).queryRequest}</span>
@@ -211,7 +212,7 @@ const ApprovalHistory: React.FC<ApprovalHistoryProps> = ({ history, currentStatu
                     )}
 
                     {/* Clarification Response - Inline format */}
-                    {(historyItem as any).queryResponse && (
+                    {(historyItem as any).queryResponse && canSeeNotes && (
                       <div className="mt-1 text-sm">
                         <span className="font-medium text-gray-700">Clarification Response: </span>
                         <span className="text-blue-800">{(historyItem as any).queryResponse}</span>

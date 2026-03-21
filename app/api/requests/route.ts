@@ -57,14 +57,23 @@ export async function GET(request: NextRequest) {
     const statusFilter = searchParams.get('status'); // Renamed for clarity
     const college = searchParams.get('college');
     const pendingApprovals = searchParams.get('pendingApprovals') === 'true';
+    const allRequests = searchParams.get('all') === 'true'; // New parameter for fetching all requests
 
     console.log('[DEBUG] Requests API called:', {
       userId: user.id,
       userRole: user.role,
       statusFilter,
       page,
-      limit
+      limit,
+      allRequests
     });
+
+    // Check if user has permission to view all requests
+    const canViewAllRequests = [UserRole.DEAN, UserRole.CHIEF_DIRECTOR, UserRole.CHAIRMAN].includes(user.role as UserRole);
+    
+    if (allRequests && !canViewAllRequests) {
+      return NextResponse.json({ error: 'Insufficient permissions to view all requests' }, { status: 403 });
+    }
 
     let filter: any = {};
 
@@ -88,7 +97,7 @@ export async function GET(request: NextRequest) {
       baseQuery.college = college;
     }
 
-    const allRequests = await Request.find(baseQuery)
+    const allRequestsFromDB = await Request.find(baseQuery)
       .populate('requester', 'name email empId role')
       .populate('history.actor', 'name email empId role')
       .sort({ updatedAt: -1, createdAt: -1 })
@@ -96,15 +105,22 @@ export async function GET(request: NextRequest) {
 
     console.log('[DEBUG] Total requests fetched:', allRequests.length);
 
-    // Apply role-based visibility filtering
-    let visibleRequests = filterRequestsByVisibility(
-      allRequests,
-      user.role as UserRole,
-      dbUser._id.toString(),
-      dbUser.college
-    );
-
-    console.log('[DEBUG] Requests after visibility filtering:', visibleRequests.length);
+    let visibleRequests;
+    
+    // If requesting all requests and user has permission, return all requests without visibility filtering
+    if (searchParams.get('all') === 'true' && canViewAllRequests) {
+      visibleRequests = allRequestsFromDB; // Use all requests without filtering
+      console.log('[DEBUG] Returning all requests for privileged user:', visibleRequests.length);
+    } else {
+      // Apply role-based visibility filtering for normal requests
+      visibleRequests = filterRequestsByVisibility(
+        allRequestsFromDB,
+        user.role as UserRole,
+        dbUser._id.toString(),
+        dbUser.college
+      );
+      console.log('[DEBUG] Requests after visibility filtering:', visibleRequests.length);
+    }
 
     // Apply status filtering based on the URL query parameter
     if (statusFilter) {

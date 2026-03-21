@@ -50,7 +50,7 @@ export async function POST(
     });
 
     // Validate action - add new actions for budget routing and query workflow
-    if (!['approve', 'reject', 'clarify', 'forward', 'send_to_dean', 'send_to_vp', 'send_to_chairman', 'reject_with_clarification', 'clarify_and_reapprove', 'query_and_reapprove', 'dean_send_to_requester', 'escalation_action'].includes(action)) {
+    if (!['approve', 'reject', 'clarify', 'forward', 'send_to_dean', 'send_to_vp', 'send_to_vp_research', 'send_to_vp_academic', 'send_to_vp_admin', 'send_to_research_director', 'send_to_chairman', 'reject_with_clarification', 'clarify_and_reapprove', 'query_and_reapprove', 'dean_send_to_requester', 'escalation_action'].includes(action)) {
       console.log('[DEBUG] Invalid action:', action);
       return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
     }
@@ -301,7 +301,7 @@ export async function POST(
         break;
 
       case 'send_to_dean':
-        if (user.role === UserRole.INSTITUTION_MANAGER && requestRecord.status === RequestStatus.INSTITUTION_VERIFIED) {
+        if (user.role === UserRole.INSTITUTION_MANAGER && (requestRecord.status === RequestStatus.INSTITUTION_VERIFIED || requestRecord.status === RequestStatus.MANAGER_REVIEW)) {
           nextStatus = RequestStatus.DEAN_REVIEW;
           actionType = ActionType.APPROVE;
           // Mark this request as coming from direct send to dean path
@@ -318,16 +318,44 @@ export async function POST(
             userRole: user.role,
             expectedRole: UserRole.INSTITUTION_MANAGER,
             currentStatus: requestRecord.status,
-            expectedStatus: RequestStatus.INSTITUTION_VERIFIED
+            expectedStatuses: [RequestStatus.INSTITUTION_VERIFIED, RequestStatus.MANAGER_REVIEW]
           });
         }
         break;
 
       case 'send_to_vp':
-        if (user.role === UserRole.INSTITUTION_MANAGER && requestRecord.status === RequestStatus.INSTITUTION_VERIFIED) {
+        if (user.role === UserRole.INSTITUTION_MANAGER && (requestRecord.status === RequestStatus.INSTITUTION_VERIFIED || requestRecord.status === RequestStatus.MANAGER_REVIEW)) {
           nextStatus = RequestStatus.VP_APPROVAL;
           actionType = ActionType.APPROVE;
           // This follows normal flow through VP → HOI → Dean → Chief Director
+        }
+        break;
+
+      case 'send_to_vp_research':
+        if (user.role === UserRole.INSTITUTION_MANAGER && (requestRecord.status === RequestStatus.INSTITUTION_VERIFIED || requestRecord.status === RequestStatus.MANAGER_REVIEW)) {
+          nextStatus = RequestStatus.VP_RESEARCH_APPROVAL;
+          actionType = ActionType.APPROVE;
+        }
+        break;
+
+      case 'send_to_vp_academic':
+        if (user.role === UserRole.INSTITUTION_MANAGER && (requestRecord.status === RequestStatus.INSTITUTION_VERIFIED || requestRecord.status === RequestStatus.MANAGER_REVIEW)) {
+          nextStatus = RequestStatus.VP_ACADEMIC_APPROVAL;
+          actionType = ActionType.APPROVE;
+        }
+        break;
+
+      case 'send_to_vp_admin':
+        if (user.role === UserRole.INSTITUTION_MANAGER && (requestRecord.status === RequestStatus.INSTITUTION_VERIFIED || requestRecord.status === RequestStatus.MANAGER_REVIEW)) {
+          nextStatus = RequestStatus.VP_ADMIN_APPROVAL;
+          actionType = ActionType.APPROVE;
+        }
+        break;
+
+      case 'send_to_research_director':
+        if (user.role === UserRole.INSTITUTION_MANAGER && (requestRecord.status === RequestStatus.INSTITUTION_VERIFIED || requestRecord.status === RequestStatus.MANAGER_REVIEW)) {
+          nextStatus = RequestStatus.RESEARCH_DIRECTOR_APPROVAL;
+          actionType = ActionType.APPROVE;
         }
         break;
 

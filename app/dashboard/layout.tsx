@@ -10,6 +10,7 @@ import {
   ClockIcon,
   ArrowRightStartOnRectangleIcon,
   FlagIcon,
+  ChartBarIcon,
 } from '@heroicons/react/24/outline';
 import { UserRole } from '../../lib/types';
 import { AuthUser } from '../../lib/auth';
@@ -38,13 +39,19 @@ const navigation: NavItem[] = [
     name: 'Pending Approvals',
     href: '/dashboard/approvals',
     icon: ClipboardDocumentListIcon,
-    roles: [UserRole.INSTITUTION_MANAGER, UserRole.ACCOUNTANT, UserRole.VP, UserRole.HEAD_OF_INSTITUTION, UserRole.DEAN, UserRole.MMA, UserRole.HR, UserRole.AUDIT, UserRole.IT, UserRole.CHIEF_DIRECTOR, UserRole.CHAIRMAN] // All non-requester roles
+    roles: [UserRole.INSTITUTION_MANAGER, UserRole.ACCOUNTANT, UserRole.VP, UserRole.VP_RESEARCH, UserRole.VP_ACADEMIC, UserRole.VP_ADMIN, UserRole.RESEARCH_DIRECTOR, UserRole.HEAD_OF_INSTITUTION, UserRole.DEAN, UserRole.MMA, UserRole.HR, UserRole.AUDIT, UserRole.IT, UserRole.CHIEF_DIRECTOR, UserRole.CHAIRMAN] // All non-requester roles
   },
   {
     name: 'Flagged Requests',
     href: '/dashboard/flagged',
     icon: FlagIcon,
-    roles: [UserRole.VP, UserRole.HEAD_OF_INSTITUTION, UserRole.DEAN, UserRole.CHIEF_DIRECTOR, UserRole.CHAIRMAN],
+    roles: [UserRole.VP, UserRole.VP_RESEARCH, UserRole.VP_ACADEMIC, UserRole.VP_ADMIN, UserRole.RESEARCH_DIRECTOR, UserRole.HEAD_OF_INSTITUTION, UserRole.DEAN, UserRole.CHIEF_DIRECTOR, UserRole.CHAIRMAN],
+  },
+  {
+    name: 'Analysis',
+    href: '/dashboard/analysis',
+    icon: ChartBarIcon,
+    roles: [UserRole.DEAN, UserRole.CHIEF_DIRECTOR, UserRole.CHAIRMAN, UserRole.VP_RESEARCH, UserRole.VP_ACADEMIC, UserRole.VP_ADMIN, UserRole.RESEARCH_DIRECTOR],
   },
 ];
 

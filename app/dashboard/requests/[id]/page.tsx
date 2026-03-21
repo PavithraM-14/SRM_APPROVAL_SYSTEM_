@@ -611,6 +611,123 @@ export default function RequestDetailPage({ params }: { params: { id: string } }
     }
   };
 
+  // New VP role handlers
+  const handleSendToVPResearch = async (notes: string, attachments: string[]) => {
+    try {
+      setProcessingApproval(true);
+      const response = await fetch(`/api/requests/${params.id}/approve`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'send_to_vp_research',
+          notes,
+          attachments
+        }),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to send to VP Research');
+      }
+
+      await fetchRequest();
+      setIsApprovalModalOpen(false);
+
+    } catch (err) {
+      console.error('Send to VP Research error:', err);
+      throw err;
+    } finally {
+      setProcessingApproval(false);
+    }
+  };
+
+  const handleSendToVPAcademic = async (notes: string, attachments: string[]) => {
+    try {
+      setProcessingApproval(true);
+      const response = await fetch(`/api/requests/${params.id}/approve`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'send_to_vp_academic',
+          notes,
+          attachments
+        }),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to send to VP Academic');
+      }
+
+      await fetchRequest();
+      setIsApprovalModalOpen(false);
+
+    } catch (err) {
+      console.error('Send to VP Academic error:', err);
+      throw err;
+    } finally {
+      setProcessingApproval(false);
+    }
+  };
+
+  const handleSendToVPAdmin = async (notes: string, attachments: string[]) => {
+    try {
+      setProcessingApproval(true);
+      const response = await fetch(`/api/requests/${params.id}/approve`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'send_to_vp_admin',
+          notes,
+          attachments
+        }),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to send to VP Admin');
+      }
+
+      await fetchRequest();
+      setIsApprovalModalOpen(false);
+
+    } catch (err) {
+      console.error('Send to VP Admin error:', err);
+      throw err;
+    } finally {
+      setProcessingApproval(false);
+    }
+  };
+
+  const handleSendToResearchDirector = async (notes: string, attachments: string[]) => {
+    try {
+      setProcessingApproval(true);
+      const response = await fetch(`/api/requests/${params.id}/approve`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'send_to_research_director',
+          notes,
+          attachments
+        }),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to send to Research Director');
+      }
+
+      await fetchRequest();
+      setIsApprovalModalOpen(false);
+
+    } catch (err) {
+      console.error('Send to Research Director error:', err);
+      throw err;
+    } finally {
+      setProcessingApproval(false);
+    }
+  };
+
   const handleSendToChairman = async (notes: string, attachments: string[]) => {
     if (!request) return;
     
@@ -659,7 +776,9 @@ export default function RequestDetailPage({ params }: { params: { id: string } }
   const hideWorkflowAndHistory =
     currentUser?.role === 'accountant';
 
-  const canSeeApprovalHistory = [
+  const canSeeApprovalHistory = true; // All users can see approval history
+
+  const canSeeNotesInHistory = [
     'dean', 'mma', 'hr', 'audit', 'it', 'chief_director', 'chairman',
   ].includes(currentUser?.role);
 
@@ -1169,7 +1288,7 @@ export default function RequestDetailPage({ params }: { params: { id: string } }
             <ApprovalWorkflow currentStatus={request.status} />
           </div>
 
-          {/* Approval History — only visible to Dean and above */}
+          {/* Approval History — visible to all users, but notes only visible to Dean and above */}
           {canSeeApprovalHistory && (
             <div className="bg-white shadow rounded-lg sm:rounded-xl p-4 sm:p-6">
               <div className="flex flex-col xs:flex-row xs:items-center xs:justify-between gap-3 mb-4">
@@ -1198,7 +1317,11 @@ export default function RequestDetailPage({ params }: { params: { id: string } }
 
               {showApprovalHistory && (
                 <div className="transition-all duration-300 ease-in-out">
-                  <ApprovalHistory history={request.history} currentStatus={request.status} />
+                  <ApprovalHistory 
+                    history={request.history} 
+                    currentStatus={request.status} 
+                    canSeeNotes={canSeeNotesInHistory}
+                  />
                 </div>
               )}
 
@@ -1239,6 +1362,10 @@ export default function RequestDetailPage({ params }: { params: { id: string } }
         onClarify={handleClarify}
         onSendToDean={handleSendToDean}
         onSendToVP={handleSendToVP}
+        onSendToVPResearch={handleSendToVPResearch}
+        onSendToVPAcademic={handleSendToVPAcademic}
+        onSendToVPAdmin={handleSendToVPAdmin}
+        onSendToResearchDirector={handleSendToResearchDirector}
         onSendToChairman={handleSendToChairman}
         loading={processingApproval}
       />

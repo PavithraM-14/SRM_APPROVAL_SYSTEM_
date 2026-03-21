@@ -16,6 +16,10 @@ const roleOptions = [
   { value: UserRole.INSTITUTION_MANAGER, label: 'Institution Manager' },
   { value: UserRole.ACCOUNTANT, label: 'Accountant' },
   { value: UserRole.VP, label: 'Vice President' },
+  { value: UserRole.VP_RESEARCH, label: 'VP Research' },
+  { value: UserRole.VP_ACADEMIC, label: 'VP Academic' },
+  { value: UserRole.VP_ADMIN, label: 'VP Admin' },
+  { value: UserRole.RESEARCH_DIRECTOR, label: 'Research Director' },
   { value: UserRole.HEAD_OF_INSTITUTION, label: 'Head of Institution' },
   { value: UserRole.DEAN, label: 'Admin Dept' },
   { value: UserRole.MMA, label: 'MMA' },
@@ -28,7 +32,7 @@ const roleOptions = [
 
 const rolesWithDepartment = [UserRole.REQUESTER];
 // Roles that do not need to select an Institution
-const rolesWithoutCollege = [UserRole.CHAIRMAN, UserRole.DEAN, UserRole.CHIEF_DIRECTOR];
+const rolesWithoutCollege = [UserRole.CHAIRMAN, UserRole.DEAN, UserRole.CHIEF_DIRECTOR, UserRole.VP_RESEARCH, UserRole.VP_ACADEMIC, UserRole.VP_ADMIN, UserRole.RESEARCH_DIRECTOR];
 
 export default function SignupPage() {
   const [step, setStep] = useState<'form' | 'otp'>('form');

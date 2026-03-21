@@ -26,6 +26,10 @@ interface ApprovalModalProps {
   onClarify?: (notes: string, attachments: string[], target?: string) => void;
   onSendToDean?: (notes: string, attachments: string[]) => void;
   onSendToVP?: (notes: string, attachments: string[]) => void;
+  onSendToVPResearch?: (notes: string, attachments: string[]) => void;
+  onSendToVPAcademic?: (notes: string, attachments: string[]) => void;
+  onSendToVPAdmin?: (notes: string, attachments: string[]) => void;
+  onSendToResearchDirector?: (notes: string, attachments: string[]) => void;
   onSendToChairman?: (notes: string, attachments: string[]) => void;
   loading?: boolean;
 }
@@ -42,18 +46,25 @@ export default function ApprovalModal({
   onClarify,
   onSendToDean,
   onSendToVP,
+  onSendToVPResearch,
+  onSendToVPAcademic,
+  onSendToVPAdmin,
+  onSendToResearchDirector,
   onSendToChairman,
   loading = false
 }: ApprovalModalProps) {
-  const [action, setAction] = useState<'approve' | 'reject' | 'reject_with_clarification' | 'forward' | 'clarify' | 'send_to_dean' | 'send_to_vp' | 'send_to_chairman'>(() => {
+  const [action, setAction] = useState<'approve' | 'reject' | 'reject_with_clarification' | 'forward' | 'clarify' | 'send_to_dean' | 'send_to_vp' | 'send_to_vp_research' | 'send_to_vp_academic' | 'send_to_vp_admin' | 'send_to_research_director' | 'send_to_chairman'>(() => {
     if (userRole === 'institution_manager' && request.status === 'manager_review') {
       return 'forward';
     }
     if (userRole === 'institution_manager' && request.status === 'institution_verified') {
-      return 'send_to_dean';
+      return 'send_to_vp_research';
     }
     if (['hr', 'it', 'audit', 'mma'].includes(userRole) && request.status === 'department_checks') {
       return 'forward';
+    }
+    if (['vp', 'vp_research', 'vp_academic', 'vp_admin', 'research_director'].includes(userRole)) {
+      return 'approve';
     }
     return 'approve';
   });
@@ -148,6 +159,46 @@ export default function ApprovalModal({
         onSendToVP(notes, attachments);
       } else {
         alert('Send to VP action not configured');
+      }
+      return;
+    }
+
+    // For Institution Manager in institution_verified status, handle send_to_vp_research action
+    if (userRole === 'institution_manager' && request.status === 'institution_verified' && action === 'send_to_vp_research') {
+      if (onSendToVPResearch) {
+        onSendToVPResearch(notes, attachments);
+      } else {
+        alert('Send to VP Research action not configured');
+      }
+      return;
+    }
+
+    // For Institution Manager in institution_verified status, handle send_to_vp_academic action
+    if (userRole === 'institution_manager' && request.status === 'institution_verified' && action === 'send_to_vp_academic') {
+      if (onSendToVPAcademic) {
+        onSendToVPAcademic(notes, attachments);
+      } else {
+        alert('Send to VP Academic action not configured');
+      }
+      return;
+    }
+
+    // For Institution Manager in institution_verified status, handle send_to_vp_admin action
+    if (userRole === 'institution_manager' && request.status === 'institution_verified' && action === 'send_to_vp_admin') {
+      if (onSendToVPAdmin) {
+        onSendToVPAdmin(notes, attachments);
+      } else {
+        alert('Send to VP Admin action not configured');
+      }
+      return;
+    }
+
+    // For Institution Manager in institution_verified status, handle send_to_research_director action
+    if (userRole === 'institution_manager' && request.status === 'institution_verified' && action === 'send_to_research_director') {
+      if (onSendToResearchDirector) {
+        onSendToResearchDirector(notes, attachments);
+      } else {
+        alert('Send to Research Director action not configured');
       }
       return;
     }
@@ -902,8 +953,12 @@ export default function ApprovalModal({
                   disabled={loading}
                 >
                   <option value="forward">Forward to Budget Verification</option>
-                  <option value="reject">Reject</option>
+                  <option value="send_to_vp_research">Forward to VP Research</option>
+                  <option value="send_to_vp_academic">Forward to VP Academic</option>
+                  <option value="send_to_dean">Forward to Admin Department</option>
+                  <option value="send_to_research_director">Forward to Research Director</option>
                   <option value="reject_with_clarification">Raise Query</option>
+                  <option value="reject">Reject</option>
                 </select>
 
                 {/* Action Options Display */}
@@ -920,13 +975,51 @@ export default function ApprovalModal({
                     </div>
                   )}
 
-                  {action === 'reject' && (
-                    <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+                  {action === 'send_to_vp_research' && (
+                    <div className="p-3 bg-purple-50 border border-purple-200 rounded-lg">
                       <div className="flex items-center">
-                        <XCircleIcon className="w-5 h-5 text-red-600 mr-2" />
-                        <span className="font-medium text-red-700">Reject</span>
+                        <CheckCircleIcon className="w-5 h-5 text-purple-600 mr-2" />
+                        <span className="font-medium text-purple-700">Forward to VP Research</span>
                       </div>
-                      <p className="text-sm text-red-600 mt-1">Permanently reject this request</p>
+                      <p className="text-sm text-purple-600 mt-1">
+                        Forward this request to VP Research for research-related approvals.
+                      </p>
+                    </div>
+                  )}
+
+                  {action === 'send_to_vp_academic' && (
+                    <div className="p-3 bg-indigo-50 border border-indigo-200 rounded-lg">
+                      <div className="flex items-center">
+                        <CheckCircleIcon className="w-5 h-5 text-indigo-600 mr-2" />
+                        <span className="font-medium text-indigo-700">Forward to VP Academic</span>
+                      </div>
+                      <p className="text-sm text-indigo-600 mt-1">
+                        Forward this request to VP Academic for academic-related approvals.
+                      </p>
+                    </div>
+                  )}
+
+                  {action === 'send_to_dean' && (
+                    <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                      <div className="flex items-center">
+                        <CheckCircleIcon className="w-5 h-5 text-blue-600 mr-2" />
+                        <span className="font-medium text-blue-700">Forward to Admin Department</span>
+                      </div>
+                      <p className="text-sm text-blue-600 mt-1">
+                        Forward this request directly to Admin Department for review. Admin Department will then forward to Chairman for final approval.
+                      </p>
+                    </div>
+                  )}
+
+                  {action === 'send_to_research_director' && (
+                    <div className="p-3 bg-cyan-50 border border-cyan-200 rounded-lg">
+                      <div className="flex items-center">
+                        <CheckCircleIcon className="w-5 h-5 text-cyan-600 mr-2" />
+                        <span className="font-medium text-cyan-700">Forward to Research Director</span>
+                      </div>
+                      <p className="text-sm text-cyan-600 mt-1">
+                        Forward this request to Research Director for research project approvals.
+                      </p>
                     </div>
                   )}
 
@@ -941,10 +1034,20 @@ export default function ApprovalModal({
                       </p>
                     </div>
                   )}
+
+                  {action === 'reject' && (
+                    <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+                      <div className="flex items-center">
+                        <XCircleIcon className="w-5 h-5 text-red-600 mr-2" />
+                        <span className="font-medium text-red-700">Reject</span>
+                      </div>
+                      <p className="text-sm text-red-600 mt-1">Permanently reject this request</p>
+                    </div>
+                  )}
                 </div>
               </>
             ) : userRole === 'institution_manager' && request.status === 'institution_verified' ? (
-              // Interface for Institution Manager after verification is complete
+              // Interface for Institution Manager after verification is complete (simplified)
               <>
                 <select
                   value={action}
@@ -952,34 +1055,111 @@ export default function ApprovalModal({
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
                   disabled={loading}
                 >
-                  <option value="send_to_dean">Forward to Admin Dept</option>
-                  <option value="send_to_vp">Forward to VP</option>
+                  <option value="send_to_vp_research">Forward to VP Research</option>
+                  <option value="send_to_vp_academic">Forward to VP Academic</option>
+                  <option value="send_to_dean">Forward to Admin Department</option>
+                  <option value="send_to_research_director">Forward to Research Director</option>
                   <option value="reject_with_clarification">Raise Query</option>
                   <option value="reject">Reject</option>
                 </select>
 
                 {/* Action Options Display */}
                 <div className="mt-3 space-y-2">
-                  {action === 'send_to_dean' && (
-                    <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                  {action === 'send_to_vp_research' && (
+                    <div className="p-3 bg-purple-50 border border-purple-200 rounded-lg">
                       <div className="flex items-center">
-                        <CheckCircleIcon className="w-5 h-5 text-blue-600 mr-2" />
-                        <span className="font-medium text-blue-700">Forward to Admin Dept</span>
+                        <CheckCircleIcon className="w-5 h-5 text-purple-600 mr-2" />
+                        <span className="font-medium text-purple-700">Forward to VP Research</span>
                       </div>
-                      <p className="text-sm text-blue-600 mt-1">
-                        Forward this request directly to Admin Dept for review. Admin Dept will then forward to Chairman for final approval.
+                      <p className="text-sm text-purple-600 mt-1">
+                        Forward this request to VP Research for research-related approvals.
                       </p>
                     </div>
                   )}
 
-                  {action === 'send_to_vp' && (
+                  {action === 'send_to_vp_academic' && (
+                    <div className="p-3 bg-indigo-50 border border-indigo-200 rounded-lg">
+                      <div className="flex items-center">
+                        <CheckCircleIcon className="w-5 h-5 text-indigo-600 mr-2" />
+                        <span className="font-medium text-indigo-700">Forward to VP Academic</span>
+                      </div>
+                      <p className="text-sm text-indigo-600 mt-1">
+                        Forward this request to VP Academic for academic-related approvals.
+                      </p>
+                    </div>
+                  )}
+
+                  {action === 'send_to_dean' && (
+                    <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                      <div className="flex items-center">
+                        <CheckCircleIcon className="w-5 h-5 text-blue-600 mr-2" />
+                        <span className="font-medium text-blue-700">Forward to Admin Department</span>
+                      </div>
+                      <p className="text-sm text-blue-600 mt-1">
+                        Forward this request directly to Admin Department for review. Admin Department will then forward to Chairman for final approval.
+                      </p>
+                    </div>
+                  )}
+
+                  {action === 'send_to_research_director' && (
+                    <div className="p-3 bg-cyan-50 border border-cyan-200 rounded-lg">
+                      <div className="flex items-center">
+                        <CheckCircleIcon className="w-5 h-5 text-cyan-600 mr-2" />
+                        <span className="font-medium text-cyan-700">Forward to Research Director</span>
+                      </div>
+                      <p className="text-sm text-cyan-600 mt-1">
+                        Forward this request to Research Director for research project approvals.
+                      </p>
+                    </div>
+                  )}
+
+                  {action === 'reject_with_clarification' && (
+                    <div className="p-3 bg-orange-50 border border-orange-200 rounded-lg">
+                      <div className="flex items-center">
+                        <ExclamationTriangleIcon className="w-5 h-5 text-orange-600 mr-2" />
+                        <span className="font-medium text-orange-700">Raise Query</span>
+                      </div>
+                      <p className="text-sm text-orange-600 mt-1">
+                        Request additional information from the requester
+                      </p>
+                    </div>
+                  )}
+
+                  {action === 'reject' && (
+                    <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+                      <div className="flex items-center">
+                        <XCircleIcon className="w-5 h-5 text-red-600 mr-2" />
+                        <span className="font-medium text-red-700">Reject</span>
+                      </div>
+                      <p className="text-sm text-red-600 mt-1">Permanently reject this request</p>
+                    </div>
+                  )}
+                </div>
+              </>
+            ) : ['vp', 'vp_research', 'vp_academic', 'vp_admin', 'research_director'].includes(userRole) ? (
+              // Interface for all VP roles and Research Director
+              <>
+                <select
+                  value={action}
+                  onChange={(e) => setAction(e.target.value as any)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                  disabled={loading}
+                >
+                  <option value="approve">Forward to Head of Institution</option>
+                  <option value="reject_with_clarification">Raise Query</option>
+                  <option value="reject">Reject</option>
+                </select>
+
+                {/* Action Options Display */}
+                <div className="mt-3 space-y-2">
+                  {action === 'approve' && (
                     <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
                       <div className="flex items-center">
                         <CheckCircleIcon className="w-5 h-5 text-green-600 mr-2" />
-                        <span className="font-medium text-green-700">Forward to VP</span>
+                        <span className="font-medium text-green-700">Forward to Head of Institution</span>
                       </div>
                       <p className="text-sm text-green-600 mt-1">
-                        Forward this request through normal approval flow: VP → HOI → Admin Dept → Head of Campus.
+                        Approve and forward this request to Head of Institution for next level approval.
                       </p>
                     </div>
                   )}
