@@ -223,11 +223,10 @@ export async function GET(request: NextRequest) {
       managerReviewRequests.forEach(req => {
         const visibility = analyzeRequestVisibility(req, user.role as UserRole, dbUser._id.toString(), dbUser.college);
 
-        // Check if this is a post-parallel-verification scenario
+        // Check if this is a post-budget-verification scenario
         const hasParallelVerificationHistory = req.history?.some((h: any) =>
-          h.newStatus === RequestStatus.PARALLEL_VERIFICATION ||
-          h.newStatus === RequestStatus.SOP_COMPLETED ||
-          h.newStatus === RequestStatus.BUDGET_COMPLETED
+          h.newStatus === RequestStatus.BUDGET_CHECK ||
+          h.newStatus === RequestStatus.INSTITUTION_VERIFIED
         );
 
         // Check if manager has previously acted
