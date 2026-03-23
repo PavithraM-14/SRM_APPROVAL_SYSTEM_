@@ -54,8 +54,7 @@ export async function runEscalation(): Promise<EscalationRunResult> {
         try {
           const userQuery: Record<string, unknown> = { role: stalledRole };
           if (INSTITUTIONAL_ROLES.has(stalledRole)) userQuery.college = req.college;
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const approver = await User.findOne(userQuery).lean() as any;
+          const approver = await User.findOne(userQuery).lean() as { email: string; name: string } | null;
 
           if (!approver) {
             console.warn(`[escalation] No user for role=${stalledRole} college=${req.college} req=${req.requestId}`);
