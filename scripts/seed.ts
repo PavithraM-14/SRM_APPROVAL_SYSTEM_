@@ -114,13 +114,13 @@ async function seed() {
     const requester = users.find(u => u.role === UserRole.REQUESTER);
     const manager = users.find(u => u.role === UserRole.INSTITUTION_MANAGER);
     const accountant = users.find(u => u.role === UserRole.ACCOUNTANT);
-    const vp = users.find(u => u.role === UserRole.VP);
+    const vpResearch = users.find(u => u.role === UserRole.VP_RESEARCH);
     const hoi = users.find(u => u.role === UserRole.HEAD_OF_INSTITUTION);
     const dean = users.find(u => u.role === UserRole.DEAN);
     const chiefDirector = users.find(u => u.role === UserRole.CHIEF_DIRECTOR);
     const chairman = users.find(u => u.role === UserRole.CHAIRMAN);
     
-    if (requester && manager && accountant && vp && dean && chairman) {
+    if (requester && manager && accountant && vpResearch && dean && chairman) {
       const requests = [];
       
       // Scenario 1: Fully approved request (Chairman approved)
@@ -169,12 +169,12 @@ async function seed() {
             action: ActionType.FORWARD,
             actor: manager._id,
             timestamp: new Date(Date.now() - 16 * 24 * 60 * 60 * 1000),
-            newStatus: RequestStatus.VP_APPROVAL,
+            newStatus: RequestStatus.VP_RESEARCH_APPROVAL,
             notes: 'Budget available, forwarded to VP'
           },
           {
             action: ActionType.APPROVE,
-            actor: vp._id,
+            actor: vpResearch._id,
             timestamp: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000),
             newStatus: RequestStatus.HOI_APPROVAL,
             notes: 'VP approved, forwarded to HOI'
@@ -257,12 +257,12 @@ async function seed() {
             action: ActionType.FORWARD,
             actor: manager._id,
             timestamp: new Date(Date.now() - 11 * 24 * 60 * 60 * 1000),
-            newStatus: RequestStatus.VP_APPROVAL,
+            newStatus: RequestStatus.VP_RESEARCH_APPROVAL,
             notes: 'Forwarded to VP for approval'
           },
           {
             action: ActionType.REJECT,
-            actor: vp._id,
+            actor: vpResearch._id,
             timestamp: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000),
             newStatus: RequestStatus.REJECTED,
             notes: 'Request rejected due to budget constraints and alternative solutions available'
@@ -317,12 +317,12 @@ async function seed() {
             action: ActionType.FORWARD,
             actor: manager._id,
             timestamp: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000),
-            newStatus: RequestStatus.VP_APPROVAL,
+            newStatus: RequestStatus.VP_RESEARCH_APPROVAL,
             notes: 'Budget available, forwarded to VP'
           },
           {
             action: ActionType.APPROVE,
-            actor: vp._id,
+            actor: vpResearch._id,
             timestamp: new Date(Date.now() - 13 * 24 * 60 * 60 * 1000),
             newStatus: RequestStatus.HOI_APPROVAL,
             notes: 'VP approved, forwarded to HOI'
@@ -414,7 +414,7 @@ async function seed() {
         sopReference: sopRecords[0].code,
         attachments: ['sample-document.pdf'],
         requester: requester._id,
-        status: RequestStatus.VP_APPROVAL,
+        status: RequestStatus.VP_RESEARCH_APPROVAL,
         history: [
           {
             action: ActionType.CREATE,
@@ -448,7 +448,7 @@ async function seed() {
             action: ActionType.FORWARD,
             actor: manager._id,
             timestamp: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000),
-            newStatus: RequestStatus.VP_APPROVAL,
+            newStatus: RequestStatus.VP_RESEARCH_APPROVAL,
             notes: 'Budget available, forwarded to VP for approval'
           }
         ]
@@ -630,12 +630,12 @@ async function seed() {
             action: ActionType.FORWARD,
             actor: manager._id,
             timestamp: new Date(Date.now() - 16 * 24 * 60 * 60 * 1000),
-            newStatus: RequestStatus.VP_APPROVAL,
+            newStatus: RequestStatus.VP_RESEARCH_APPROVAL,
             notes: 'High value request, forwarded to VP'
           },
           {
             action: ActionType.APPROVE,
-            actor: vp._id,
+            actor: vpResearch._id,
             timestamp: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000),
             newStatus: RequestStatus.HOI_APPROVAL,
             notes: 'VP approved, forwarded to HOI'
@@ -758,7 +758,7 @@ async function seed() {
         sopReference: sopRecords[1].code,
         attachments: ['sample-document.pdf'],
         requester: requester._id,
-        status: RequestStatus.VP_APPROVAL,
+        status: RequestStatus.VP_RESEARCH_APPROVAL,
         pendingQuery: false, // Clarification completed, now pending VP review
         queryLevel: null,
         history: [
@@ -773,14 +773,14 @@ async function seed() {
             action: ActionType.FORWARD,
             actor: manager._id,
             timestamp: new Date(Date.now() - 11 * 24 * 60 * 60 * 1000),
-            newStatus: RequestStatus.VP_APPROVAL,
+            newStatus: RequestStatus.VP_RESEARCH_APPROVAL,
             notes: 'Manager approved, forwarded to VP'
           },
           {
             action: ActionType.REJECT_WITH_CLARIFICATION,
-            actor: vp._id,
+            actor: vpResearch._id,
             timestamp: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000),
-            previousStatus: RequestStatus.VP_APPROVAL,
+            previousStatus: RequestStatus.VP_RESEARCH_APPROVAL,
             newStatus: RequestStatus.SUBMITTED,
             queryRequest: 'The training program seems expensive. Please provide: 1) Detailed curriculum breakdown, 2) Number of participants, 3) Alternative training options considered, 4) Expected skill improvement metrics.',
             requiresClarification: true,
@@ -791,7 +791,7 @@ async function seed() {
             actor: requester._id,
             timestamp: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
             previousStatus: RequestStatus.SUBMITTED,
-            newStatus: RequestStatus.VP_APPROVAL,
+            newStatus: RequestStatus.VP_RESEARCH_APPROVAL,
             queryResponse: 'Thank you for the questions. Here are the details: 1) Curriculum: Advanced project management (40%), Leadership skills (30%), Technical training (30%), 2) Participants: 15 senior staff members, 3) Alternatives: Online training (₹50k less but 60% less effective), In-house training (₹80k less but lacks certification), 4) Metrics: 25% improvement in project delivery time, 90% certification rate expected. This training is critical for our upcoming major projects.',
             notes: 'Requester provided detailed query as requested'
           }
@@ -826,12 +826,12 @@ async function seed() {
             action: ActionType.FORWARD,
             actor: manager._id,
             timestamp: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000),
-            newStatus: RequestStatus.VP_APPROVAL,
+            newStatus: RequestStatus.VP_RESEARCH_APPROVAL,
             notes: 'Manager approved, forwarded to VP'
           },
           {
             action: ActionType.APPROVE,
-            actor: vp._id,
+            actor: vpResearch._id,
             timestamp: new Date(Date.now() - 13 * 24 * 60 * 60 * 1000),
             newStatus: RequestStatus.HOI_APPROVAL,
             notes: 'VP approved, forwarded to HOI'
@@ -877,12 +877,12 @@ async function seed() {
             action: ActionType.FORWARD,
             actor: manager._id,
             timestamp: new Date(Date.now() - 19 * 24 * 60 * 60 * 1000),
-            newStatus: RequestStatus.VP_APPROVAL,
+            newStatus: RequestStatus.VP_RESEARCH_APPROVAL,
             notes: 'Manager approved, forwarded to VP'
           },
           {
             action: ActionType.APPROVE,
-            actor: vp._id,
+            actor: vpResearch._id,
             timestamp: new Date(Date.now() - 18 * 24 * 60 * 60 * 1000),
             newStatus: RequestStatus.HOI_APPROVAL,
             notes: 'VP approved, forwarded to HOI'
@@ -982,12 +982,12 @@ async function seed() {
             action: ActionType.FORWARD,
             actor: manager._id,
             timestamp: new Date(Date.now() - 26 * 24 * 60 * 60 * 1000),
-            newStatus: RequestStatus.VP_APPROVAL,
+            newStatus: RequestStatus.VP_RESEARCH_APPROVAL,
             notes: 'High value request, forwarded to VP'
           },
           {
             action: ActionType.APPROVE,
-            actor: vp._id,
+            actor: vpResearch._id,
             timestamp: new Date(Date.now() - 25 * 24 * 60 * 60 * 1000),
             newStatus: RequestStatus.HOI_APPROVAL,
             notes: 'VP approved, forwarded to HOI'
@@ -1031,13 +1031,13 @@ async function seed() {
         sopReference: 'SOP-LEAVE-001',
         attachments: ['sample-document.pdf'],
         requester: requester._id,
-        status: RequestStatus.VP_APPROVAL, // Directly at VP level
+        status: RequestStatus.VP_RESEARCH_APPROVAL, // Directly at VP level
         history: [
           {
             action: ActionType.CREATE,
             actor: requester._id,
             timestamp: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
-            newStatus: RequestStatus.VP_APPROVAL,
+            newStatus: RequestStatus.VP_RESEARCH_APPROVAL,
             notes: 'Leave request created and forwarded directly to VP for approval'
           }
         ]
@@ -1062,12 +1062,12 @@ async function seed() {
             action: ActionType.CREATE,
             actor: requester._id,
             timestamp: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
-            newStatus: RequestStatus.VP_APPROVAL,
+            newStatus: RequestStatus.VP_RESEARCH_APPROVAL,
             notes: 'Leave request created and forwarded directly to VP for approval'
           },
           {
             action: ActionType.APPROVE,
-            actor: vp._id,
+            actor: vpResearch._id,
             timestamp: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
             newStatus: RequestStatus.HOI_APPROVAL,
             notes: 'VP approved medical leave, forwarded to HOI'
@@ -1094,12 +1094,12 @@ async function seed() {
             action: ActionType.CREATE,
             actor: requester._id,
             timestamp: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000),
-            newStatus: RequestStatus.VP_APPROVAL,
+            newStatus: RequestStatus.VP_RESEARCH_APPROVAL,
             notes: 'Emergency leave request created and forwarded directly to VP for approval'
           },
           {
             action: ActionType.APPROVE,
-            actor: vp._id,
+            actor: vpResearch._id,
             timestamp: new Date(Date.now() - 9 * 24 * 60 * 60 * 1000),
             newStatus: RequestStatus.HOI_APPROVAL,
             notes: 'VP approved emergency leave, forwarded to HOI'
@@ -1134,13 +1134,13 @@ async function seed() {
         sopReference: 'SOP-LEAVE-004',
         attachments: ['sample-document.pdf'],
         requester: requester._id,
-        status: RequestStatus.VP_APPROVAL,
+        status: RequestStatus.VP_RESEARCH_APPROVAL,
         history: [
           {
             action: ActionType.CREATE,
             actor: requester._id,
             timestamp: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
-            newStatus: RequestStatus.VP_APPROVAL,
+            newStatus: RequestStatus.VP_RESEARCH_APPROVAL,
             notes: 'Maternity leave request created and forwarded directly to VP for approval'
           }
         ]
@@ -1174,12 +1174,12 @@ async function seed() {
             action: ActionType.FORWARD,
             actor: manager._id,
             timestamp: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
-            newStatus: RequestStatus.VP_APPROVAL,
+            newStatus: RequestStatus.VP_RESEARCH_APPROVAL,
             notes: 'Manager approved, forwarded to VP'
           },
           {
             action: ActionType.APPROVE,
-            actor: vp._id,
+            actor: vpResearch._id,
             timestamp: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000),
             newStatus: RequestStatus.HOI_APPROVAL,
             notes: 'VP approved, forwarded to HOI'
@@ -1227,12 +1227,12 @@ async function seed() {
             action: ActionType.FORWARD,
             actor: manager._id,
             timestamp: new Date(Date.now() - 11 * 24 * 60 * 60 * 1000),
-            newStatus: RequestStatus.VP_APPROVAL,
+            newStatus: RequestStatus.VP_RESEARCH_APPROVAL,
             notes: 'Manager approved, forwarded to VP'
           },
           {
             action: ActionType.APPROVE,
-            actor: vp._id,
+            actor: vpResearch._id,
             timestamp: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000),
             newStatus: RequestStatus.HOI_APPROVAL,
             notes: 'VP approved, forwarded to HOI'
@@ -1287,12 +1287,12 @@ async function seed() {
             action: ActionType.FORWARD,
             actor: manager._id,
             timestamp: new Date(Date.now() - 9 * 24 * 60 * 60 * 1000),
-            newStatus: RequestStatus.VP_APPROVAL,
+            newStatus: RequestStatus.VP_RESEARCH_APPROVAL,
             notes: 'Manager approved, forwarded to VP'
           },
           {
             action: ActionType.APPROVE,
-            actor: vp._id,
+            actor: vpResearch._id,
             timestamp: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000),
             newStatus: RequestStatus.HOI_APPROVAL,
             notes: 'VP approved, forwarded to HOI'
@@ -1497,7 +1497,6 @@ function getRoleDisplayName(role: UserRole): string {
     [UserRole.REQUESTER]: 'Raj',
     [UserRole.INSTITUTION_MANAGER]: 'Tharun',
     [UserRole.ACCOUNTANT]: 'Swathy',
-    [UserRole.VP]: 'Shri',
     [UserRole.VP_RESEARCH]: 'Dr. Vikram',
     [UserRole.VP_ACADEMIC]: 'Dr. Priya',
     [UserRole.VP_ADMIN]: 'Mr. Suresh',

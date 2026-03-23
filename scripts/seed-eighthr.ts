@@ -25,7 +25,6 @@ function getRoleDisplayName(role: UserRole): string {
     [UserRole.REQUESTER]: 'Raj',
     [UserRole.INSTITUTION_MANAGER]: 'Tharun',
     [UserRole.ACCOUNTANT]: 'Swathy',
-    [UserRole.VP]: 'Shri',
     [UserRole.VP_RESEARCH]: 'Shri',
     [UserRole.VP_ACADEMIC]: 'Shri',
     [UserRole.VP_ADMIN]: 'Shri',
