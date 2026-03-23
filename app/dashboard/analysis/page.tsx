@@ -88,6 +88,8 @@ export default function AnalysisPage() {
   const [collegeFilter, setCollegeFilter] = useState('all');
   const [departmentFilter, setDepartmentFilter] = useState('all');
   const [dateFilter, setDateFilter] = useState('all');
+  const [customDateFrom, setCustomDateFrom] = useState('');
+  const [customDateTo, setCustomDateTo] = useState('');
 
   const organizeHierarchicalData = useCallback((requests: RequestData[]) => {
     const organized: HierarchicalData = {};
@@ -148,6 +150,20 @@ export default function AnalysisPage() {
     );
   };
 
+  const matchesDateFilter = (createdAt: string): boolean => {
+    if (dateFilter === 'all') return true;
+    const requestDate = new Date(createdAt);
+    if (dateFilter === 'custom') {
+      const from = customDateFrom ? new Date(customDateFrom) : null;
+      const to = customDateTo ? new Date(customDateTo + 'T23:59:59') : null;
+      if (from && requestDate < from) return false;
+      if (to && requestDate > to) return false;
+      return true;
+    }
+    const daysDiff = (Date.now() - requestDate.getTime()) / (1000 * 60 * 60 * 24);
+    return daysDiff <= Number(dateFilter);
+  };
+
   const getFilteredCollegeRequests = (college: string) => {
     const collegeRequests = getCollegeRequests(college);
     return collegeRequests.filter(request => {
@@ -156,30 +172,9 @@ export default function AnalysisPage() {
         request.purpose.toLowerCase().includes(searchTerm.toLowerCase()) ||
         request.requester.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         request.requestId.includes(searchTerm);
-      
       const matchesStatus = statusFilter === 'all' || request.status === statusFilter;
       const matchesDepartment = departmentFilter === 'all' || request.department === departmentFilter;
-      
-      let matchesDate = true;
-      if (dateFilter !== 'all') {
-        const requestDate = new Date(request.createdAt);
-        const now = new Date();
-        const daysDiff = (now.getTime() - requestDate.getTime()) / (1000 * 60 * 60 * 24);
-        
-        switch (dateFilter) {
-          case '7':
-            matchesDate = daysDiff <= 7;
-            break;
-          case '30':
-            matchesDate = daysDiff <= 30;
-            break;
-          case '90':
-            matchesDate = daysDiff <= 90;
-            break;
-        }
-      }
-      
-      return matchesSearch && matchesStatus && matchesDepartment && matchesDate;
+      return matchesSearch && matchesStatus && matchesDepartment && matchesDateFilter(request.createdAt);
     });
   };
 
@@ -191,29 +186,8 @@ export default function AnalysisPage() {
         request.purpose.toLowerCase().includes(searchTerm.toLowerCase()) ||
         request.requester.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         request.requestId.includes(searchTerm);
-      
       const matchesStatus = statusFilter === 'all' || request.status === statusFilter;
-      
-      let matchesDate = true;
-      if (dateFilter !== 'all') {
-        const requestDate = new Date(request.createdAt);
-        const now = new Date();
-        const daysDiff = (now.getTime() - requestDate.getTime()) / (1000 * 60 * 60 * 24);
-        
-        switch (dateFilter) {
-          case '7':
-            matchesDate = daysDiff <= 7;
-            break;
-          case '30':
-            matchesDate = daysDiff <= 30;
-            break;
-          case '90':
-            matchesDate = daysDiff <= 90;
-            break;
-        }
-      }
-      
-      return matchesSearch && matchesStatus && matchesDate;
+      return matchesSearch && matchesStatus && matchesDateFilter(request.createdAt);
     });
   };
 
@@ -249,31 +223,10 @@ export default function AnalysisPage() {
         request.purpose.toLowerCase().includes(searchTerm.toLowerCase()) ||
         request.requester.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         request.requestId.includes(searchTerm);
-      
       const matchesStatus = statusFilter === 'all' || request.status === statusFilter;
       const matchesCollege = collegeFilter === 'all' || request.college === collegeFilter;
       const matchesDepartment = departmentFilter === 'all' || request.department === departmentFilter;
-      
-      let matchesDate = true;
-      if (dateFilter !== 'all') {
-        const requestDate = new Date(request.createdAt);
-        const now = new Date();
-        const daysDiff = (now.getTime() - requestDate.getTime()) / (1000 * 60 * 60 * 24);
-        
-        switch (dateFilter) {
-          case '7':
-            matchesDate = daysDiff <= 7;
-            break;
-          case '30':
-            matchesDate = daysDiff <= 30;
-            break;
-          case '90':
-            matchesDate = daysDiff <= 90;
-            break;
-        }
-      }
-      
-      return matchesSearch && matchesStatus && matchesCollege && matchesDepartment && matchesDate;
+      return matchesSearch && matchesStatus && matchesCollege && matchesDepartment && matchesDateFilter(request.createdAt);
     });
   };
 
@@ -464,15 +417,47 @@ export default function AnalysisPage() {
             <label className="block text-sm font-medium text-gray-700 mb-1">Date Range</label>
             <select
               value={dateFilter}
-              onChange={(e) => setDateFilter(e.target.value)}
+              onChange={(e) => {
+                setDateFilter(e.target.value);
+                if (e.target.value !== 'custom') {
+                  setCustomDateFrom('');
+                  setCustomDateTo('');
+                }
+              }}
               className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
               <option value="all">All Time</option>
               <option value="7">Last 7 days</option>
               <option value="30">Last 30 days</option>
               <option value="90">Last 90 days</option>
+              <option value="custom">Custom Range</option>
             </select>
           </div>
+
+          {/* Custom Date Pickers */}
+          {dateFilter === 'custom' && (
+            <>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">From</label>
+                <input
+                  type="date"
+                  value={customDateFrom}
+                  onChange={(e) => setCustomDateFrom(e.target.value)}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">To</label>
+                <input
+                  type="date"
+                  value={customDateTo}
+                  min={customDateFrom}
+                  onChange={(e) => setCustomDateTo(e.target.value)}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+            </>
+          )}
         </div>
       </div>
 

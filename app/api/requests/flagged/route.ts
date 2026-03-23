@@ -9,11 +9,20 @@ import {
 } from '../../../../lib/escalation-hierarchy';
 
 // Roles allowed to access the flagged requests endpoint
+// Must stay in sync with the nav items in dashboard/layout.tsx
 const ALLOWED_ROLES = new Set<UserRole>([
-  UserRole.INSTITUTION_MANAGER,
+  UserRole.ACCOUNTANT,
   UserRole.VP,
+  UserRole.VP_RESEARCH,
+  UserRole.VP_ACADEMIC,
+  UserRole.VP_ADMIN,
+  UserRole.RESEARCH_DIRECTOR,
   UserRole.HEAD_OF_INSTITUTION,
   UserRole.DEAN,
+  UserRole.MMA,
+  UserRole.HR,
+  UserRole.AUDIT,
+  UserRole.IT,
   UserRole.CHIEF_DIRECTOR,
   UserRole.CHAIRMAN,
 ]);
@@ -45,10 +54,13 @@ export async function GET(request: NextRequest) {
       .populate('requester', 'name email')
       .lean();
 
-    // Filter: user sees requests stalled at their own role OR any lower role
+    // Filter: roles in the escalation hierarchy see requests stalled at their level or below.
+    // Roles outside the hierarchy (e.g. vp_research, accountant, mma) see all flagged requests.
     const visible = flaggedRequests.filter((req) => {
       const stalledRole = req.escalation?.stalledRole as UserRole | undefined;
       if (!stalledRole) return false;
+      const inHierarchy = ESCALATION_HIERARCHY.includes(userRole);
+      if (!inHierarchy) return true;
       return stalledRole === userRole || isHigherRole(userRole, stalledRole);
     });
 

@@ -313,7 +313,7 @@ export async function POST(
         break;
 
       case 'send_to_dean':
-        if (effectiveRole === UserRole.INSTITUTION_MANAGER && requestRecord.status === RequestStatus.INSTITUTION_VERIFIED) {
+        if (effectiveRole === UserRole.INSTITUTION_MANAGER && (requestRecord.status === RequestStatus.INSTITUTION_VERIFIED || requestRecord.status === RequestStatus.MANAGER_REVIEW)) {
           nextStatus = RequestStatus.DEAN_REVIEW;
           actionType = ActionType.APPROVE;
           if (!updateData.$set) updateData.$set = {};
@@ -322,7 +322,7 @@ export async function POST(
         break;
 
       case 'send_to_vp':
-        if (effectiveRole === UserRole.INSTITUTION_MANAGER && requestRecord.status === RequestStatus.INSTITUTION_VERIFIED) {
+        if (effectiveRole === UserRole.INSTITUTION_MANAGER && (requestRecord.status === RequestStatus.INSTITUTION_VERIFIED || requestRecord.status === RequestStatus.MANAGER_REVIEW)) {
           nextStatus = RequestStatus.VP_APPROVAL;
           actionType = ActionType.APPROVE;
         }

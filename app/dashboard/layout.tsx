@@ -45,13 +45,13 @@ const navigation: NavItem[] = [
     name: 'Flagged Requests',
     href: '/dashboard/flagged',
     icon: FlagIcon,
-    roles: [UserRole.VP, UserRole.VP_RESEARCH, UserRole.VP_ACADEMIC, UserRole.VP_ADMIN, UserRole.RESEARCH_DIRECTOR, UserRole.HEAD_OF_INSTITUTION, UserRole.DEAN, UserRole.CHIEF_DIRECTOR, UserRole.CHAIRMAN],
+    roles: [UserRole.ACCOUNTANT, UserRole.VP, UserRole.VP_RESEARCH, UserRole.VP_ACADEMIC, UserRole.VP_ADMIN, UserRole.RESEARCH_DIRECTOR, UserRole.HEAD_OF_INSTITUTION, UserRole.DEAN, UserRole.MMA, UserRole.HR, UserRole.AUDIT, UserRole.IT, UserRole.CHIEF_DIRECTOR, UserRole.CHAIRMAN],
   },
   {
-    name: 'Analysis',
+    name: 'Workflow',
     href: '/dashboard/analysis',
     icon: ChartBarIcon,
-    roles: [UserRole.DEAN, UserRole.CHIEF_DIRECTOR, UserRole.CHAIRMAN, UserRole.VP_RESEARCH, UserRole.VP_ACADEMIC, UserRole.VP_ADMIN, UserRole.RESEARCH_DIRECTOR],
+    roles: [UserRole.DEAN, UserRole.CHIEF_DIRECTOR, UserRole.CHAIRMAN],
   },
 ];
 

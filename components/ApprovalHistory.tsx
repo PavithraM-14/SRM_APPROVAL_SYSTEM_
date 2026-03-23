@@ -143,9 +143,9 @@ const ApprovalHistory: React.FC<ApprovalHistoryProps> = ({ history, currentStatu
               <li key={historyItem._id} className="px-4 py-6 sm:px-6">
                 <div className="flex items-start">
                   <div className="flex-shrink-0">
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center ${getActionBadgeClass(historyItem.action)}`}>
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center ${getActionBadgeClass(historyItem.action ?? '')}`}>
                       <span className="text-xs font-bold">
-                        {historyItem.action.charAt(0).toUpperCase()}
+                        {(historyItem.action ?? '?').charAt(0).toUpperCase()}
                       </span>
                     </div>
                   </div>
@@ -158,7 +158,9 @@ const ApprovalHistory: React.FC<ApprovalHistoryProps> = ({ history, currentStatu
                         </span>
                         <span className="text-sm text-gray-600">by</span>
                         <span className="text-sm font-medium text-gray-900">
-                          {historyItem.actor.name}
+                          {typeof historyItem.actor === 'object' && historyItem.actor !== null
+                            ? (historyItem.actor as any).name ?? 'Unknown'
+                            : 'Unknown'}
                         </span>
                       </div>
                       <div className="text-xs sm:text-sm text-gray-500">
