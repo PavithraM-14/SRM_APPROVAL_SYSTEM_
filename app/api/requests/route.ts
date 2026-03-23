@@ -103,7 +103,7 @@ export async function GET(request: NextRequest) {
       .sort({ updatedAt: -1, createdAt: -1 })
       .lean(); // Convert to plain objects for better performance
 
-    console.log('[DEBUG] Total requests fetched:', allRequests.length);
+    console.log('[DEBUG] Total requests fetched:', allRequestsFromDB.length);
 
     let visibleRequests;
     
