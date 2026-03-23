@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { XMarkIcon, CheckCircleIcon, XCircleIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline';
 
 interface ApprovalModalProps {
@@ -19,6 +19,7 @@ interface ApprovalModalProps {
     budgetAvailable?: boolean;
   };
   userRole: string;
+  isFlaggedProxy?: boolean; // true when a higher role is acting on behalf of the stalled role
   onApprove: (notes: string, attachments: string[], sopReference?: string, budgetAvailable?: boolean, budgetData?: { allocated: number; spent: number; balance: number }) => void;
   onReject: (notes: string) => void;
   onRejectWithClarification: (queryRequest: string, attachments: string[]) => void;
@@ -34,11 +35,19 @@ interface ApprovalModalProps {
   loading?: boolean;
 }
 
+function getDefaultAction(userRole: string, status?: string): 'approve' | 'reject' | 'reject_with_clarification' | 'forward' | 'clarify' | 'send_to_dean' | 'send_to_vp' | 'send_to_vp_research' | 'send_to_vp_academic' | 'send_to_vp_admin' | 'send_to_research_director' | 'send_to_chairman' {
+  if (userRole === 'institution_manager' && status === 'manager_review') return 'forward';
+  if (userRole === 'institution_manager' && status === 'institution_verified') return 'send_to_vp_research';
+  if (['hr', 'it', 'audit', 'mma'].includes(userRole) && status === 'department_checks') return 'forward';
+  return 'approve';
+}
+
 export default function ApprovalModal({
   isOpen,
   onClose,
   request,
   userRole,
+  isFlaggedProxy = false,
   onApprove,
   onReject,
   onRejectWithClarification,
@@ -53,21 +62,14 @@ export default function ApprovalModal({
   onSendToChairman,
   loading = false
 }: ApprovalModalProps) {
-  const [action, setAction] = useState<'approve' | 'reject' | 'reject_with_clarification' | 'forward' | 'clarify' | 'send_to_dean' | 'send_to_vp' | 'send_to_vp_research' | 'send_to_vp_academic' | 'send_to_vp_admin' | 'send_to_research_director' | 'send_to_chairman'>(() => {
-    if (userRole === 'institution_manager' && request.status === 'manager_review') {
-      return 'forward';
-    }
-    if (userRole === 'institution_manager' && request.status === 'institution_verified') {
-      return 'send_to_vp_research';
-    }
-    if (['hr', 'it', 'audit', 'mma'].includes(userRole) && request.status === 'department_checks') {
-      return 'forward';
-    }
-    if (['vp', 'vp_research', 'vp_academic', 'vp_admin', 'research_director'].includes(userRole)) {
-      return 'approve';
-    }
-    return 'approve';
-  });
+  const [action, setAction] = useState<'approve' | 'reject' | 'reject_with_clarification' | 'forward' | 'clarify' | 'send_to_dean' | 'send_to_vp' | 'send_to_vp_research' | 'send_to_vp_academic' | 'send_to_vp_admin' | 'send_to_research_director' | 'send_to_chairman'>(
+    () => getDefaultAction(userRole, request.status)
+  );
+
+  // Reset action when userRole or status changes (modal is reused across roles)
+  useEffect(() => {
+    setAction(getDefaultAction(userRole, request.status));
+  }, [userRole, request.status]);
   const [notes, setNotes] = useState('');
   const [attachments, setAttachments] = useState<string[]>([]);
   const [urlInput, setUrlInput] = useState('');
@@ -97,6 +99,27 @@ export default function ApprovalModal({
   };
 
   const handleSubmit = () => {
+    // When a higher role is acting as proxy for the stalled role,
+    // skip all role-specific field validation and just forward/approve directly
+    if (isFlaggedProxy) {
+      if (action === 'reject') {
+        if (!notes.trim()) { alert('Please provide a reason for rejection'); return; }
+        onReject(notes);
+      } else if (action === 'reject_with_clarification') {
+        if (!notes.trim()) { alert('Please provide query for the requester'); return; }
+        onRejectWithClarification(notes, attachments);
+      } else if (action === 'forward') {
+        if (onForward) onForward(notes, attachments);
+      } else if (action === 'send_to_dean') {
+        if (onSendToDean) onSendToDean(notes, attachments);
+      } else if (action === 'send_to_vp') {
+        if (onSendToVP) onSendToVP(notes, attachments);
+      } else {
+        onApprove(notes, attachments);
+      }
+      return;
+    }
+
     // Validation for Accountant
     if (userRole === 'accountant') {
       if (budgetAvailable === null) {
@@ -275,7 +298,7 @@ export default function ApprovalModal({
   };
 
   const resetForm = () => {
-    setAction('approve');
+    setAction(getDefaultAction(userRole, request.status));
     setNotes('');
     setAttachments([]);
     setUrlInput('');
@@ -469,7 +492,7 @@ export default function ApprovalModal({
           )}
 
           {/* SOP Reference Section for Institution Manager */}
-          {userRole === 'institution_manager' && request.status === 'manager_review' && (
+          {!isFlaggedProxy && userRole === 'institution_manager' && request.status === 'manager_review' && (
             <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
               <h4 className="text-lg font-medium text-blue-900 mb-4">SOP Reference Verification</h4>
 
@@ -1293,15 +1316,20 @@ export default function ApprovalModal({
               onClick={handleSubmit}
               className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors disabled:opacity-50"
               disabled={loading || (
-                // For Accountant, only check their specific requirements
-                (isAccountant && budgetAvailable === null) ||
-                // For institution manager in manager_review with forward action, check SOP reference
-                (userRole === 'institution_manager' && request.status === 'manager_review' && action === 'forward' && sopReferenceAvailable === null) ||
-                (userRole === 'institution_manager' && request.status === 'manager_review' && action === 'forward' && sopReferenceAvailable === true && !sopReference.trim()) ||
-                // For department users, notes are optional for forward action, required for reject actions
-                (['hr', 'it', 'audit', 'mma'].includes(userRole) && action !== 'forward' && !notes.trim()) ||
-                // For other roles, check notes requirement for non-approve actions
-                (!isAccountant && !['hr', 'it', 'audit', 'mma'].includes(userRole) && action !== 'approve' && !notes.trim())
+                // When acting as proxy for a flagged stalled role, only require notes for reject actions
+                isFlaggedProxy ? (
+                  (action === 'reject' || action === 'reject_with_clarification') && !notes.trim()
+                ) : (
+                  // For Accountant, only check their specific requirements
+                  (isAccountant && budgetAvailable === null) ||
+                  // For institution manager in manager_review with forward action, check SOP reference
+                  (userRole === 'institution_manager' && request.status === 'manager_review' && action === 'forward' && sopReferenceAvailable === null) ||
+                  (userRole === 'institution_manager' && request.status === 'manager_review' && action === 'forward' && sopReferenceAvailable === true && !sopReference.trim()) ||
+                  // For department users, notes are optional for forward action, required for reject actions
+                  (['hr', 'it', 'audit', 'mma'].includes(userRole) && action !== 'forward' && !notes.trim()) ||
+                  // For other roles, check notes requirement for non-approve actions
+                  (!isAccountant && !['hr', 'it', 'audit', 'mma'].includes(userRole) && action !== 'approve' && !notes.trim())
+                )
               )}
             >
               {loading ? 'Processing...' : 'Submit'}

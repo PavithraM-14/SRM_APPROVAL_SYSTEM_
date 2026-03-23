@@ -10,6 +10,7 @@ import {
 
 // Roles allowed to access the flagged requests endpoint
 const ALLOWED_ROLES = new Set<UserRole>([
+  UserRole.INSTITUTION_MANAGER,
   UserRole.VP,
   UserRole.HEAD_OF_INSTITUTION,
   UserRole.DEAN,
@@ -44,11 +45,10 @@ export async function GET(request: NextRequest) {
       .populate('requester', 'name email')
       .lean();
 
-    // Filter by hierarchy: user sees requests stalled at their role OR any lower role
+    // Filter: user sees requests stalled at their own role OR any lower role
     const visible = flaggedRequests.filter((req) => {
       const stalledRole = req.escalation?.stalledRole as UserRole | undefined;
       if (!stalledRole) return false;
-      // User can see if they ARE the stalled role or are strictly higher
       return stalledRole === userRole || isHigherRole(userRole, stalledRole);
     });
 

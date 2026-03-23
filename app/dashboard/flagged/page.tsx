@@ -4,8 +4,6 @@ import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { FlagIcon } from '@heroicons/react/24/outline';
-import { getActionsForHigherRole, isHigherRole } from '../../../lib/escalation-hierarchy';
-import { UserRole } from '../../../lib/types';
 
 interface EscalationInfo {
   flagged: boolean;
@@ -45,7 +43,6 @@ export default function FlaggedRequestsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentUser, setCurrentUser] = useState<any>(null);
-  const [actionLoading, setActionLoading] = useState<string | null>(null);
 
   const fetchCurrentUser = useCallback(async () => {
     try {
@@ -86,28 +83,6 @@ export default function FlaggedRequestsPage() {
     if (currentUser) fetchFlagged();
   }, [currentUser, fetchFlagged]);
 
-  const handleAction = async (requestId: string, subAction: string) => {
-    setActionLoading(`${requestId}-${subAction}`);
-    try {
-      const res = await fetch(`/api/requests/${requestId}/approve`, {
-        method: 'POST',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'escalation_action', subAction }),
-      });
-      if (res.ok) {
-        await fetchFlagged();
-      } else {
-        const data = await res.json();
-        alert(data.error || 'Action failed');
-      }
-    } catch {
-      alert('Action failed');
-    } finally {
-      setActionLoading(null);
-    }
-  };
-
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
@@ -117,9 +92,7 @@ export default function FlaggedRequestsPage() {
   }
 
   if (error) {
-    return (
-      <div className="text-center py-20 text-red-600">{error}</div>
-    );
+    return <div className="text-center py-20 text-red-600">{error}</div>;
   }
 
   return (
@@ -140,7 +113,7 @@ export default function FlaggedRequestsPage() {
           <table className="min-w-full divide-y divide-gray-200 bg-white">
             <thead className="bg-gray-50">
               <tr>
-                {['Request', 'Stalled Role', 'Time Since Flagged', 'Requester', 'College / Dept', 'Actions'].map((h) => (
+                {['Request', 'Stalled Role', 'Time Since Flagged', 'Requester', 'College / Dept'].map((h) => (
                   <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                     {h}
                   </th>
@@ -149,17 +122,8 @@ export default function FlaggedRequestsPage() {
             </thead>
             <tbody className="divide-y divide-gray-100">
               {requests.map((req) => {
-                const stalledRole = req.escalation.stalledRole as UserRole | null;
-                const actingRole = currentUser?.role as UserRole | undefined;
+                const stalledRole = req.escalation.stalledRole;
                 const alreadyActed = !!req.escalation.actedByHigherRole;
-                const canAct =
-                  !alreadyActed &&
-                  actingRole &&
-                  stalledRole &&
-                  isHigherRole(actingRole, stalledRole);
-                const permittedActions = canAct && stalledRole
-                  ? getActionsForHigherRole(actingRole!, stalledRole)
-                  : [];
 
                 return (
                   <tr key={req._id} className="hover:bg-gray-50 transition-colors">
@@ -172,6 +136,11 @@ export default function FlaggedRequestsPage() {
                       </Link>
                       {req.requestId && (
                         <p className="text-xs text-gray-400 mt-0.5">{req.requestId}</p>
+                      )}
+                      {alreadyActed && (
+                        <p className="text-xs text-orange-500 mt-0.5 italic">
+                          Escalated by {formatRole(req.escalation.actedByHigherRole!)}
+                        </p>
                       )}
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-700">
@@ -187,37 +156,6 @@ export default function FlaggedRequestsPage() {
                       <span>{req.college}</span>
                       {req.department && (
                         <span className="text-gray-400"> / {req.department}</span>
-                      )}
-                    </td>
-                    <td className="px-4 py-3">
-                      {alreadyActed ? (
-                        <span className="text-xs text-gray-500 italic">
-                          This request has been escalated past you
-                        </span>
-                      ) : canAct ? (
-                        <div className="flex gap-2 flex-wrap">
-                          {permittedActions.map((act) => {
-                            const key = `${req._id}-${act}`;
-                            const isLoading = actionLoading === key;
-                            const colorMap: Record<string, string> = {
-                              approve: 'bg-green-600 hover:bg-green-700',
-                              reject: 'bg-red-600 hover:bg-red-700',
-                              forward: 'bg-blue-600 hover:bg-blue-700',
-                            };
-                            return (
-                              <button
-                                key={act}
-                                disabled={isLoading}
-                                onClick={() => handleAction(req._id, act)}
-                                className={`px-3 py-1 text-xs font-medium text-white rounded-md transition-colors ${colorMap[act] ?? 'bg-gray-600 hover:bg-gray-700'} disabled:opacity-50`}
-                              >
-                                {isLoading ? '...' : act.charAt(0).toUpperCase() + act.slice(1)}
-                              </button>
-                            );
-                          })}
-                        </div>
-                      ) : (
-                        <span className="text-xs text-gray-400">—</span>
                       )}
                     </td>
                   </tr>

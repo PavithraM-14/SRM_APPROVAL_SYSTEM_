@@ -55,10 +55,11 @@ export function getEscalationReferenceTime(request: any): Date | null {
 }
 
 export function canActOnFlaggedRequest(actingRole: UserRole, stalledRole: UserRole): boolean {
-  return isHigherRole(actingRole, stalledRole);
+  return actingRole === stalledRole || isHigherRole(actingRole, stalledRole);
 }
 
-const ROLE_ACTIONS: Partial<Record<UserRole, string[]>> = {
+// Actions available when a higher role bypasses the stalled role
+const HIGHER_ROLE_ACTIONS: Partial<Record<UserRole, string[]>> = {
   [UserRole.VP]: ["forward"],
   [UserRole.HEAD_OF_INSTITUTION]: ["forward"],
   [UserRole.DEAN]: ["forward", "approve", "reject"],
@@ -66,7 +67,11 @@ const ROLE_ACTIONS: Partial<Record<UserRole, string[]>> = {
   [UserRole.CHAIRMAN]: ["approve", "reject"],
 };
 
+// The stalled role itself can always forward, approve, or reject their own flagged request
+const STALLED_ROLE_ACTIONS = ["forward", "approve", "reject"];
+
 export function getActionsForHigherRole(actingRole: UserRole, stalledRole: UserRole): string[] {
+  if (actingRole === stalledRole) return STALLED_ROLE_ACTIONS;
   if (!isHigherRole(actingRole, stalledRole)) return [];
-  return ROLE_ACTIONS[actingRole] ?? [];
+  return HIGHER_ROLE_ACTIONS[actingRole] ?? [];
 }

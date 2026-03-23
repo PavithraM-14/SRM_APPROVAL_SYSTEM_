@@ -196,6 +196,7 @@ export default function RequestDetailPage({ params }: { params: { id: string } }
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [showApprovalHistory, setShowApprovalHistory] = useState(false);
   const [processingApproval, setProcessingApproval] = useState(false);
+  const [effectiveApprovalRole, setEffectiveApprovalRole] = useState<string>('');
 
   const fetchCurrentUser = useCallback(async () => {
     try {
@@ -899,9 +900,7 @@ export default function RequestDetailPage({ params }: { params: { id: string } }
                       <dt className="text-xs sm:text-sm font-medium text-gray-700">Status</dt>
                       <dd className="text-xs sm:text-sm col-span-2">
                         <span className="text-xs sm:text-sm text-gray-900">
-                          {request.status === 'parallel_verification' 
-                            ? 'VERIFICATION' 
-                            : request.status.replace('_', ' ').toUpperCase()}
+                          {request.status.replace(/_/g, ' ').toUpperCase()}
                         </span>
                         {request.pendingQuery && request.queryLevel === currentUser?.role && (
                           <QueryIndicator size="sm" showText={false} />
@@ -1007,9 +1006,7 @@ export default function RequestDetailPage({ params }: { params: { id: string } }
                       <dt className="text-xs sm:text-sm font-medium text-gray-700">Status</dt>
                       <dd className="text-xs sm:text-sm col-span-2">
                         <span className="text-xs sm:text-sm text-gray-900">
-                          {request.status === 'parallel_verification' 
-                            ? 'VERIFICATION' 
-                            : request.status.replace('_', ' ').toUpperCase()}
+                          {request.status.replace(/_/g, ' ').toUpperCase()}
                         </span>
                         {request.pendingQuery && request.queryLevel === currentUser?.role && (
                           <QueryIndicator size="sm" showText={false} />
@@ -1227,14 +1224,20 @@ export default function RequestDetailPage({ params }: { params: { id: string } }
 
               const requiredApprovers = approvalEngine.getRequiredApprover(request.status as RequestStatus);
               const isAuthorized = requiredApprovers.includes(currentUser?.role as UserRole);
+              const isFlaggedHigherRoleForQuery =
+                escalation?.flagged === true &&
+                stalledRole !== undefined &&
+                viewerRole !== undefined &&
+                !isAuthorized &&
+                viewerIndex !== -1 && stalledIndex !== -1 && viewerIndex > stalledIndex;
 
-              return isAuthorized ? (
+              return (isAuthorized || isFlaggedHigherRoleForQuery) ? (
                 <div className="mt-4 sm:mt-6 flex flex-col gap-3">
                   {flaggedBanner}
                   {banner}
                   <div className="flex flex-col sm:flex-row gap-3 justify-center sm:justify-start">
                     <button
-                      onClick={() => setIsApprovalModalOpen(true)}
+                      onClick={() => { setEffectiveApprovalRole(currentUser?.role || ''); setIsApprovalModalOpen(true); }}
                       className="w-full sm:w-auto min-w-[200px] px-4 sm:px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm sm:text-base font-medium active:scale-95 shadow-sm"
                     >
                       Process Request
@@ -1253,20 +1256,42 @@ export default function RequestDetailPage({ params }: { params: { id: string } }
             
             const requiredApprovers = approvalEngine.getRequiredApprover(request.status as RequestStatus);
             const isAuthorized = requiredApprovers.includes(currentUser?.role as UserRole);
-            
-            return isAuthorized ? (
+
+            // Higher role acting on behalf of stalled role when request is flagged
+            const isFlaggedHigherRole =
+              escalation?.flagged === true &&
+              stalledRole !== undefined &&
+              viewerRole !== undefined &&
+              !isAuthorized &&
+              viewerIndex !== -1 &&
+              stalledIndex !== -1 &&
+              viewerIndex > stalledIndex;
+
+            const canProcess = isAuthorized || isFlaggedHigherRole;
+
+            // When a higher role acts on a flagged request, show the modal as if they are the stalled role
+            const effectiveRole = isFlaggedHigherRole ? stalledRole! : (currentUser?.role || '');
+
+            const flaggedHigherRoleBanner = isFlaggedHigherRole ? (
+              <div className="mt-4 sm:mt-6 flex items-center gap-2 px-4 py-3 bg-orange-50 border border-orange-300 rounded-lg">
+                <FlagIcon className="h-5 w-5 text-orange-500 flex-shrink-0" />
+                <span className="text-sm font-medium text-orange-800">
+                  This request is flagged and stalled at <strong>{stalledRole?.replace(/_/g, ' ')}</strong>. You are processing it on their behalf.
+                </span>
+              </div>
+            ) : null;
+
+            return canProcess ? (
               <div className="mt-4 sm:mt-6 flex flex-col gap-3">
                 {flaggedBanner}
+                {flaggedHigherRoleBanner}
                 <div className="flex flex-col sm:flex-row gap-3 justify-center sm:justify-start">
-                  {/* Main Process Request Button */}
                   <button
-                    onClick={() => setIsApprovalModalOpen(true)}
+                    onClick={() => { setEffectiveApprovalRole(effectiveRole); setIsApprovalModalOpen(true); }}
                     className="w-full sm:w-auto min-w-[200px] px-4 sm:px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm sm:text-base font-medium active:scale-95 shadow-sm"
                   >
                     Process Request
                   </button>
-                  
-                  {/* Dedicated Raise Query Button */}
                   <button
                     onClick={() => setIsDirectQueryModalOpen(true)}
                     className="w-full sm:w-auto min-w-[200px] px-4 sm:px-6 py-3 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors text-sm sm:text-base font-medium active:scale-95 shadow-sm flex items-center justify-center gap-2"
@@ -1354,7 +1379,8 @@ export default function RequestDetailPage({ params }: { params: { id: string } }
           budgetBalance: request.budgetBalance,
           budgetAvailable: request.budgetAvailable
         }}
-        userRole={currentUser?.role || ''}
+        userRole={effectiveApprovalRole || currentUser?.role || ''}
+        isFlaggedProxy={effectiveApprovalRole !== '' && effectiveApprovalRole !== currentUser?.role}
         onApprove={handleApprove}
         onReject={handleReject}
         onRejectWithClarification={handleRejectWithClarification}
