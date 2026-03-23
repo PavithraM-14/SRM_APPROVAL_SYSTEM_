@@ -2,7 +2,6 @@ import { UserRole, RequestStatus } from "./types";
 
 export const ESCALATION_HIERARCHY: UserRole[] = [
   UserRole.INSTITUTION_MANAGER,
-  UserRole.VP,
   UserRole.HEAD_OF_INSTITUTION,
   UserRole.DEAN,
   UserRole.CHIEF_DIRECTOR,
@@ -11,7 +10,6 @@ export const ESCALATION_HIERARCHY: UserRole[] = [
 
 export const ESCALATABLE_STATUSES: RequestStatus[] = [
   RequestStatus.MANAGER_REVIEW,
-  RequestStatus.VP_APPROVAL,
   RequestStatus.HOI_APPROVAL,
   RequestStatus.DEAN_REVIEW,
   RequestStatus.CHIEF_DIRECTOR_APPROVAL,
@@ -20,7 +18,6 @@ export const ESCALATABLE_STATUSES: RequestStatus[] = [
 
 export const STATUS_TO_ROLE: Record<RequestStatus, UserRole> = {
   [RequestStatus.MANAGER_REVIEW]: UserRole.INSTITUTION_MANAGER,
-  [RequestStatus.VP_APPROVAL]: UserRole.VP,
   [RequestStatus.HOI_APPROVAL]: UserRole.HEAD_OF_INSTITUTION,
   [RequestStatus.DEAN_REVIEW]: UserRole.DEAN,
   [RequestStatus.CHIEF_DIRECTOR_APPROVAL]: UserRole.CHIEF_DIRECTOR,
@@ -60,7 +57,6 @@ export function canActOnFlaggedRequest(actingRole: UserRole, stalledRole: UserRo
 
 // Actions available when a higher role bypasses the stalled role
 const HIGHER_ROLE_ACTIONS: Partial<Record<UserRole, string[]>> = {
-  [UserRole.VP]: ["forward"],
   [UserRole.HEAD_OF_INSTITUTION]: ["forward"],
   [UserRole.DEAN]: ["forward", "approve", "reject"],
   [UserRole.CHIEF_DIRECTOR]: ["forward", "approve", "reject"],

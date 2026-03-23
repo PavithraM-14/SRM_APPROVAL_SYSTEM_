@@ -39,13 +39,13 @@ const navigation: NavItem[] = [
     name: 'Pending Approvals',
     href: '/dashboard/approvals',
     icon: ClipboardDocumentListIcon,
-    roles: [UserRole.INSTITUTION_MANAGER, UserRole.ACCOUNTANT, UserRole.VP, UserRole.VP_RESEARCH, UserRole.VP_ACADEMIC, UserRole.VP_ADMIN, UserRole.RESEARCH_DIRECTOR, UserRole.HEAD_OF_INSTITUTION, UserRole.DEAN, UserRole.MMA, UserRole.HR, UserRole.AUDIT, UserRole.IT, UserRole.CHIEF_DIRECTOR, UserRole.CHAIRMAN] // All non-requester roles
+    roles: [UserRole.INSTITUTION_MANAGER, UserRole.ACCOUNTANT, UserRole.VP_RESEARCH, UserRole.VP_ACADEMIC, UserRole.VP_ADMIN, UserRole.RESEARCH_DIRECTOR, UserRole.HEAD_OF_INSTITUTION, UserRole.DEAN, UserRole.MMA, UserRole.HR, UserRole.AUDIT, UserRole.IT, UserRole.CHIEF_DIRECTOR, UserRole.CHAIRMAN] // All non-requester roles
   },
   {
     name: 'Flagged Requests',
     href: '/dashboard/flagged',
     icon: FlagIcon,
-    roles: [UserRole.ACCOUNTANT, UserRole.VP, UserRole.VP_RESEARCH, UserRole.VP_ACADEMIC, UserRole.VP_ADMIN, UserRole.RESEARCH_DIRECTOR, UserRole.HEAD_OF_INSTITUTION, UserRole.DEAN, UserRole.MMA, UserRole.HR, UserRole.AUDIT, UserRole.IT, UserRole.CHIEF_DIRECTOR, UserRole.CHAIRMAN],
+    roles: [UserRole.ACCOUNTANT, UserRole.VP_RESEARCH, UserRole.VP_ACADEMIC, UserRole.VP_ADMIN, UserRole.RESEARCH_DIRECTOR, UserRole.HEAD_OF_INSTITUTION, UserRole.DEAN, UserRole.MMA, UserRole.HR, UserRole.AUDIT, UserRole.IT, UserRole.CHIEF_DIRECTOR, UserRole.CHAIRMAN],
   },
   {
     name: 'Workflow',
@@ -159,7 +159,7 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
 
   const fetchFlaggedCount = useCallback(async () => {
     if (!user) return;
-    const flaggedRoles: UserRole[] = [UserRole.VP, UserRole.HEAD_OF_INSTITUTION, UserRole.DEAN, UserRole.CHIEF_DIRECTOR, UserRole.CHAIRMAN];
+    const flaggedRoles: UserRole[] = [UserRole.HEAD_OF_INSTITUTION, UserRole.DEAN, UserRole.CHIEF_DIRECTOR, UserRole.CHAIRMAN];
     if (!flaggedRoles.includes(user.role as UserRole)) return;
     try {
       const res = await fetch('/api/requests/flagged?countOnly=true', { credentials: 'include' });

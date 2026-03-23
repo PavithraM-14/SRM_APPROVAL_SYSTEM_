@@ -23,7 +23,6 @@ export function analyzeRequestVisibility(
     // UserRole.REQUESTER, // REMOVED: Requesters are filtered by ID, so college check is redundant and can hide legitimate requests
     UserRole.INSTITUTION_MANAGER,
     UserRole.ACCOUNTANT,
-    UserRole.VP,
     UserRole.HEAD_OF_INSTITUTION
   ];
 
@@ -336,7 +335,6 @@ function getAllStatusesForRole(userRole: UserRole): RequestStatus[] {
       RequestStatus.BUDGET_CHECK,
       RequestStatus.INSTITUTION_VERIFIED
     ],
-    [UserRole.VP]: [RequestStatus.VP_APPROVAL],
     [UserRole.VP_RESEARCH]: [RequestStatus.VP_RESEARCH_APPROVAL],
     [UserRole.VP_ACADEMIC]: [RequestStatus.VP_ACADEMIC_APPROVAL],
     [UserRole.VP_ADMIN]: [RequestStatus.VP_ADMIN_APPROVAL],

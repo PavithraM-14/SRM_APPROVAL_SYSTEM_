@@ -21,7 +21,6 @@ function getRoleDisplayName(role: UserRole): string {
     [UserRole.REQUESTER]: 'Raj',
     [UserRole.INSTITUTION_MANAGER]: 'Tharun',
     [UserRole.ACCOUNTANT]: 'Swathy',
-    [UserRole.VP]: 'Shri',
     [UserRole.VP_RESEARCH]: 'Shri',
     [UserRole.VP_ACADEMIC]: 'Shri',
     [UserRole.VP_ADMIN]: 'Shri',
@@ -119,7 +118,7 @@ async function seedTenHr() {
     const requester  = users.find(u => u.role === UserRole.REQUESTER)!;
     const manager    = users.find(u => u.role === UserRole.INSTITUTION_MANAGER)!;
     const accountant = users.find(u => u.role === UserRole.ACCOUNTANT)!;
-    const vp         = users.find(u => u.role === UserRole.VP)!;
+    const vpResearch = users.find(u => u.role === UserRole.VP_RESEARCH)!;
     const hoi        = users.find(u => u.role === UserRole.HEAD_OF_INSTITUTION)!;
     const dean       = users.find(u => u.role === UserRole.DEAN)!;
     const chief      = users.find(u => u.role === UserRole.CHIEF_DIRECTOR)!;
@@ -169,11 +168,11 @@ async function seedTenHr() {
       costEstimate: 180000, expenseCategory: 'Software', sopReference: 'SOP-002',
       attachments: ['license-renewal-invoice.pdf'],
       requester: requester._id,
-      status: RequestStatus.VP_APPROVAL,
+      status: RequestStatus.VP_RESEARCH_APPROVAL,
       escalation: {
         reminderSent: true, reminderSentAt: hoursAgo(6),
         flagged: true, flaggedAt: hoursAgo(4),
-        stalledRole: UserRole.VP,
+        stalledRole: UserRole.VP_RESEARCH,
       },
       history: [
         {
@@ -197,13 +196,13 @@ async function seedTenHr() {
         {
           action: ActionType.FORWARD, actor: manager._id,
           timestamp: hoursAgo(11.5),
-          previousStatus: RequestStatus.INSTITUTION_VERIFIED, newStatus: RequestStatus.VP_APPROVAL,
-          notes: 'Forwarded to VP for approval',
+          previousStatus: RequestStatus.INSTITUTION_VERIFIED, newStatus: RequestStatus.VP_RESEARCH_APPROVAL,
+          notes: 'Forwarded to VP Research for approval',
         },
         {
           action: ActionType.ESCALATION_FLAGGED, actor: sys,
           timestamp: hoursAgo(4),
-          previousStatus: RequestStatus.VP_APPROVAL, newStatus: RequestStatus.VP_APPROVAL,
+          previousStatus: RequestStatus.VP_RESEARCH_APPROVAL, newStatus: RequestStatus.VP_RESEARCH_APPROVAL,
           notes: 'Auto-flagged: no action taken in 10 hours',
         },
       ],
@@ -246,14 +245,14 @@ async function seedTenHr() {
         {
           action: ActionType.FORWARD, actor: manager._id,
           timestamp: hoursAgo(9.5),
-          previousStatus: RequestStatus.INSTITUTION_VERIFIED, newStatus: RequestStatus.VP_APPROVAL,
-          notes: 'Forwarded to VP',
+          previousStatus: RequestStatus.INSTITUTION_VERIFIED, newStatus: RequestStatus.VP_RESEARCH_APPROVAL,
+          notes: 'Forwarded to VP Research',
         },
         {
-          action: ActionType.APPROVE, actor: vp._id,
+          action: ActionType.APPROVE, actor: vpResearch._id,
           timestamp: hoursAgo(11),
-          previousStatus: RequestStatus.VP_APPROVAL, newStatus: RequestStatus.HOI_APPROVAL,
-          notes: 'VP approved',
+          previousStatus: RequestStatus.VP_RESEARCH_APPROVAL, newStatus: RequestStatus.HOI_APPROVAL,
+          notes: 'VP Research approved',
         },
         {
           action: ActionType.ESCALATION_FLAGGED, actor: sys,
@@ -301,14 +300,14 @@ async function seedTenHr() {
         {
           action: ActionType.FORWARD, actor: manager._id,
           timestamp: hoursAgo(11.5),
-          previousStatus: RequestStatus.INSTITUTION_VERIFIED, newStatus: RequestStatus.VP_APPROVAL,
-          notes: 'Forwarded to VP',
+          previousStatus: RequestStatus.INSTITUTION_VERIFIED, newStatus: RequestStatus.VP_RESEARCH_APPROVAL,
+          notes: 'Forwarded to VP Research',
         },
         {
-          action: ActionType.APPROVE, actor: vp._id,
+          action: ActionType.APPROVE, actor: vpResearch._id,
           timestamp: hoursAgo(11),
-          previousStatus: RequestStatus.VP_APPROVAL, newStatus: RequestStatus.HOI_APPROVAL,
-          notes: 'VP approved',
+          previousStatus: RequestStatus.VP_RESEARCH_APPROVAL, newStatus: RequestStatus.HOI_APPROVAL,
+          notes: 'VP Research approved',
         },
         {
           action: ActionType.APPROVE, actor: hoi._id,
@@ -362,14 +361,14 @@ async function seedTenHr() {
         {
           action: ActionType.FORWARD, actor: manager._id,
           timestamp: hoursAgo(9),
-          previousStatus: RequestStatus.INSTITUTION_VERIFIED, newStatus: RequestStatus.VP_APPROVAL,
-          notes: 'Forwarded to VP',
+          previousStatus: RequestStatus.INSTITUTION_VERIFIED, newStatus: RequestStatus.VP_RESEARCH_APPROVAL,
+          notes: 'Forwarded to VP Research',
         },
         {
-          action: ActionType.APPROVE, actor: vp._id,
+          action: ActionType.APPROVE, actor: vpResearch._id,
           timestamp: hoursAgo(8.5),
-          previousStatus: RequestStatus.VP_APPROVAL, newStatus: RequestStatus.HOI_APPROVAL,
-          notes: 'VP approved',
+          previousStatus: RequestStatus.VP_RESEARCH_APPROVAL, newStatus: RequestStatus.HOI_APPROVAL,
+          notes: 'VP Research approved',
         },
         {
           action: ActionType.APPROVE, actor: hoi._id,
@@ -405,7 +404,7 @@ async function seedTenHr() {
       escalation: {
         reminderSent: true, reminderSentAt: hoursAgo(8),
         flagged: true, flaggedAt: hoursAgo(6),
-        stalledRole: UserRole.VP,
+        stalledRole: UserRole.VP_RESEARCH,
         actedByHigherRole: UserRole.DEAN,
         actedByHigherRoleAt: hoursAgo(1),
       },
@@ -419,21 +418,21 @@ async function seedTenHr() {
         {
           action: ActionType.FORWARD, actor: manager._id,
           timestamp: hoursAgo(15.5),
-          previousStatus: RequestStatus.MANAGER_REVIEW, newStatus: RequestStatus.VP_APPROVAL,
-          notes: 'Forwarded to VP',
+          previousStatus: RequestStatus.MANAGER_REVIEW, newStatus: RequestStatus.VP_RESEARCH_APPROVAL,
+          notes: 'Forwarded to VP Research',
         },
         {
           action: ActionType.ESCALATION_FLAGGED, actor: sys,
           timestamp: hoursAgo(6),
-          previousStatus: RequestStatus.VP_APPROVAL, newStatus: RequestStatus.VP_APPROVAL,
+          previousStatus: RequestStatus.VP_RESEARCH_APPROVAL, newStatus: RequestStatus.VP_RESEARCH_APPROVAL,
           notes: 'Auto-flagged: no action taken in 10 hours',
         },
         {
           action: ActionType.ESCALATION_ACTION, actor: dean._id,
           timestamp: hoursAgo(1),
-          previousStatus: RequestStatus.VP_APPROVAL, newStatus: RequestStatus.HOI_APPROVAL,
-          skippedRole: UserRole.VP,
-          notes: 'Escalation action by dean — forwarded past stalled VP',
+          previousStatus: RequestStatus.VP_RESEARCH_APPROVAL, newStatus: RequestStatus.HOI_APPROVAL,
+          skippedRole: UserRole.VP_RESEARCH,
+          notes: 'Escalation action by dean — forwarded past stalled VP Research',
         },
       ],
     });
@@ -445,8 +444,8 @@ async function seedTenHr() {
     users.forEach(u => console.log(`  ${u.email.padEnd(42)} ${u.name.padEnd(12)} (${u.role})`));
 
     console.log('\n🚩 Flagged Requests — Who Can Bypass:\n');
-    console.log('  Stalled at Manager        → VP, HOI, Dean, Chief, Chairman');
-    console.log('  Stalled at VP             → HOI, Dean, Chief, Chairman');
+    console.log('  Stalled at Manager        → VP Research/Academic/Admin, HOI, Dean, Chief, Chairman');
+    console.log('  Stalled at VP Research    → HOI, Dean, Chief, Chairman');
     console.log('  Stalled at HOI            → Dean, Chief, Chairman');
     console.log('  Stalled at Admin Dept     → Chief, Chairman');
     console.log('  Stalled at Head of Campus → Chairman only');

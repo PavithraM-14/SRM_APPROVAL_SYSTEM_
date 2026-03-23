@@ -29,7 +29,6 @@ export async function GET(
       UserRole.REQUESTER,
       UserRole.INSTITUTION_MANAGER,
       UserRole.ACCOUNTANT,
-      UserRole.VP,
       UserRole.VP_RESEARCH,
       UserRole.VP_ACADEMIC,
       UserRole.VP_ADMIN,
@@ -56,7 +55,6 @@ export async function GET(
       UserRole.REQUESTER,
       UserRole.INSTITUTION_MANAGER,
       UserRole.ACCOUNTANT,
-      UserRole.VP,
       UserRole.HEAD_OF_INSTITUTION
     ];
 

@@ -4,7 +4,6 @@ export enum UserRole {
   REQUESTER = 'requester',
   INSTITUTION_MANAGER = 'institution_manager',
   ACCOUNTANT = 'accountant',
-  VP = 'vp',
   VP_RESEARCH = 'vp_research',
   VP_ACADEMIC = 'vp_academic',
   VP_ADMIN = 'vp_admin',

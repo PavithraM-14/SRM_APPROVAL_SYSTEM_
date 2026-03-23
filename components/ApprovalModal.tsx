@@ -26,7 +26,6 @@ interface ApprovalModalProps {
   onForward?: (notes: string, attachments: string[], sopReference?: string) => void;
   onClarify?: (notes: string, attachments: string[], target?: string) => void;
   onSendToDean?: (notes: string, attachments: string[]) => void;
-  onSendToVP?: (notes: string, attachments: string[]) => void;
   onSendToVPResearch?: (notes: string, attachments: string[]) => void;
   onSendToVPAcademic?: (notes: string, attachments: string[]) => void;
   onSendToVPAdmin?: (notes: string, attachments: string[]) => void;
@@ -35,9 +34,9 @@ interface ApprovalModalProps {
   loading?: boolean;
 }
 
-function getDefaultAction(userRole: string, status?: string): 'approve' | 'reject' | 'reject_with_clarification' | 'forward' | 'clarify' | 'send_to_dean' | 'send_to_vp' | 'send_to_vp_research' | 'send_to_vp_academic' | 'send_to_vp_admin' | 'send_to_research_director' | 'send_to_chairman' {
+function getDefaultAction(userRole: string, status?: string): 'approve' | 'reject' | 'reject_with_clarification' | 'forward' | 'clarify' | 'send_to_dean' | 'send_to_vp_research' | 'send_to_vp_academic' | 'send_to_vp_admin' | 'send_to_research_director' | 'send_to_chairman' {
   if (userRole === 'institution_manager' && status === 'manager_review') return 'forward';
-  if (userRole === 'institution_manager' && status === 'institution_verified') return 'send_to_vp';
+  if (userRole === 'institution_manager' && status === 'institution_verified') return 'send_to_vp_research';
   if (['hr', 'it', 'audit', 'mma'].includes(userRole) && status === 'department_checks') return 'forward';
   return 'approve';
 }
@@ -54,7 +53,6 @@ export default function ApprovalModal({
   onForward,
   onClarify,
   onSendToDean,
-  onSendToVP,
   onSendToVPResearch,
   onSendToVPAcademic,
   onSendToVPAdmin,
@@ -62,7 +60,7 @@ export default function ApprovalModal({
   onSendToChairman,
   loading = false
 }: ApprovalModalProps) {
-  const [action, setAction] = useState<'approve' | 'reject' | 'reject_with_clarification' | 'forward' | 'clarify' | 'send_to_dean' | 'send_to_vp' | 'send_to_vp_research' | 'send_to_vp_academic' | 'send_to_vp_admin' | 'send_to_research_director' | 'send_to_chairman'>(
+  const [action, setAction] = useState<'approve' | 'reject' | 'reject_with_clarification' | 'forward' | 'clarify' | 'send_to_dean' | 'send_to_vp_research' | 'send_to_vp_academic' | 'send_to_vp_admin' | 'send_to_research_director' | 'send_to_chairman'>(
     () => getDefaultAction(userRole, request.status)
   );
 
@@ -112,8 +110,6 @@ export default function ApprovalModal({
         if (onForward) onForward(notes, attachments);
       } else if (action === 'send_to_dean') {
         if (onSendToDean) onSendToDean(notes, attachments);
-      } else if (action === 'send_to_vp') {
-        if (onSendToVP) onSendToVP(notes, attachments);
       } else {
         onApprove(notes, attachments);
       }
@@ -169,7 +165,6 @@ export default function ApprovalModal({
     // For Institution Manager in manager_review status, handle direct forward actions (skip budget)
     if (userRole === 'institution_manager' && request.status === 'manager_review') {
       const directActions: Record<string, { handler?: (n: string, a: string[]) => void; label: string }> = {
-        send_to_vp: { handler: onSendToVP, label: 'Send to VP' },
         send_to_vp_research: { handler: onSendToVPResearch, label: 'Send to VP Research' },
         send_to_vp_academic: { handler: onSendToVPAcademic, label: 'Send to VP Academic' },
         send_to_vp_admin: { handler: onSendToVPAdmin, label: 'Send to VP Admin' },
@@ -189,16 +184,6 @@ export default function ApprovalModal({
         onSendToDean(notes, attachments);
       } else {
         alert('Send to Dean action not configured');
-      }
-      return;
-    }
-
-    // For Institution Manager in institution_verified status, handle send_to_vp action
-    if (userRole === 'institution_manager' && request.status === 'institution_verified' && action === 'send_to_vp') {
-      if (onSendToVP) {
-        onSendToVP(notes, attachments);
-      } else {
-        alert('Send to VP action not configured');
       }
       return;
     }
@@ -1003,7 +988,6 @@ export default function ApprovalModal({
                   disabled={loading}
                 >
                   <option value="forward">Forward to Budget Verification</option>
-                  <option value="send_to_vp">Forward to VP</option>
                   <option value="send_to_vp_research">Forward to VP Research</option>
                   <option value="send_to_vp_academic">Forward to VP Academic</option>
                   <option value="send_to_vp_admin">Forward to VP Admin</option>
@@ -1023,18 +1007,6 @@ export default function ApprovalModal({
                       </div>
                       <p className="text-sm text-green-600 mt-1">
                         This will forward the request to the Accountant for budget verification.
-                      </p>
-                    </div>
-                  )}
-
-                  {action === 'send_to_vp' && (
-                    <div className="p-3 bg-violet-50 border border-violet-200 rounded-lg">
-                      <div className="flex items-center">
-                        <CheckCircleIcon className="w-5 h-5 text-violet-600 mr-2" />
-                        <span className="font-medium text-violet-700">Forward to VP</span>
-                      </div>
-                      <p className="text-sm text-violet-600 mt-1">
-                        Forward this request directly to VP, skipping budget verification.
                       </p>
                     </div>
                   )}
@@ -1131,7 +1103,6 @@ export default function ApprovalModal({
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
                   disabled={loading}
                 >
-                  <option value="send_to_vp">Forward to VP</option>
                   <option value="send_to_vp_research">Forward to VP Research</option>
                   <option value="send_to_vp_academic">Forward to VP Academic</option>
                   <option value="send_to_vp_admin">Forward to VP Admin</option>
@@ -1143,18 +1114,6 @@ export default function ApprovalModal({
 
                 {/* Action Options Display */}
                 <div className="mt-3 space-y-2">
-                  {action === 'send_to_vp' && (
-                    <div className="p-3 bg-violet-50 border border-violet-200 rounded-lg">
-                      <div className="flex items-center">
-                        <CheckCircleIcon className="w-5 h-5 text-violet-600 mr-2" />
-                        <span className="font-medium text-violet-700">Forward to VP</span>
-                      </div>
-                      <p className="text-sm text-violet-600 mt-1">
-                        Forward this request to VP for approval.
-                      </p>
-                    </div>
-                  )}
-
                   {action === 'send_to_vp_research' && (
                     <div className="p-3 bg-purple-50 border border-purple-200 rounded-lg">
                       <div className="flex items-center">
@@ -1238,7 +1197,7 @@ export default function ApprovalModal({
                   )}
                 </div>
               </>
-            ) : ['vp', 'vp_research', 'vp_academic', 'vp_admin', 'research_director'].includes(userRole) ? (
+            ) : ['vp_research', 'vp_academic', 'vp_admin', 'research_director'].includes(userRole) ? (
               // Interface for all VP roles and Research Director
               <>
                 <select

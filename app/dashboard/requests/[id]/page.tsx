@@ -583,35 +583,6 @@ export default function RequestDetailPage({ params }: { params: { id: string } }
     }
   };
 
-  const handleSendToVP = async (notes: string, attachments: string[]) => {
-    try {
-      setProcessingApproval(true);
-      const response = await fetch(`/api/requests/${params.id}/approve`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'send_to_vp',
-          notes,
-          attachments
-        }),
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to send to VP');
-      }
-
-      await fetchRequest();
-      setIsApprovalModalOpen(false);
-
-    } catch (err) {
-      console.error('Send to VP error:', err);
-      throw err;
-    } finally {
-      setProcessingApproval(false);
-    }
-  };
-
   // New VP role handlers
   const handleSendToVPResearch = async (notes: string, attachments: string[]) => {
     try {
@@ -1387,7 +1358,6 @@ export default function RequestDetailPage({ params }: { params: { id: string } }
         onForward={handleForward}
         onClarify={handleClarify}
         onSendToDean={handleSendToDean}
-        onSendToVP={handleSendToVP}
         onSendToVPResearch={handleSendToVPResearch}
         onSendToVPAcademic={handleSendToVPAcademic}
         onSendToVPAdmin={handleSendToVPAdmin}

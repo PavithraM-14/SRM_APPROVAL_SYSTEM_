@@ -12,7 +12,6 @@ import {
 // Must stay in sync with the nav items in dashboard/layout.tsx
 const ALLOWED_ROLES = new Set<UserRole>([
   UserRole.ACCOUNTANT,
-  UserRole.VP,
   UserRole.VP_RESEARCH,
   UserRole.VP_ACADEMIC,
   UserRole.VP_ADMIN,

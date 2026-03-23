@@ -9,7 +9,6 @@ type Transition = {
 export const approvalEngine = {
   transitions: <Transition[]>[
     { from: RequestStatus.MANAGER_REVIEW, to: RequestStatus.BUDGET_CHECK, requiredRole: UserRole.INSTITUTION_MANAGER },
-    { from: RequestStatus.MANAGER_REVIEW, to: RequestStatus.VP_APPROVAL, requiredRole: UserRole.INSTITUTION_MANAGER },
     { from: RequestStatus.MANAGER_REVIEW, to: RequestStatus.VP_RESEARCH_APPROVAL, requiredRole: UserRole.INSTITUTION_MANAGER },
     { from: RequestStatus.MANAGER_REVIEW, to: RequestStatus.VP_ACADEMIC_APPROVAL, requiredRole: UserRole.INSTITUTION_MANAGER },
     { from: RequestStatus.MANAGER_REVIEW, to: RequestStatus.VP_ADMIN_APPROVAL, requiredRole: UserRole.INSTITUTION_MANAGER },
@@ -18,14 +17,12 @@ export const approvalEngine = {
 
     { from: RequestStatus.BUDGET_CHECK, to: RequestStatus.INSTITUTION_VERIFIED, requiredRole: UserRole.ACCOUNTANT },
 
-    { from: RequestStatus.INSTITUTION_VERIFIED, to: RequestStatus.VP_APPROVAL, requiredRole: UserRole.INSTITUTION_MANAGER },
     { from: RequestStatus.INSTITUTION_VERIFIED, to: RequestStatus.VP_RESEARCH_APPROVAL, requiredRole: UserRole.INSTITUTION_MANAGER },
     { from: RequestStatus.INSTITUTION_VERIFIED, to: RequestStatus.VP_ACADEMIC_APPROVAL, requiredRole: UserRole.INSTITUTION_MANAGER },
     { from: RequestStatus.INSTITUTION_VERIFIED, to: RequestStatus.VP_ADMIN_APPROVAL, requiredRole: UserRole.INSTITUTION_MANAGER },
     { from: RequestStatus.INSTITUTION_VERIFIED, to: RequestStatus.RESEARCH_DIRECTOR_APPROVAL, requiredRole: UserRole.INSTITUTION_MANAGER },
     { from: RequestStatus.INSTITUTION_VERIFIED, to: RequestStatus.DEAN_REVIEW, requiredRole: UserRole.INSTITUTION_MANAGER },
 
-    { from: RequestStatus.VP_APPROVAL, to: RequestStatus.HOI_APPROVAL, requiredRole: UserRole.VP },
     { from: RequestStatus.VP_RESEARCH_APPROVAL, to: RequestStatus.HOI_APPROVAL, requiredRole: UserRole.VP_RESEARCH },
     { from: RequestStatus.VP_ACADEMIC_APPROVAL, to: RequestStatus.HOI_APPROVAL, requiredRole: UserRole.VP_ACADEMIC },
     { from: RequestStatus.VP_ADMIN_APPROVAL, to: RequestStatus.HOI_APPROVAL, requiredRole: UserRole.VP_ADMIN },
@@ -50,7 +47,6 @@ export const approvalEngine = {
     // Rejections
     { from: RequestStatus.MANAGER_REVIEW, to: RequestStatus.REJECTED, requiredRole: UserRole.INSTITUTION_MANAGER },
     { from: RequestStatus.BUDGET_CHECK, to: RequestStatus.REJECTED, requiredRole: UserRole.ACCOUNTANT },
-    { from: RequestStatus.VP_APPROVAL, to: RequestStatus.REJECTED, requiredRole: UserRole.VP },
     { from: RequestStatus.VP_RESEARCH_APPROVAL, to: RequestStatus.REJECTED, requiredRole: UserRole.VP_RESEARCH },
     { from: RequestStatus.VP_ACADEMIC_APPROVAL, to: RequestStatus.REJECTED, requiredRole: UserRole.VP_ACADEMIC },
     { from: RequestStatus.VP_ADMIN_APPROVAL, to: RequestStatus.REJECTED, requiredRole: UserRole.VP_ADMIN },
@@ -97,12 +93,6 @@ export const approvalEngine = {
       case UserRole.ACCOUNTANT:
         if (currentStatus === RequestStatus.BUDGET_CHECK) {
           return RequestStatus.INSTITUTION_VERIFIED;
-        }
-        break;
-
-      case UserRole.VP:
-        if (currentStatus === RequestStatus.VP_APPROVAL) {
-          return RequestStatus.HOI_APPROVAL;
         }
         break;
 

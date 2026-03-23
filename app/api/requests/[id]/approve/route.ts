@@ -50,7 +50,7 @@ export async function POST(
     });
 
     // Validate action - add new actions for budget routing and query workflow
-    if (!['approve', 'reject', 'clarify', 'forward', 'send_to_dean', 'send_to_vp', 'send_to_vp_research', 'send_to_vp_academic', 'send_to_vp_admin', 'send_to_research_director', 'send_to_chairman', 'reject_with_clarification', 'clarify_and_reapprove', 'query_and_reapprove', 'dean_send_to_requester', 'escalation_action'].includes(action)) {
+    if (!['approve', 'reject', 'clarify', 'forward', 'send_to_dean', 'send_to_vp_research', 'send_to_vp_academic', 'send_to_vp_admin', 'send_to_research_director', 'send_to_chairman', 'reject_with_clarification', 'clarify_and_reapprove', 'query_and_reapprove', 'dean_send_to_requester', 'escalation_action'].includes(action)) {
       console.log('[DEBUG] Invalid action:', action);
       return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
     }
@@ -139,7 +139,6 @@ export async function POST(
       UserRole.REQUESTER,
       UserRole.INSTITUTION_MANAGER,
       UserRole.ACCOUNTANT,
-      UserRole.VP,
       UserRole.HEAD_OF_INSTITUTION
     ];
 
@@ -321,13 +320,6 @@ export async function POST(
         }
         break;
 
-      case 'send_to_vp':
-        if (effectiveRole === UserRole.INSTITUTION_MANAGER && (requestRecord.status === RequestStatus.INSTITUTION_VERIFIED || requestRecord.status === RequestStatus.MANAGER_REVIEW)) {
-          nextStatus = RequestStatus.VP_APPROVAL;
-          actionType = ActionType.APPROVE;
-        }
-        break;
-
       case 'send_to_vp_research':
         if (user.role === UserRole.INSTITUTION_MANAGER && (requestRecord.status === RequestStatus.INSTITUTION_VERIFIED || requestRecord.status === RequestStatus.MANAGER_REVIEW)) {
           nextStatus = RequestStatus.VP_RESEARCH_APPROVAL;
@@ -457,14 +449,6 @@ export async function POST(
           queryMessage: notes
         });
         break;
-    }
-
-    // 🔹 **SPECIAL FIX — VP → HOI**
-    if (
-      effectiveRole === UserRole.VP &&
-      requestRecord.status === RequestStatus.VP_APPROVAL
-    ) {
-      nextStatus = RequestStatus.HOI_APPROVAL;
     }
 
     // 🔹 Institution Manager stores SOP reference when forwarding to budget check
