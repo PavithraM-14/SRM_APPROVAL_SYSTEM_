@@ -337,6 +337,10 @@ function getAllStatusesForRole(userRole: UserRole): RequestStatus[] {
       RequestStatus.INSTITUTION_VERIFIED
     ],
     [UserRole.VP]: [RequestStatus.VP_APPROVAL],
+    [UserRole.VP_RESEARCH]: [RequestStatus.VP_RESEARCH_APPROVAL],
+    [UserRole.VP_ACADEMIC]: [RequestStatus.VP_ACADEMIC_APPROVAL],
+    [UserRole.VP_ADMIN]: [RequestStatus.VP_ADMIN_APPROVAL],
+    [UserRole.RESEARCH_DIRECTOR]: [RequestStatus.RESEARCH_DIRECTOR_APPROVAL],
     [UserRole.HEAD_OF_INSTITUTION]: [RequestStatus.HOI_APPROVAL],
     [UserRole.DEAN]: [RequestStatus.DEAN_REVIEW, RequestStatus.DEAN_VERIFICATION],
     [UserRole.MMA]: [RequestStatus.DEPARTMENT_CHECKS],
