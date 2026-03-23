@@ -15,7 +15,6 @@ const roleOptions = [
   { value: UserRole.REQUESTER, label: 'Requester/HOD' },
   { value: UserRole.INSTITUTION_MANAGER, label: 'Institution Manager' },
   { value: UserRole.ACCOUNTANT, label: 'Accountant' },
-  { value: UserRole.VP, label: 'Vice President' },
   { value: UserRole.VP_RESEARCH, label: 'VP Research' },
   { value: UserRole.VP_ACADEMIC, label: 'VP Academic' },
   { value: UserRole.VP_ADMIN, label: 'VP Admin' },

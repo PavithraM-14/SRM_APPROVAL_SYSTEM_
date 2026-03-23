@@ -14,7 +14,10 @@ const FLAGGING_THRESHOLD_MS = 10 * 60 * 60 * 1000;
 
 const INSTITUTIONAL_ROLES = new Set<UserRole>([
   UserRole.INSTITUTION_MANAGER,
-  UserRole.VP,
+  UserRole.VP_RESEARCH,
+  UserRole.VP_ACADEMIC,
+  UserRole.VP_ADMIN,
+  UserRole.RESEARCH_DIRECTOR,
   UserRole.HEAD_OF_INSTITUTION,
   UserRole.DEAN,
 ]);
