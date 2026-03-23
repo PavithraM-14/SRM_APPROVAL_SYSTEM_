@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { 
   DocumentTextIcon,
   FolderIcon,
@@ -89,32 +89,7 @@ export default function AnalysisPage() {
   const [departmentFilter, setDepartmentFilter] = useState('all');
   const [dateFilter, setDateFilter] = useState('all');
 
-  useEffect(() => {
-    fetchAllRequests();
-  }, []);
-
-  const fetchAllRequests = async () => {
-    try {
-      setLoading(true);
-      const response = await fetch('/api/requests?all=true', {
-        credentials: 'include'
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch requests');
-      }
-
-      const data = await response.json();
-      setAllRequests(data.requests || []);
-      organizeHierarchicalData(data.requests || []);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load requests');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const organizeHierarchicalData = (requests: RequestData[]) => {
+  const organizeHierarchicalData = useCallback((requests: RequestData[]) => {
     const organized: HierarchicalData = {};
     
     requests.forEach(request => {
@@ -136,7 +111,32 @@ export default function AnalysisPage() {
     });
     
     setHierarchicalData(organized);
-  };
+  }, []);
+
+  const fetchAllRequests = useCallback(async () => {
+    try {
+      setLoading(true);
+      const response = await fetch('/api/requests?all=true', {
+        credentials: 'include'
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch requests');
+      }
+
+      const data = await response.json();
+      setAllRequests(data.requests || []);
+      organizeHierarchicalData(data.requests || []);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load requests');
+    } finally {
+      setLoading(false);
+    }
+  }, [organizeHierarchicalData]);
+
+  useEffect(() => {
+    fetchAllRequests();
+  }, [fetchAllRequests]);
 
   const getCollegeRequests = (college: string) => {
     return allRequests.filter(request => request.college === college);
