@@ -84,7 +84,10 @@ export const queryEngine = {
     if (queryEntries.length === 0) return false;
 
     const aboveDeanStatuses = [
-      RequestStatus.VP_APPROVAL,
+      RequestStatus.VP_RESEARCH_APPROVAL,
+      RequestStatus.VP_ACADEMIC_APPROVAL,
+      RequestStatus.VP_ADMIN_APPROVAL,
+      RequestStatus.RESEARCH_DIRECTOR_APPROVAL,
       RequestStatus.HOI_APPROVAL,
       RequestStatus.CHIEF_DIRECTOR_APPROVAL,
       RequestStatus.CHAIRMAN_APPROVAL,
@@ -131,7 +134,10 @@ export const queryEngine = {
       [RequestStatus.CHIEF_DIRECTOR_APPROVAL]: 'chief_director',
       [RequestStatus.HOI_APPROVAL]: 'head_of_institution',
       [RequestStatus.DEAN_REVIEW]: 'dean',
-      [RequestStatus.VP_APPROVAL]: 'vp',
+      [RequestStatus.VP_RESEARCH_APPROVAL]: 'vp_research',
+      [RequestStatus.VP_ACADEMIC_APPROVAL]: 'vp_academic',
+      [RequestStatus.VP_ADMIN_APPROVAL]: 'vp_admin',
+      [RequestStatus.RESEARCH_DIRECTOR_APPROVAL]: 'research_director',
       [RequestStatus.MANAGER_REVIEW]: 'institution_manager',
       [RequestStatus.BUDGET_CHECK]: 'accountant',
     };
@@ -144,7 +150,10 @@ export const queryEngine = {
       'chief_director': 'Head of Campus',
       'head_of_institution': 'Head of Institution',
       'dean': 'Admin Dept',
-      'vp': 'Vice President',
+      'vp_research': 'VP Research',
+      'vp_academic': 'VP Academic',
+      'vp_admin': 'VP Admin',
+      'research_director': 'Research Director',
       'institution_manager': 'Institution Manager',
       'accountant': 'Accountant',
     };
@@ -170,7 +179,10 @@ export const queryEngine = {
       [RequestStatus.CHIEF_DIRECTOR_APPROVAL]: RequestStatus.CHIEF_DIRECTOR_APPROVAL,
       [RequestStatus.HOI_APPROVAL]: RequestStatus.HOI_APPROVAL,
       [RequestStatus.DEAN_REVIEW]: RequestStatus.DEAN_REVIEW,
-      [RequestStatus.VP_APPROVAL]: RequestStatus.VP_APPROVAL,
+      [RequestStatus.VP_RESEARCH_APPROVAL]: RequestStatus.VP_RESEARCH_APPROVAL,
+      [RequestStatus.VP_ACADEMIC_APPROVAL]: RequestStatus.VP_ACADEMIC_APPROVAL,
+      [RequestStatus.VP_ADMIN_APPROVAL]: RequestStatus.VP_ADMIN_APPROVAL,
+      [RequestStatus.RESEARCH_DIRECTOR_APPROVAL]: RequestStatus.RESEARCH_DIRECTOR_APPROVAL,
       [RequestStatus.MANAGER_REVIEW]: RequestStatus.MANAGER_REVIEW,
       [RequestStatus.BUDGET_CHECK]: RequestStatus.BUDGET_CHECK,
     };

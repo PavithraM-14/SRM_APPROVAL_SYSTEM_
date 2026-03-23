@@ -22,7 +22,10 @@ const getStatusDisplayName = (status: string) => {
     'manager_review': 'Manager Review',
     'budget_check': 'Budget Check',
     'institution_verified': 'Manager Approval',
-    'vp_approval': 'VP Approval',
+    'vp_research_approval': 'VP Research Approval',
+    'vp_academic_approval': 'VP Academic Approval',
+    'vp_admin_approval': 'VP Admin Approval',
+    'research_director_approval': 'Research Director Approval',
     'hoi_approval': 'HOI Approval',
     'dean_review': 'Admin Dept Review',
     'department_checks': 'Department Checks',
@@ -39,12 +42,24 @@ const getStatusDisplayName = (status: string) => {
 };
 
 const ApprovalWorkflow: React.FC<ApprovalWorkflowProps> = ({ currentStatus }) => {
+  // Determine which VP-level step to show based on current status
+  const vpStatuses: Record<string, string> = {
+    'vp_research_approval': 'VP Research Approval',
+    'vp_academic_approval': 'VP Academic Approval',
+    'vp_admin_approval': 'VP Admin Approval',
+    'research_director_approval': 'Research Director Approval',
+  };
+  const vpStepId = Object.keys(vpStatuses).includes(currentStatus)
+    ? currentStatus
+    : 'vp_research_approval'; // default label when not on a VP path
+  const vpStepName = vpStatuses[vpStepId] || 'VP Approval';
+
   // Define the main approval workflow steps
   const workflowSteps = [
     { id: 'manager_review', name: 'Manager Review' },
     { id: 'budget_check', name: 'Budget Check' },
     { id: 'institution_verified', name: 'Manager Approval' },
-    { id: 'vp_approval', name: 'VP Approval' },
+    { id: vpStepId, name: vpStepName },
     { id: 'hoi_approval', name: 'HOI Approval' },
     { id: 'dean_review', name: 'Admin Dept Review' },
     { id: 'dean_verification', name: 'Admin Dept Verification' },
