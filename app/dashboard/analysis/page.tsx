@@ -5,13 +5,10 @@ import {
   DocumentTextIcon,
   FolderIcon,
   FolderOpenIcon,
-  EyeIcon,
-  FunnelIcon,
   MagnifyingGlassIcon,
   UserGroupIcon,
   ChevronRightIcon
 } from '@heroicons/react/24/outline';
-import Link from 'next/link';
 import { DENTAL_DEPARTMENTS, ENGINEERING_DEPARTMENTS, FSH_DEPARTMENTS, EEC_DEPARTMENTS, MANAGEMENT_DEPARTMENTS, SEAD_DEPARTMENTS, NIGHTINGALE_DEPARTMENTS } from '../../../lib/constants';
 import CollegeSelect from '../../../components/CollegeSelect';
 
@@ -271,9 +268,9 @@ export default function AnalysisPage() {
           <h1 className="text-2xl font-bold text-gray-900">Analysis</h1>
           <p className="text-gray-600">
             {selectedDepartment && selectedCollege
-              ? `Viewing requests for ${selectedDepartment} Department in ${selectedCollege} College`
+              ? `Viewing requests for ${selectedDepartment} Department in ${selectedCollege} Institution`
               : selectedCollege 
-                ? `Viewing requests for ${selectedCollege} College`
+                ? `Viewing requests for ${selectedCollege} Institution`
                 : 'Comprehensive view of all requests in the system'
             }
           </p>
@@ -290,7 +287,7 @@ export default function AnalysisPage() {
               }}
               className="text-blue-600 hover:text-blue-800 text-sm font-medium"
             >
-              ← Back to {selectedDepartment ? 'College' : 'All Colleges'}
+              ← Back to {selectedDepartment ? 'Institution' : 'All Institutions'}
             </button>
           )}
           <div className="text-sm text-gray-500">
@@ -306,22 +303,7 @@ export default function AnalysisPage() {
       </div>
 
       {/* Filters */}
-      <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-gray-900 flex items-center">
-            <FunnelIcon className="h-5 w-5 mr-2" />
-            Filters & Search
-          </h3>
-          <span className="text-sm text-gray-500">
-            {selectedDepartment && selectedCollege
-              ? `${getFilteredDepartmentRequests(selectedCollege, selectedDepartment).length} of ${getDepartmentRequests(selectedCollege, selectedDepartment).length} requests`
-              : selectedCollege 
-                ? `${getFilteredCollegeRequests(selectedCollege).length} of ${getCollegeRequests(selectedCollege).length} requests`
-                : `${filteredRequests.length} of ${allRequests.length} requests`
-            }
-          </span>
-        </div>
-        
+      <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
           {/* Search */}
           <div className="xl:col-span-2">
@@ -355,7 +337,7 @@ export default function AnalysisPage() {
 
           {/* College Filter */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">College</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Institution</label>
             <CollegeSelect
               value={collegeFilter}
               onChange={(value) => {
@@ -466,9 +448,9 @@ export default function AnalysisPage() {
         <div className="p-6 border-b border-gray-200">
           <h3 className="text-lg font-semibold text-gray-900 flex items-center">
             <FolderIcon className="h-5 w-5 mr-2" />
-            Campus & Colleges
+            Campus & Institutions
           </h3>
-          <p className="text-sm text-gray-600 mt-1">Browse requests organized by campus, college, and department</p>
+          <p className="text-sm text-gray-600 mt-1">Browse requests organized by campus, institution, and department</p>
         </div>
         
         <div className="p-6">
@@ -697,18 +679,18 @@ export default function AnalysisPage() {
         <div className="p-6 border-b border-gray-200">
           <h3 className="text-lg font-semibold text-gray-900">
             {selectedDepartment && selectedCollege
-              ? `${selectedDepartment} Department - ${selectedCollege} College Requests`
+              ? `${selectedDepartment} Department - ${selectedCollege} Institution Requests`
               : selectedCollege 
-                ? `${selectedCollege} College Requests` 
+                ? `${selectedCollege} Institution Requests` 
                 : 'All Requests'
             }
           </h3>
           <p className="text-sm text-gray-600 mt-1">
             {selectedDepartment && selectedCollege
-              ? `Complete list of requests from ${selectedDepartment} Department in ${selectedCollege} College with filtering applied`
+              ? ` list of requests from ${selectedDepartment} Department in ${selectedCollege} Institution with filtering applied`
               : selectedCollege 
-                ? `Complete list of requests from ${selectedCollege} College with filtering applied`
-                : 'Complete list of all requests with filtering applied'
+                ? `list of requests from ${selectedCollege} Institution with filtering applied`
+                : ' list of all requests with filtering applied'
             }
           </p>
         </div>
@@ -725,14 +707,11 @@ export default function AnalysisPage() {
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   {selectedDepartment 
-                    ? 'College' 
+                    ? 'Institution' 
                     : selectedCollege 
                       ? 'Department' 
-                      : 'College/Department'
+                      : 'Institution/Department'
                   }
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Amount
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Status
@@ -740,9 +719,7 @@ export default function AnalysisPage() {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Date
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Actions
-                </th>
+
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
@@ -752,7 +729,11 @@ export default function AnalysisPage() {
                   ? getFilteredCollegeRequests(selectedCollege) 
                   : filteredRequests
               ).map((request) => (
-                <tr key={request._id} className="hover:bg-gray-50">
+                <tr
+                  key={request._id}
+                  onClick={() => window.location.href = `/dashboard/requests/${request._id}`}
+                  className="hover:bg-gray-50 cursor-pointer"
+                >
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div>
                       <div className="text-sm font-medium text-gray-900">{request.title}</div>
@@ -775,25 +756,14 @@ export default function AnalysisPage() {
                       </div>
                     )}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    ₹{request.costEstimate.toLocaleString()}
-                  </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(request.status)}`}>
                       {formatStatus(request.status)}
                     </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {formatDate(request.createdAt)}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <Link
-                      href={`/dashboard/requests/${request._id}`}
-                      className="text-blue-600 hover:text-blue-900 flex items-center"
-                    >
-                      <EyeIcon className="h-4 w-4 mr-1" />
-                      View
-                    </Link>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm text-gray-500">{formatDate(request.createdAt)}</div>
+                    <div className="text-xs text-gray-400">{new Date(request.createdAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</div>
                   </td>
                 </tr>
               ))}
@@ -811,9 +781,9 @@ export default function AnalysisPage() {
               <h3 className="text-lg font-medium text-gray-900 mb-2">No Requests Found</h3>
               <p className="text-gray-500">
                 {selectedDepartment && selectedCollege
-                  ? `No requests found for ${selectedDepartment} Department in ${selectedCollege} College matching your current filter criteria.`
+                  ? `No requests found for ${selectedDepartment} Department in ${selectedCollege} Institution matching your current filter criteria.`
                   : selectedCollege 
-                    ? `No requests found for ${selectedCollege} College matching your current filter criteria.`
+                    ? `No requests found for ${selectedCollege} Institution matching your current filter criteria.`
                     : 'No requests match your current filter criteria.'
                 }
               </p>
