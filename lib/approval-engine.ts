@@ -44,6 +44,9 @@ export const approvalEngine = {
     { from: RequestStatus.CHIEF_DIRECTOR_APPROVAL, to: RequestStatus.CHAIRMAN_APPROVAL, requiredRole: UserRole.CHIEF_DIRECTOR },
     { from: RequestStatus.CHAIRMAN_APPROVAL, to: RequestStatus.APPROVED, requiredRole: UserRole.CHAIRMAN },
 
+    // Research Director direct-to-Chairman flow
+    { from: RequestStatus.RESEARCH_DIRECTOR_SUBMITTED, to: RequestStatus.APPROVED, requiredRole: UserRole.CHAIRMAN },
+
     // Rejections
     { from: RequestStatus.MANAGER_REVIEW, to: RequestStatus.REJECTED, requiredRole: UserRole.INSTITUTION_MANAGER },
     { from: RequestStatus.BUDGET_CHECK, to: RequestStatus.REJECTED, requiredRole: UserRole.ACCOUNTANT },
@@ -55,6 +58,7 @@ export const approvalEngine = {
     { from: RequestStatus.DEAN_REVIEW, to: RequestStatus.REJECTED, requiredRole: UserRole.DEAN },
     { from: RequestStatus.CHIEF_DIRECTOR_APPROVAL, to: RequestStatus.REJECTED, requiredRole: UserRole.CHIEF_DIRECTOR },
     { from: RequestStatus.CHAIRMAN_APPROVAL, to: RequestStatus.REJECTED, requiredRole: UserRole.CHAIRMAN },
+    { from: RequestStatus.RESEARCH_DIRECTOR_SUBMITTED, to: RequestStatus.REJECTED, requiredRole: UserRole.CHAIRMAN },
   ],
 
   getRequiredApprover(status: RequestStatus): UserRole[] {
@@ -170,6 +174,9 @@ export const approvalEngine = {
 
       case UserRole.CHAIRMAN:
         if (currentStatus === RequestStatus.CHAIRMAN_APPROVAL) {
+          return RequestStatus.APPROVED;
+        }
+        if (currentStatus === RequestStatus.RESEARCH_DIRECTOR_SUBMITTED) {
           return RequestStatus.APPROVED;
         }
         break;

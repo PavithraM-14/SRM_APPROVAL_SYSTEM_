@@ -73,13 +73,14 @@ export function canApproveRequest(userRole: UserRole, requestStatus: string): bo
     'dean_verification': [UserRole.DEAN],
     'chief_director_approval': [UserRole.CHIEF_DIRECTOR],
     'chairman_approval': [UserRole.CHAIRMAN],
+    'research_director_submitted': [UserRole.CHAIRMAN],
   };
 
   return approvalMatrix[requestStatus]?.includes(userRole) || false;
 }
 
 export function canCreateRequest(userRole: UserRole): boolean {
-  return userRole === UserRole.REQUESTER;
+  return userRole === UserRole.REQUESTER || userRole === UserRole.RESEARCH_DIRECTOR;
 }
 
 export function validateUserAction(user: AuthUser | null, action: 'create_request' | 'approve_request', context?: any): { allowed: boolean; reason?: string } {
@@ -92,7 +93,7 @@ export function validateUserAction(user: AuthUser | null, action: 'create_reques
       if (!canCreateRequest(user.role)) {
         return { 
           allowed: false, 
-          reason: `User role '${user.role}' is not authorized to create requests. Only requesters can create requests.` 
+          reason: `User role '${user.role}' is not authorized to create requests. Only requesters and research directors can create requests.` 
         };
       }
       return { allowed: true };

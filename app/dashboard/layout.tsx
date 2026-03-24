@@ -28,6 +28,8 @@ const navigation: NavItem[] = [
   { name: 'Dashboard', href: '/dashboard', icon: HomeIcon, roles: Object.values(UserRole) },
   { name: 'My Requests', href: '/dashboard/requests', icon: ClipboardDocumentListIcon, roles: [UserRole.REQUESTER] },
   { name: 'Create Request', href: '/dashboard/requests/create', icon: DocumentPlusIcon, roles: [UserRole.REQUESTER] },
+  { name: 'My Requests', href: '/dashboard/rd-requests', icon: ClipboardDocumentListIcon, roles: [UserRole.RESEARCH_DIRECTOR] },
+  { name: 'Create Request', href: '/dashboard/rd-requests/create', icon: DocumentPlusIcon, roles: [UserRole.RESEARCH_DIRECTOR] },
   { name: 'Queries', href: '/dashboard/queries', icon: ClockIcon, roles: [
     UserRole.REQUESTER, 
     UserRole.INSTITUTION_MANAGER, 
@@ -113,6 +115,14 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
 
       if (hrefPath === '/dashboard/requests/create') {
         return pathname === '/dashboard/requests/create';
+      }
+
+      if (hrefPath === '/dashboard/rd-requests' && !hrefQuery) {
+        return pathname === '/dashboard/rd-requests';
+      }
+
+      if (hrefPath === '/dashboard/rd-requests/create') {
+        return pathname === '/dashboard/rd-requests/create';
       }
 
       return pathname.startsWith(hrefPath);

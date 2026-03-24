@@ -39,6 +39,7 @@ export enum RequestStatus {
   REJECTED = 'rejected',
   CLARIFICATION_REQUIRED = 'query_required',
   DEPARTMENT_CLARIFICATION = 'department_query', // For Dean's queries to MMA, HR, Audit, IT
+  RESEARCH_DIRECTOR_SUBMITTED = 'research_director_submitted', // Research Director's own requests awaiting Chairman
 }
 
 export enum ActionType {

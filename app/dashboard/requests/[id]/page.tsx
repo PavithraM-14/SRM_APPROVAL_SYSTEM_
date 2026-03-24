@@ -1314,9 +1314,14 @@ export default function RequestDetailPage({ params }: { params: { id: string } }
       {/* Workflow (hidden for Accountant) */}
       {!hideWorkflowAndHistory && (
         <div className="space-y-4 sm:space-y-6">
-          <div className="bg-white shadow rounded-lg sm:rounded-xl p-4 sm:p-6">
-            <ApprovalWorkflow currentStatus={request.status} />
-          </div>
+          {!request.history?.some((h: any) => h.newStatus === 'research_director_submitted') && (
+            <div className="bg-white shadow rounded-lg sm:rounded-xl p-4 sm:p-6">
+              <ApprovalWorkflow
+                currentStatus={request.status}
+                isRDFlow={false}
+              />
+            </div>
+          )}
 
           {/* Approval History — visible to all users, but notes only visible to Dean and above */}
           {canSeeApprovalHistory && (

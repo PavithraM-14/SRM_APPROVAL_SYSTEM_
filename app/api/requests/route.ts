@@ -21,6 +21,11 @@ function getRoleBasedFilter(userRole: UserRole, userId: any, pendingOnly: boolea
       filter.requester = userId;
       break;
 
+    case UserRole.RESEARCH_DIRECTOR:
+      // Research Directors see their own requests + requests at their approval stage
+      // Visibility filtering handles the rest
+      break;
+
     default:
       // For non-requesters, be more inclusive especially for dashboard
       if (isForDashboard) {
@@ -236,11 +241,20 @@ export async function POST(request: NextRequest) {
     // Check if this is a leave request (case-insensitive)
     const isLeaveRequest = validatedData.title.toLowerCase().includes('leave');
 
-    // Determine initial status based on request type
-    const initialStatus = isLeaveRequest ? RequestStatus.VP_APPROVAL : RequestStatus.MANAGER_REVIEW;
-    const initialNotes = isLeaveRequest
-      ? 'Leave request created and forwarded directly to VP for approval'
-      : 'Request created and forwarded to manager for review';
+    // Determine initial status based on request type and user role
+    let initialStatus: RequestStatus;
+    let initialNotes: string;
+
+    if (user!.role === UserRole.RESEARCH_DIRECTOR) {
+      initialStatus = RequestStatus.RESEARCH_DIRECTOR_SUBMITTED;
+      initialNotes = 'Request created by Research Director and forwarded directly to Chairman for approval';
+    } else if (isLeaveRequest) {
+      initialStatus = RequestStatus.VP_APPROVAL;
+      initialNotes = 'Leave request created and forwarded directly to VP for approval';
+    } else {
+      initialStatus = RequestStatus.MANAGER_REVIEW;
+      initialNotes = 'Request created and forwarded to manager for review';
+    }
 
     // Generate unique 6-digit request ID
     const requestId = await generateRequestId();

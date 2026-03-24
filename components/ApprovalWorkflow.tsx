@@ -5,6 +5,7 @@ import { RequestStatus } from '../lib/types';
 
 interface ApprovalWorkflowProps {
   currentStatus: RequestStatus;
+  isRDFlow?: boolean;
 }
 
 const getStatusBadgeClass = (status: string, isCurrent: boolean, isCompleted: boolean) => {
@@ -35,13 +36,14 @@ const getStatusDisplayName = (status: string) => {
     'approved': 'Approved',
     'rejected': 'Rejected',
     'query_required': 'Queries Required',
-    'department_query': 'Department Queries'
+    'department_query': 'Department Queries',
+    'research_director_submitted': 'Awaiting Chairman Approval'
   };
   
   return statusMap[status.toLowerCase()] || status;
 };
 
-const ApprovalWorkflow: React.FC<ApprovalWorkflowProps> = ({ currentStatus }) => {
+const ApprovalWorkflow: React.FC<ApprovalWorkflowProps> = ({ currentStatus, isRDFlow: isRDFlowProp = false }) => {
   // Determine which VP-level step to show based on current status
   const vpStatuses: Record<string, string> = {
     'vp_research_approval': 'VP Research Approval',
@@ -51,29 +53,112 @@ const ApprovalWorkflow: React.FC<ApprovalWorkflowProps> = ({ currentStatus }) =>
   };
   const vpStepId = Object.keys(vpStatuses).includes(currentStatus)
     ? currentStatus
-    : 'vp_research_approval'; // default label when not on a VP path
+    : 'vp_research_approval';
   const vpStepName = vpStatuses[vpStepId] || 'VP Approval';
 
-  // Define the main approval workflow steps
-  const workflowSteps = [
-    { id: 'manager_review', name: 'Manager Review' },
-    { id: 'budget_check', name: 'Budget Check' },
-    { id: 'institution_verified', name: 'Manager Approval' },
-    { id: vpStepId, name: vpStepName },
-    { id: 'hoi_approval', name: 'HOI Approval' },
-    { id: 'dean_review', name: 'Admin Dept Review' },
-    { id: 'dean_verification', name: 'Admin Dept Verification' },
-    { id: 'chief_director_approval', name: 'Head of Campus Approval' },
-    { id: 'chairman_approval', name: 'Chairman Approval' },
+  // Simplified 2-step workflow for Research Director direct-to-Chairman flow
+  const rdWorkflowSteps = [
+    { id: 'research_director_submitted', name: 'Submitted to Chairman' },
     { id: 'approved', name: 'Approved' },
   ];
+  const rdCurrentIndex = rdWorkflowSteps.findIndex(step => step.id === currentStatus);
+  const isRDFlow = isRDFlowProp || currentStatus === 'research_director_submitted';
+
+  // ── RD Flow: compact inline design ──────────────────────────────────────
+  if (isRDFlow) {
+    const isApproved = currentStatus === 'approved';
+    return (
+      <div className="inline-flex flex-col gap-3 p-4 bg-white rounded-xl border border-gray-200 shadow-sm w-fit">
+        <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest">Approval Flow</p>
+        <div className="flex items-center gap-3">
+
+          {/* Step 1 */}
+          <div className="flex flex-col items-center gap-1.5">
+            <div className="w-9 h-9 rounded-full bg-green-500 flex items-center justify-center shadow-sm">
+              <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <span className="text-xs font-medium text-gray-600 text-center w-20 leading-tight">Research Director</span>
+          </div>
+
+          {/* Connector */}
+          <div className={`h-0.5 w-10 rounded-full ${isApproved ? 'bg-green-400' : 'bg-gray-200'}`} />
+
+          {/* Step 2 */}
+          <div className="flex flex-col items-center gap-1.5">
+            <div className={`w-9 h-9 rounded-full flex items-center justify-center shadow-sm transition-colors ${
+              isApproved
+                ? 'bg-green-500'
+                : 'bg-blue-500 ring-4 ring-blue-100'
+            }`}>
+              {isApproved ? (
+                <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+              ) : (
+                <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              )}
+            </div>
+            <span className={`text-xs font-medium text-center w-16 leading-tight ${isApproved ? 'text-gray-600' : 'text-blue-600'}`}>Chairman</span>
+          </div>
+
+          {/* Connector */}
+          <div className={`h-0.5 w-10 rounded-full ${isApproved ? 'bg-green-400' : 'bg-gray-200'}`} />
+
+          {/* Step 3 */}
+          <div className="flex flex-col items-center gap-1.5">
+            <div className={`w-9 h-9 rounded-full flex items-center justify-center shadow-sm ${
+              isApproved ? 'bg-green-500' : 'bg-gray-100'
+            }`}>
+              {isApproved ? (
+                <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+              ) : (
+                <span className="text-xs font-semibold text-gray-400">3</span>
+              )}
+            </div>
+            <span className={`text-xs font-medium text-center w-16 leading-tight ${isApproved ? 'text-green-600' : 'text-gray-400'}`}>
+              {isApproved ? 'Approved' : 'Pending'}
+            </span>
+          </div>
+
+        </div>
+
+        {/* Status pill */}
+        <div className={`self-start px-3 py-1 rounded-full text-xs font-semibold ${
+          isApproved
+            ? 'bg-green-100 text-green-700'
+            : 'bg-blue-50 text-blue-700'
+        }`}>
+          {isApproved ? '✓ Approved by Chairman' : 'Awaiting Chairman Approval'}
+        </div>
+      </div>
+    );
+  }
+  // ────────────────────────────────────────────────────────────────────────
+
+  const workflowSteps = [
+      { id: 'manager_review', name: 'Manager Review' },
+      { id: 'budget_check', name: 'Budget Check' },
+      { id: 'institution_verified', name: 'Manager Approval' },
+      { id: vpStepId, name: vpStepName },
+      { id: 'hoi_approval', name: 'HOI Approval' },
+      { id: 'dean_review', name: 'Admin Dept Review' },
+      { id: 'dean_verification', name: 'Admin Dept Verification' },
+      { id: 'chief_director_approval', name: 'Head of Campus Approval' },
+      { id: 'chairman_approval', name: 'Chairman Approval' },
+      { id: 'approved', name: 'Approved' },
+    ];
 
   // Check if current status is a query status
   const isQueryStatus = ['query_required', 'department_checks'].includes(currentStatus);
-  
+
   // Check if current status is a verification status
   const isParallelStatus = ['budget_check', 'institution_verified'].includes(currentStatus);
-  
   // Find the index of the current status in main workflow
   const currentStatusIndex = workflowSteps.findIndex(step => step.id === currentStatus);
 

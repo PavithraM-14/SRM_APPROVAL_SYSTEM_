@@ -52,6 +52,19 @@ export function analyzeRequestVisibility(
     return { canSee: false, category: 'completed', reason: 'Not own request' };
   }
 
+  // Research Directors can always see their own requests
+  if (userRole === UserRole.RESEARCH_DIRECTOR) {
+    if (request.requester._id?.toString() === userId || request.requester.toString() === userId) {
+      return {
+        canSee: true,
+        category: getRequesterCategory(request.status, request.pendingQuery, request.queryLevel),
+        reason: 'Own request (Research Director)'
+      };
+    }
+    // Also allow them to see requests at their approval stage (from other flows)
+    return analyzeApproverVisibility(request, userRole, userId);
+  }
+
   // For approvers, check if request has reached their level through proper workflow
   return analyzeApproverVisibility(request, userRole, userId);
 }
@@ -338,7 +351,7 @@ function getAllStatusesForRole(userRole: UserRole): RequestStatus[] {
     [UserRole.VP_RESEARCH]: [RequestStatus.VP_RESEARCH_APPROVAL],
     [UserRole.VP_ACADEMIC]: [RequestStatus.VP_ACADEMIC_APPROVAL],
     [UserRole.VP_ADMIN]: [RequestStatus.VP_ADMIN_APPROVAL],
-    [UserRole.RESEARCH_DIRECTOR]: [RequestStatus.RESEARCH_DIRECTOR_APPROVAL],
+    [UserRole.RESEARCH_DIRECTOR]: [RequestStatus.RESEARCH_DIRECTOR_APPROVAL, RequestStatus.RESEARCH_DIRECTOR_SUBMITTED],
     [UserRole.HEAD_OF_INSTITUTION]: [RequestStatus.HOI_APPROVAL],
     [UserRole.DEAN]: [RequestStatus.DEAN_REVIEW, RequestStatus.DEAN_VERIFICATION],
     [UserRole.MMA]: [RequestStatus.DEPARTMENT_CHECKS],
@@ -346,7 +359,7 @@ function getAllStatusesForRole(userRole: UserRole): RequestStatus[] {
     [UserRole.AUDIT]: [RequestStatus.DEPARTMENT_CHECKS],
     [UserRole.IT]: [RequestStatus.DEPARTMENT_CHECKS],
     [UserRole.CHIEF_DIRECTOR]: [RequestStatus.CHIEF_DIRECTOR_APPROVAL],
-    [UserRole.CHAIRMAN]: [RequestStatus.CHAIRMAN_APPROVAL]
+    [UserRole.CHAIRMAN]: [RequestStatus.CHAIRMAN_APPROVAL, RequestStatus.RESEARCH_DIRECTOR_SUBMITTED]
   };
 
   return statusMap[userRole] || [];
