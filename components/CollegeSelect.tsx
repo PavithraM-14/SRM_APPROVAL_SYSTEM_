@@ -56,7 +56,7 @@ export default function CollegeSelect({ value, onChange, className }: CollegeSel
 
     // Helper to get display label from value
     const getDisplayLabel = () => {
-        if (!value || value === 'all') return 'All Colleges';
+        if (!value || value === 'all') return 'All Institutions';
         if (value === 'EEC') return 'EEC';
         if (value === 'DENTAL') return 'DENTAL';
         if (value === 'SRM Nightingale School') return 'SRM Nightingale School';
@@ -89,7 +89,7 @@ export default function CollegeSelect({ value, onChange, className }: CollegeSel
                             setIsOpen(false);
                         }}
                     >
-                        <span className="block truncate">All Colleges</span>
+                        <span className="block truncate">All Institutions</span>
                     </div>
 
                     {COLLEGES.map((college) => (
