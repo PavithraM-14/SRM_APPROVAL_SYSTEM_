@@ -31,8 +31,6 @@ export default function QueryModal({
   isRequester = false
 }: QueriesModalProps) {
   const [queryResponse, setQueryResponse] = useState('');
-  const [rejectReason, setRejectReason] = useState('');
-  const [showRejectForm, setShowRejectForm] = useState(false);
   const [attachments, setAttachments] = useState<string[]>([]);
 
   if (!isOpen) return null;
@@ -43,14 +41,6 @@ export default function QueryModal({
       return;
     }
     onQueryAndApprove(queryResponse, attachments);
-  };
-
-  const handleReject = () => {
-    if (!rejectReason.trim()) {
-      alert('Please provide a reason for rejection');
-      return;
-    }
-    onReject(rejectReason);
   };
 
   return (
@@ -64,7 +54,7 @@ export default function QueryModal({
             </div>
             <div>
               <h3 className="text-lg font-semibold text-gray-900">
-                Query Required
+                Respond to Query
               </h3>
               <p className="text-sm text-gray-500">
                 Response needed from {queryRequest.actor.name}
@@ -122,106 +112,57 @@ export default function QueryModal({
         </div>
 
         {/* Response Form */}
-        {!showRejectForm ? (
-          <div className="p-6">
-            <h4 className="text-sm font-medium text-gray-900 mb-3">
-              Your Clarification Response:
-            </h4>
-            <textarea
-              value={queryResponse}
-              onChange={(e) => setQueryResponse(e.target.value)}
-              placeholder="Provide your clarification response to the query here..."
-              className="w-full h-32 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
-              disabled={loading}
-            />
+        <div className="p-6">
+          <h4 className="text-sm font-medium text-gray-900 mb-3">
+            Your Clarification Response:
+          </h4>
+          <textarea
+            value={queryResponse}
+            onChange={(e) => setQueryResponse(e.target.value)}
+            placeholder="Provide your clarification response to the query here..."
+            className="w-full h-32 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+            disabled={loading}
+          />
 
-            {/* File Upload - Only for Requesters */}
-            {isRequester && (
-              <div className="mt-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Attach Supporting Documents:
-                </label>
-                <FileUpload
-                  onFilesUploaded={setAttachments}
-                  maxFiles={3}
-                  disabled={loading}
-                  existingFiles={attachments}
-                  isQuery={true}
-                />
-                <p className="text-xs text-blue-600 mt-2">
-                  Only PDF files can be attached during clarification responses
-                </p>
-              </div>
-            )}
-
-            {/* Action Buttons */}
-            <div className="flex justify-between mt-6">
-              <button
-                onClick={() => setShowRejectForm(true)}
-                className="px-4 py-2 text-red-600 hover:text-red-800 font-medium transition-colors"
+          {/* File Upload - Only for Requesters */}
+          {isRequester && (
+            <div className="mt-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Attach Supporting Documents:
+              </label>
+              <FileUpload
+                onFilesUploaded={setAttachments}
+                maxFiles={3}
                 disabled={loading}
-              >
-                Cannot Answer - Reject
-              </button>
-              <div className="space-x-3">
-                <button
-                  onClick={onClose}
-                  className="px-4 py-2 text-gray-600 hover:text-gray-800 font-medium transition-colors"
-                  disabled={loading}
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleQueryAndApprove}
-                  className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium transition-colors disabled:opacity-50"
-                  disabled={loading || !queryResponse.trim()}
-                >
-                  {loading ? 'Processing...' : (isRequester ? 'Submit Clarification' : 'Approve with Clarification')}
-                </button>
-              </div>
+                existingFiles={attachments}
+                isQuery={true}
+              />
+              <p className="text-xs text-blue-600 mt-2">
+                Only PDF files can be attached during clarification responses
+              </p>
             </div>
-          </div>
-        ) : (
-          /* Reject Form */
-          <div className="p-6">
-            <h4 className="text-sm font-medium text-gray-900 mb-3">
-              Reason for Rejection:
-            </h4>
-            <textarea
-              value={rejectReason}
-              onChange={(e) => setRejectReason(e.target.value)}
-              placeholder="Explain why you cannot provide the requested information..."
-              className="w-full h-32 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 resize-none"
-              disabled={loading}
-            />
+          )}
 
-            <div className="flex justify-between mt-6">
+          {/* Action Buttons */}
+          <div className="flex justify-end mt-6">
+            <div className="space-x-3">
               <button
-                onClick={() => setShowRejectForm(false)}
+                onClick={onClose}
                 className="px-4 py-2 text-gray-600 hover:text-gray-800 font-medium transition-colors"
                 disabled={loading}
               >
-                Back to Response
+                Cancel
               </button>
-              <div className="space-x-3">
-                <button
-                  onClick={onClose}
-                  className="px-4 py-2 text-gray-600 hover:text-gray-800 font-medium transition-colors"
-                  disabled={loading}
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleReject}
-                  className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium transition-colors disabled:opacity-50"
-                  disabled={loading || !rejectReason.trim()}
-                >
-                  {loading ? 'Processing...' : 'Reject Request'}
-                </button>
-              </div>
+              <button
+                onClick={handleQueryAndApprove}
+                className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium transition-colors disabled:opacity-50"
+                disabled={loading || !queryResponse.trim()}
+              >
+                {loading ? 'Processing...' : 'Submit'}
+              </button>
             </div>
           </div>
-        )}
+        </div>
       </div>
     </div>
   );

@@ -392,14 +392,19 @@ export async function POST(
           return NextResponse.json({ error: 'Target role is required when raising queries' }, { status: 400 });
         }
 
+        // Explicitly prevent queries to Chairman - he's the final authority
+        if (targetRole === UserRole.CHAIRMAN) {
+          return NextResponse.json({ error: 'Cannot send queries to Chairman - he is the final authority' }, { status: 400 });
+        }
+
         // Validate that the current user can send queries to the target role (must be below their level)
         const { canSendQueryTo } = await import('../../../../../lib/query-hierarchy');
         if (!canSendQueryTo(user.role as UserRole, targetRole as UserRole)) {
           return NextResponse.json({ error: 'You can only send queries to roles below your level' }, { status: 400 });
         }
 
-        // Determine the status based on target role
-        const targetStatusMap: Record<UserRole, RequestStatus> = {
+        // Determine the status based on target role (Chairman excluded)
+        const targetStatusMap: Partial<Record<UserRole, RequestStatus>> = {
           [UserRole.REQUESTER]: RequestStatus.SUBMITTED,
           [UserRole.INSTITUTION_MANAGER]: RequestStatus.MANAGER_REVIEW,
           [UserRole.ACCOUNTANT]: RequestStatus.BUDGET_CHECK,
@@ -414,10 +419,13 @@ export async function POST(
           [UserRole.AUDIT]: RequestStatus.DEPARTMENT_CHECKS,
           [UserRole.IT]: RequestStatus.DEPARTMENT_CHECKS,
           [UserRole.CHIEF_DIRECTOR]: RequestStatus.CHIEF_DIRECTOR_APPROVAL,
-          [UserRole.CHAIRMAN]: RequestStatus.CHAIRMAN_APPROVAL,
+          // Note: Chairman excluded - no queries allowed to Chairman
         };
 
-        nextStatus = targetStatusMap[targetRole as UserRole] || RequestStatus.SUBMITTED;
+        nextStatus = targetStatusMap[targetRole as UserRole];
+        if (!nextStatus) {
+          return NextResponse.json({ error: 'Invalid target role for queries' }, { status: 400 });
+        }
         actionType = ActionType.REJECT_WITH_CLARIFICATION;
         break;
 

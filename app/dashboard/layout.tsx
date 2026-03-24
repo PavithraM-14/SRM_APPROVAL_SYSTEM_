@@ -42,8 +42,8 @@ const navigation: NavItem[] = [
     UserRole.HR, 
     UserRole.AUDIT, 
     UserRole.IT, 
-    UserRole.CHIEF_DIRECTOR, 
-    UserRole.CHAIRMAN
+    UserRole.CHIEF_DIRECTOR
+    // Note: Chairman excluded - no one can send queries to Chairman
   ] },
   {
     name: 'Pending Approvals',
