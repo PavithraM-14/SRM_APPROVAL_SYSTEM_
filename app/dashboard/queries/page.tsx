@@ -45,11 +45,7 @@ export default function QueriesPage() {
       const user = await response.json();
       setCurrentUser(user);
       
-      // Only allow requesters and Dean to access this page
-      if (user.role !== 'requester' && user.role !== 'dean') {
-        router.push('/dashboard');
-        return;
-      }
+      // All roles can access the queries page now
     } catch (err) {
       console.error('Error fetching user:', err);
       setError('Failed to load user information');
@@ -101,7 +97,11 @@ export default function QueriesPage() {
     // Open appropriate modal based on user role and query type
     if (currentUser.role === 'dean' && queryEngine.isDeanMediatedClarification(request)) {
       setIsDeanQueryModalOpen(true);
+    } else if (currentUser.role === 'requester') {
+      // Requesters use the standard query modal
+      setIsQueryModalOpen(true);
     } else {
+      // All other roles (VP, Manager, etc.) use the standard query modal
       setIsQueryModalOpen(true);
     }
   };
@@ -295,10 +295,7 @@ export default function QueriesPage() {
               Queries
             </h1>
             <p className="text-gray-600 mt-2">
-              {currentUser?.role === 'requester' 
-                ? 'Requests that need your response'
-                : 'Queries that need your review'
-              }
+              Requests that need your response or review
             </p>
           </div>
           <div className="text-right">
@@ -318,10 +315,7 @@ export default function QueriesPage() {
           </div>
           <h3 className="text-lg font-medium text-gray-900 mb-2">All Caught Up!</h3>
           <p className="text-gray-600">
-            {currentUser?.role === 'requester' 
-              ? 'You have no pending queries to respond to.'
-              : 'You have no rejection queries to review.'
-            }
+            You have no pending queries to respond to.
           </p>
           <button
             onClick={() => router.push('/dashboard')}

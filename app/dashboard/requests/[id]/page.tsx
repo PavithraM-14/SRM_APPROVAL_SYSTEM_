@@ -12,6 +12,7 @@ import AttachmentList from '../../../../components/AttachmentList';
 import { RequestStatus, ActionType, UserRole } from '../../../../lib/types';
 import { approvalEngine } from '../../../../lib/approval-engine';
 import { queryEngine } from '../../../../lib/query-engine';
+import { getQueryableRoles, getRoleDisplayName } from '../../../../lib/query-hierarchy';
 import { ExclamationTriangleIcon, FlagIcon } from '@heroicons/react/24/outline';
 import { ESCALATION_HIERARCHY } from '../../../../lib/escalation-hierarchy';
 
@@ -24,8 +25,9 @@ interface DirectQueryModalProps {
     title: string;
     requester: { name: string };
   };
-  onSubmit: (queryRequest: string, attachments: string[]) => void;
+  onSubmit: (queryRequest: string, attachments: string[], targetRole?: string) => void;
   loading?: boolean;
+  currentUserRole?: string;
 }
 
 function DirectQueryModal({
@@ -33,9 +35,11 @@ function DirectQueryModal({
   onClose,
   request,
   onSubmit,
-  loading = false
+  loading = false,
+  currentUserRole
 }: DirectQueryModalProps) {
   const [queryRequest, setQueryRequest] = useState('');
+  const [targetRole, setTargetRole] = useState('');
 
   if (!isOpen) return null;
 
@@ -44,14 +48,23 @@ function DirectQueryModal({
       alert('Please provide a query request');
       return;
     }
-    onSubmit(queryRequest, []);
+    if (!targetRole) {
+      alert('Please select who to send the query to');
+      return;
+    }
+    onSubmit(queryRequest, [], targetRole);
     setQueryRequest('');
+    setTargetRole('');
   };
 
   const handleClose = () => {
     setQueryRequest('');
+    setTargetRole('');
     onClose();
   };
+
+  // Get available roles for the current user to send queries to
+  const availableRoles = currentUserRole ? getQueryableRoles(currentUserRole as UserRole) : [UserRole.REQUESTER];
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -83,8 +96,28 @@ function DirectQueryModal({
         <div className="p-6">
           <div className="mb-4">
             <p className="text-sm text-gray-600 mb-4">
-              Send this request back to <strong>{request.requester.name}</strong> with questions or requests for additional information.
+              Send a query to request additional information or clarification.
             </p>
+          </div>
+
+          {/* Target Role Selection */}
+          <div className="mb-6">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Send Query To *
+            </label>
+            <select
+              value={targetRole}
+              onChange={(e) => setTargetRole(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500"
+              disabled={loading}
+            >
+              <option value="">Select recipient...</option>
+              {availableRoles.map((role) => (
+                <option key={role} value={role}>
+                  {getRoleDisplayName(role)}
+                </option>
+              ))}
+            </select>
           </div>
 
           <div className="mb-6">
@@ -94,7 +127,7 @@ function DirectQueryModal({
             <textarea
               value={queryRequest}
               onChange={(e) => setQueryRequest(e.target.value)}
-              placeholder="What additional information do you need from the requester?"
+              placeholder="What additional information do you need?"
               className="w-full h-32 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 resize-none"
               disabled={loading}
             />
@@ -112,9 +145,9 @@ function DirectQueryModal({
             <button
               onClick={handleSubmit}
               className="px-6 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 font-medium transition-colors disabled:opacity-50"
-              disabled={loading || !queryRequest.trim()}
+              disabled={loading || !queryRequest.trim() || !targetRole}
             >
-              {loading ? 'Sending...' : 'Send Queries to Requester'}
+              {loading ? 'Sending...' : 'Send Query'}
             </button>
           </div>
         </div>
@@ -392,7 +425,7 @@ export default function RequestDetailPage({ params }: { params: { id: string } }
     }
   };
 
-  const handleRejectWithClarification = async (queryRequest: string, attachments: string[]) => {
+  const handleRejectWithClarification = async (queryRequest: string, attachments: string[], targetRole?: string) => {
     try {
       setProcessingApproval(true);
       const response = await fetch(`/api/requests/${params.id}/approve`, {
@@ -401,7 +434,8 @@ export default function RequestDetailPage({ params }: { params: { id: string } }
         body: JSON.stringify({
           action: 'reject_with_clarification',
           notes: queryRequest,
-          attachments
+          attachments,
+          targetRole
         }),
       });
       
@@ -414,7 +448,7 @@ export default function RequestDetailPage({ params }: { params: { id: string } }
       setIsApprovalModalOpen(false);
       
       // Show success message
-      alert('Query raised successfully! The requester will be notified.');
+      alert('Query raised successfully! The recipient will be notified.');
 
     } catch (err) {
       console.error('Clarification request error:', err);
@@ -1483,6 +1517,7 @@ export default function RequestDetailPage({ params }: { params: { id: string } }
         }}
         onSubmit={handleRejectWithClarification}
         loading={processingApproval}
+        currentUserRole={currentUser?.role}
       />
 
     </div>

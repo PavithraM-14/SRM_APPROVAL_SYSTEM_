@@ -28,7 +28,23 @@ const navigation: NavItem[] = [
   { name: 'Dashboard', href: '/dashboard', icon: HomeIcon, roles: Object.values(UserRole) },
   { name: 'My Requests', href: '/dashboard/requests', icon: ClipboardDocumentListIcon, roles: [UserRole.REQUESTER] },
   { name: 'Create Request', href: '/dashboard/requests/create', icon: DocumentPlusIcon, roles: [UserRole.REQUESTER] },
-  { name: 'Queries', href: '/dashboard/queries', icon: ClockIcon, roles: [UserRole.REQUESTER, UserRole.DEAN] },
+  { name: 'Queries', href: '/dashboard/queries', icon: ClockIcon, roles: [
+    UserRole.REQUESTER, 
+    UserRole.INSTITUTION_MANAGER, 
+    UserRole.ACCOUNTANT, 
+    UserRole.VP_RESEARCH, 
+    UserRole.VP_ACADEMIC, 
+    UserRole.VP_ADMIN, 
+    UserRole.RESEARCH_DIRECTOR, 
+    UserRole.HEAD_OF_INSTITUTION, 
+    UserRole.DEAN, 
+    UserRole.MMA, 
+    UserRole.HR, 
+    UserRole.AUDIT, 
+    UserRole.IT, 
+    UserRole.CHIEF_DIRECTOR, 
+    UserRole.CHAIRMAN
+  ] },
   {
     name: 'Pending Approvals',
     href: '/dashboard/requests?status=pending', // Redirect requesters to their pending requests

@@ -38,6 +38,7 @@ export async function POST(
       target,
       sopReference,
       subAction,
+      targetRole,
     } = await request.json();
 
     action = requestAction;
@@ -384,15 +385,39 @@ export async function POST(
 
       case 'reject_with_clarification':
         if (!notes || notes.trim() === '') {
-          return NextResponse.json({ error: 'Queries for the requester are required when raising queries' }, { status: 400 });
+          return NextResponse.json({ error: 'Queries for the recipient are required when raising queries' }, { status: 400 });
         }
 
-        const queryTarget = queryEngine.getQueryTarget(requestRecord.status, effectiveRole);
-        if (!queryTarget) {
-          return NextResponse.json({ error: 'Cannot send queries - no target found' }, { status: 400 });
+        if (!targetRole) {
+          return NextResponse.json({ error: 'Target role is required when raising queries' }, { status: 400 });
         }
 
-        nextStatus = queryTarget.status;
+        // Validate that the current user can send queries to the target role (must be below their level)
+        const { canSendQueryTo } = await import('../../../../../lib/query-hierarchy');
+        if (!canSendQueryTo(user.role as UserRole, targetRole as UserRole)) {
+          return NextResponse.json({ error: 'You can only send queries to roles below your level' }, { status: 400 });
+        }
+
+        // Determine the status based on target role
+        const targetStatusMap: Record<UserRole, RequestStatus> = {
+          [UserRole.REQUESTER]: RequestStatus.SUBMITTED,
+          [UserRole.INSTITUTION_MANAGER]: RequestStatus.MANAGER_REVIEW,
+          [UserRole.ACCOUNTANT]: RequestStatus.BUDGET_CHECK,
+          [UserRole.VP_RESEARCH]: RequestStatus.VP_RESEARCH_APPROVAL,
+          [UserRole.VP_ACADEMIC]: RequestStatus.VP_ACADEMIC_APPROVAL,
+          [UserRole.VP_ADMIN]: RequestStatus.VP_ADMIN_APPROVAL,
+          [UserRole.RESEARCH_DIRECTOR]: RequestStatus.RESEARCH_DIRECTOR_APPROVAL,
+          [UserRole.HEAD_OF_INSTITUTION]: RequestStatus.HOI_APPROVAL,
+          [UserRole.DEAN]: RequestStatus.DEAN_REVIEW,
+          [UserRole.MMA]: RequestStatus.DEPARTMENT_CHECKS,
+          [UserRole.HR]: RequestStatus.DEPARTMENT_CHECKS,
+          [UserRole.AUDIT]: RequestStatus.DEPARTMENT_CHECKS,
+          [UserRole.IT]: RequestStatus.DEPARTMENT_CHECKS,
+          [UserRole.CHIEF_DIRECTOR]: RequestStatus.CHIEF_DIRECTOR_APPROVAL,
+          [UserRole.CHAIRMAN]: RequestStatus.CHAIRMAN_APPROVAL,
+        };
+
+        nextStatus = targetStatusMap[targetRole as UserRole] || RequestStatus.SUBMITTED;
         actionType = ActionType.REJECT_WITH_CLARIFICATION;
         break;
 
@@ -555,8 +580,8 @@ export async function POST(
       updateData.$set.pendingQuery = true;
 
       if (action === 'reject_with_clarification') {
-        const queryTarget = queryEngine.getQueryTarget(requestRecord.status, effectiveRole);
-        updateData.$set.queryLevel = queryTarget?.role;
+        // Use the targetRole if provided, otherwise fall back to default behavior
+        updateData.$set.queryLevel = targetRole || queryEngine.getQueryTarget(requestRecord.status, effectiveRole)?.role;
       } else {
         // dean_send_to_requester
         updateData.$set.queryLevel = UserRole.REQUESTER;
