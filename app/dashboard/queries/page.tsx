@@ -50,7 +50,7 @@ export default function QueriesPage() {
       console.error('Error fetching user:', err);
       setError('Failed to load user information');
     }
-  }, [router]);
+  }, []);
 
   const fetchQueriesRequests = useCallback(async () => {
     if (!currentUser) {

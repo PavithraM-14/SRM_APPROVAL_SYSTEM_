@@ -22,6 +22,9 @@ async function clearDatabase() {
     console.log('🗑️  Clearing all collections...');
     
     // Get all collection names from the database
+    if (!mongoose.connection.db) {
+      throw new Error('Database connection not established');
+    }
     const collections = await mongoose.connection.db.listCollections().toArray();
     
     if (collections.length === 0) {
@@ -38,6 +41,9 @@ async function clearDatabase() {
       const collectionName = collection.name;
       
       try {
+        if (!mongoose.connection.db) {
+          throw new Error('Database connection not established');
+        }
         const count = await mongoose.connection.db.collection(collectionName).countDocuments();
         
         if (count > 0) {
