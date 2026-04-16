@@ -11,6 +11,7 @@
     "start": "next start",
     "lint": "next lint",
     "seed": "tsx --env-file=.env.local scripts/seed.ts",
+    "clear-db": "tsx --env-file=.env.local scripts/clear-database.ts",
     "eighthr": "tsx --env-file=.env.local scripts/seed-eighthr.ts",
     "tenhr": "tsx --env-file=.env.local scripts/seed-tenhr.ts",
     "test": "jest --watch",

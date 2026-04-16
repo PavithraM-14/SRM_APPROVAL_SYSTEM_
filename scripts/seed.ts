@@ -803,7 +803,7 @@ async function seed() {
       const hoiRejectedToRequester = await Request.create({
         requestId: generateRequestId(),
         title: 'HOI Rejected - Direct to Requester',
-        purpose: 'This request was rejected by HOI and sent directly to requester for query (HOI is below Dean level).',
+        purpose: 'This request was rejected by HOI and sent directly to requester for query.',
         college: colleges[2],
         department: departments[1],
         costEstimate: 300000,
@@ -844,7 +844,7 @@ async function seed() {
             newStatus: RequestStatus.SUBMITTED,
             queryRequest: 'The infrastructure upgrade scope seems too broad. Please provide: 1) Detailed breakdown of systems to be upgraded, 2) Priority ranking of upgrades, 3) Phased implementation plan, 4) Cost justification for each phase.',
             requiresClarification: true,
-            notes: 'HOI rejected - sent directly to requester for query (HOI is below Dean level)'
+            notes: 'HOI rejected - sent directly to requester for query'
           }
         ]
       });
@@ -911,7 +911,7 @@ async function seed() {
             requiresClarification: true,
             originalRejector: chiefDirector._id,
             isDeanMediated: true,
-            notes: 'Head of Campus Rejected - Admin Dept to handle query (above Dean level)'
+            notes: 'Head of Campus Rejected - Admin Dept to handle query'
           },
           {
             action: ActionType.REJECT_WITH_CLARIFICATION,

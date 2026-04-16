@@ -3,8 +3,8 @@ import { UserRole } from './types';
 // Define the hierarchy from lowest to highest authority
 export const ROLE_HIERARCHY: UserRole[] = [
   UserRole.REQUESTER,
-  UserRole.INSTITUTION_MANAGER,
   UserRole.ACCOUNTANT,
+  UserRole.INSTITUTION_MANAGER,
   UserRole.VP_RESEARCH,
   UserRole.VP_ACADEMIC,
   UserRole.VP_ADMIN,
